@@ -22,7 +22,6 @@ final class ProfileRepository
             $profiles[$slug] = TheatreProfile::fromArray($data);
         }
 
-        // Si no hay ninguno, crea uno por defecto (puente con constantes)
         if (empty($profiles)) {
             $profiles['default'] = self::defaultFromConstants();
         }
@@ -37,7 +36,6 @@ final class ProfileRepository
             return $all[$slug];
         }
 
-        // fallback: perfil por defecto
         return self::defaultFromConstants();
     }
 
@@ -61,7 +59,6 @@ final class ProfileRepository
 
     private static function defaultFromConstants(): TheatreProfile
     {
-        // Puente de compatibilidad: usa las constantes si existen
         $channelId    = defined('ONEBOX_CHANNEL_ID')    ? ONEBOX_CHANNEL_ID    : '';
         $clientSecret = defined('ONEBOX_CLIENT_SECRET') ? ONEBOX_CLIENT_SECRET : '';
 
@@ -73,21 +70,27 @@ final class ProfileRepository
             ? ONEBOX_API_AUTH
             : 'https://oauth2.oneboxtds.com/oauth/token';
 
-        return new TheatreProfile(
-    'default',
-    'Perfil por defecto',
-    $channelId,
-    $clientSecret,
-    $apiCatalog,
-    $apiAuth,
-    'https://tickets.oneboxtds.com/laestacion/events/',
-    'La Estación',
-    '#009AD8', // primary
-    '#D14100', // accent
-    '#FFFFFF', // bg
-    '#000000', // text
-    '#009AD8'  // selected day (por defecto igual que primary)
-);
+        $integration = new OneboxIntegration(
+            'default',
+            'OneBox',
+            $channelId,
+            $clientSecret,
+            $apiCatalog,
+            $apiAuth,
+            'https://tickets.oneboxtds.com/laestacion/events/'
+        );
 
+        return new TheatreProfile(
+            'default',
+            'Perfil por defecto',
+            'La Estacion',
+            '#009AD8', // primary
+            '#D14100', // accent
+            '#FFFFFF', // bg
+            '#000000', // text
+            '#009AD8', // selected day (por defecto igual que primary)
+            [$integration->slug => $integration],
+            $integration->slug
+        );
     }
 }

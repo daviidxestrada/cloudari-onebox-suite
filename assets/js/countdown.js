@@ -65,23 +65,32 @@
 
 
   function buildPurchaseUrl(eventId, sessionUrl) {
-  // ✅ Manual events: si la sesión trae URL propia, la respetamos
-  if (sessionUrl && String(sessionUrl).trim() !== "") {
-    return String(sessionUrl).trim();
+    // ✅ Manual events: si la sesión trae URL propia, la respetamos
+    if (sessionUrl && String(sessionUrl).trim() !== "") {
+      return String(sessionUrl).trim();
+    }
+
+    const id = String(eventId);
+    const overrides = CONFIG.specialRedirects || {};
+    if (overrides[id]) {
+      return overrides[id];
+    }
+
+    const base = (CONFIG.purchaseBase || "").trim();
+    if (!base) return "#";
+
+    const normalized = base.replace(/\/?$/, "/");
+    return normalized + id;
   }
 
-  const id = String(eventId);
-  const overrides = CONFIG.specialRedirects || {};
-  if (overrides[id]) {
-    return overrides[id];
+  function applyOverride(eventId, url) {
+    const id = String(eventId);
+    const overrides = CONFIG.specialRedirects || {};
+    if (overrides[id]) {
+      return overrides[id];
+    }
+    return url;
   }
-
-  const base = (CONFIG.purchaseBase || "").trim();
-  if (!base) return "#";
-
-  const normalized = base.replace(/\/?$/, "/");
-  return normalized + id;
-}
 
 
   async function getSessions(inicio, fin) {
@@ -146,13 +155,10 @@
     }
 
     if (link) {
-      // ✅ Prioridad: URL de la sesión (manual) > override > purchaseBase+id
+      // ✅ Prioridad: URL de la sesión (manual / OneBox) -> override -> purchaseBase+id
       const sessionUrl = (bundle && typeof bundle.url === "string") ? bundle.url.trim() : "";
-      if (sessionUrl) {
-        link.href = sessionUrl;
-      } else {
-        link.href = buildPurchaseUrl(eventId) || "#";
-      }
+      const baseUrl = sessionUrl || buildPurchaseUrl(eventId) || "#";
+      link.href = applyOverride(eventId, baseUrl);
     }
   }
 

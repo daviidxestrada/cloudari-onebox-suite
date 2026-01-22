@@ -4,6 +4,7 @@ namespace Cloudari\Onebox\Domain\ManualEvents;
 use DateTime;
 use DateInterval;
 use Exception;
+use Cloudari\Onebox\Domain\Theatre\ProfileRepository;
 
 final class Repository
 {
@@ -163,7 +164,15 @@ final class Repository
      * Genera sesiones diarias para un evento "range"
      * entre range_start y range_end, aplicando rules/exceptions.
      */
-    private static function buildRangeSessions(int $post_id, string $titulo, string $url, string $img_url, ?string $inicio, ?string $fin): array
+    private static function buildRangeSessions(
+        int $post_id,
+        string $titulo,
+        string $url,
+        string $img_url,
+        ?string $inicio,
+        ?string $fin,
+        string $venueName
+    ): array
     {
         $mode = get_post_meta($post_id, self::META_MODE, true);
         if ($mode !== 'range') return [];
@@ -249,7 +258,7 @@ final class Repository
                         'name'  => $titulo,
                         'texts' => ['title' => ['es-ES' => $titulo]],
                     ],
-                    'venue' => ['name' => 'La Estación'],
+                    'venue' => ['name' => $venueName],
                     'date'  => ['start' => $start_iso, 'end' => $end_iso],
                     'images'=> ['landscape' => [['es-ES' => $img_url]]],
                     'price' => ['min' => ['value' => '']],
@@ -272,6 +281,12 @@ final class Repository
      */
     public static function getForCalendar(?string $inicio = null, ?string $fin = null): array
     {
+        $profile = ProfileRepository::getActive();
+        $venueName = trim((string)$profile->venueName);
+        if ($venueName === '') {
+            $venueName = 'Teatro';
+        }
+
         $posts = get_posts([
             'post_type'      => PostType::SLUG,
             'post_status'    => 'publish',
@@ -306,7 +321,15 @@ final class Repository
             $mode = in_array($mode, ['sessions', 'range'], true) ? $mode : 'sessions';
 
             if ($mode === 'range') {
-                $rangeSessions = self::buildRangeSessions($post_id, $titulo, $url, $img_url, $inicio, $fin);
+                $rangeSessions = self::buildRangeSessions(
+                    $post_id,
+                    $titulo,
+                    $url,
+                    $img_url,
+                    $inicio,
+                    $fin,
+                    $venueName
+                );
                 if (!empty($rangeSessions)) {
                     $eventos = array_merge($eventos, $rangeSessions);
                 }
@@ -366,7 +389,7 @@ final class Repository
                         'name'  => $titulo,
                         'texts' => ['title' => ['es-ES' => $titulo]],
                     ],
-                    'venue' => ['name' => 'La Estación'],
+                    'venue' => ['name' => $venueName],
                     'date'  => $end_iso ? ['start' => $start_iso, 'end' => $end_iso] : ['start' => $start_iso],
                     'images'=> ['landscape' => [['es-ES' => $img_url]]],
                     'price' => ['min' => ['value' => '']],

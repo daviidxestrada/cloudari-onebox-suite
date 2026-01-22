@@ -12,9 +12,6 @@ if (!defined('ABSPATH')) {
 
 final class Enqueue
 {
-    /**
-     * Pequeño helper para versionar assets con filemtime sin romper
-     */
     private static function assetVersion(string $relativePath): string
     {
         $file = CLOUDARI_ONEBOX_DIR . ltrim($relativePath, '/');
@@ -26,16 +23,13 @@ final class Enqueue
         return CLOUDARI_ONEBOX_VER;
     }
 
-    /**
-     * ==============================
-     *  CALENDARIO
-     * ==============================
-     */
     public static function calendar(): void
     {
         $profile = ProfileRepository::getActive();
+        $integration = $profile->getDefaultIntegration();
+        $purchaseBase = $integration ? $integration->purchaseBaseUrl : '';
+        $apiCatalogUrl = $integration ? $integration->apiCatalogUrl : '';
 
-        // CSS principal del calendario
         wp_enqueue_style(
             'cloudari-calendar',
             CLOUDARI_ONEBOX_URL . 'assets/css/calendario.css',
@@ -43,7 +37,6 @@ final class Enqueue
             self::assetVersion('assets/css/calendario.css')
         );
 
-        // Variables CSS (paleta por perfil)
         $inlineCss = sprintf(
             ':root{' .
                 '--cloudari-primary:%1$s;' .
@@ -61,7 +54,6 @@ final class Enqueue
 
         wp_add_inline_style('cloudari-calendar', $inlineCss);
 
-        // JS principal del calendario
         wp_enqueue_script(
             'cloudari-calendar',
             CLOUDARI_ONEBOX_URL . 'assets/js/calendario.js',
@@ -70,12 +62,8 @@ final class Enqueue
             true
         );
 
-        // Sesiones precargadas (el JWT solo se usa en servidor)
         $sesiones = Sessions::getDefaultRangeSessions();
-
         $ajaxUrl = '/wp-admin/admin-ajax.php?action=cloudari_get_sessions';
-
-        // Overrides desde repositorio (solo usaremos specialRedirects en el calendario)
         $overrideMaps = EventOverridesRepository::getEnvMaps();
 
         wp_localize_script(
@@ -85,25 +73,19 @@ final class Enqueue
                 'sesiones'         => $sesiones,
                 'nonce'            => wp_create_nonce('cloudari_calendar_nonce'),
                 'ajaxSesiones'     => $ajaxUrl,
-                'urlOnebox'        => $profile->apiCatalogUrl,
-                'purchaseBase'     => $profile->purchaseBaseUrl,
+                'urlOnebox'        => $apiCatalogUrl,
+                'purchaseBase'     => $purchaseBase,
                 'specialRedirects' => $overrideMaps['specialRedirects'] ?? [],
             ]
         );
     }
 
-    /**
-     * ==============================
-     *  CARTELERA
-     * ==============================
-     */
     public static function billboard(): void
     {
         $profile = ProfileRepository::getActive();
+        $integration = $profile->getDefaultIntegration();
+        $purchaseBase = $integration ? $integration->purchaseBaseUrl : '';
 
-        /**
-         * 1) Estilos inline para colores base (CSS vars)
-         */
         wp_register_style('cloudari-billboard-inline', false);
         wp_enqueue_style('cloudari-billboard-inline');
 
@@ -118,9 +100,6 @@ final class Enqueue
 
         wp_add_inline_style('cloudari-billboard-inline', $inlineCss);
 
-        /**
-         * 2) Estilos reales del widget
-         */
         wp_enqueue_style(
             'cloudari-billboard-css',
             CLOUDARI_ONEBOX_URL . 'assets/css/billboard-inline.css',
@@ -128,12 +107,9 @@ final class Enqueue
             self::assetVersion('assets/css/billboard-inline.css')
         );
 
-        /**
-         * 3) Script vacío para ENV (oneboxCards) que usará el JS real
-         */
         wp_register_script(
             'cloudari-billboard-bootstrap',
-            '', // script vacío
+            '',
             [],
             CLOUDARI_ONEBOX_VER,
             false
@@ -141,28 +117,19 @@ final class Enqueue
 
         wp_enqueue_script('cloudari-billboard-bootstrap');
 
-        /**
-         * 4) ENV del plugin (perfil + overrides) - SIN JWT
-         */
         $overrideMaps = EventOverridesRepository::getEnvMaps();
 
         wp_localize_script(
             'cloudari-billboard-bootstrap',
-            'oneboxCards', // 👈 nombre que lee billboard-inline.js
+            'oneboxCards',
             [
-                // ✅ Proxy server-side (sin CORS y sin exponer JWT)
                 'billboardEndpoint' => '/wp-json/cloudari/v1/billboard-events',
-
-                // Mantener compat con tu lógica actual
-                'purchaseBase'      => $profile->purchaseBaseUrl,
+                'purchaseBase'      => $purchaseBase,
                 'specialRedirects'  => $overrideMaps['specialRedirects']  ?? [],
                 'categoryOverrides' => $overrideMaps['categoryOverrides'] ?? [],
             ]
         );
 
-        /**
-         * 5) Script real del widget de cartelera
-         */
         wp_enqueue_script(
             'cloudari-billboard-js',
             CLOUDARI_ONEBOX_URL . 'assets/js/billboard-inline.js',
@@ -172,17 +139,13 @@ final class Enqueue
         );
     }
 
-    /**
-     * ==============================
-     *  CONTADOR
-     * ==============================
-     */
     public static function countdown(): void
     {
-        $profile      = ProfileRepository::getActive();
+        $profile = ProfileRepository::getActive();
+        $integration = $profile->getDefaultIntegration();
+        $purchaseBase = $integration ? $integration->purchaseBaseUrl : '';
         $overrideMaps = EventOverridesRepository::getEnvMaps();
 
-        // CSS
         wp_enqueue_style(
             'cloudari-countdown',
             CLOUDARI_ONEBOX_URL . 'assets/css/countdown.css',
@@ -190,7 +153,6 @@ final class Enqueue
             self::assetVersion('assets/css/countdown.css')
         );
 
-        // JS
         wp_enqueue_script(
             'cloudari-countdown',
             CLOUDARI_ONEBOX_URL . 'assets/js/countdown.js',
@@ -206,7 +168,7 @@ final class Enqueue
             'cloudariCountdown',
             [
                 'ajaxSesiones'     => $ajaxUrl,
-                'purchaseBase'     => $profile->purchaseBaseUrl,
+                'purchaseBase'     => $purchaseBase,
                 'specialRedirects' => $overrideMaps['specialRedirects'] ?? [],
                 'extraDaysDefault' => 180,
                 'cacheTtlMs'       => 6 * 60 * 60 * 1000,

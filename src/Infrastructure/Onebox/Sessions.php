@@ -2,6 +2,7 @@
 namespace Cloudari\Onebox\Infrastructure\Onebox;
 
 use Cloudari\Onebox\Domain\Theatre\ProfileRepository;
+use Cloudari\Onebox\Domain\Theatre\OneboxIntegration;
 use Cloudari\Onebox\Domain\ManualEvents\Repository as ManualRepository;
 
 if (!defined('ABSPATH')) {
@@ -9,13 +10,10 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Capa de acceso a sesiones de OneBox (con paginación y filtros de fecha)
+ * Capa de acceso a sesiones de OneBox (con paginacion y filtros de fecha)
  */
 final class Sessions
 {
-    /**
-     * Rango por defecto: hoy → fin del mes siguiente (como tenías en el functions.php)
-     */
     public static function getDefaultRangeSessions(): array
     {
         try {
@@ -28,7 +26,6 @@ final class Sessions
             $inicio = $hoy->format('Y-m-d');
             $finStr = $fin->format('Y-m-d');
 
-            // Usamos el mismo método que el AJAX, que ahora también incluye manuales
             return self::getRangeSessions($inicio, $finStr);
         } catch (\Throwable $e) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
@@ -42,175 +39,194 @@ final class Sessions
     }
 
     /**
-     * Rango arbitrario YYYY-MM-DD → YYYY-MM-DD
-     * Usado por el AJAX: cloudari_get_sessions&inicio=...&fin=...
-     * Ahora devuelve sesiones de OneBox + sesiones de eventos manuales en ese rango.
+     * Rango arbitrario YYYY-MM-DD -> YYYY-MM-DD
+     * Devuelve sesiones OneBox (multi-integracion) + manuales.
      */
     public static function getRangeSessions(string $inicio, string $fin): array
     {
-        // Sanitizar por si llegan cosas raras
         $inicio = substr(trim($inicio), 0, 10);
         $fin    = substr(trim($fin), 0, 10);
 
         $profile = ProfileRepository::getActive();
-        if (!$profile || empty($profile->apiCatalogUrl)) {
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('[Cloudari OneBox] getRangeSessions: no profile or apiCatalogUrl');
-            }
-            return [
-                'data'     => [],
-                'metadata' => ['error' => 'no_profile'],
-            ];
-        }
-
-        $base = rtrim($profile->apiCatalogUrl, '/');
-
-        $token = Auth::getJwt();
-        if (!$token) {
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('[Cloudari OneBox] getRangeSessions: no JWT token');
-            }
-            return [
-                'data'     => [],
-                'metadata' => ['error' => 'no_token'],
-            ];
-        }
+        $integrations = $profile->getIntegrations();
 
         $limit    = 100;
         $offset   = 0;
         $all      = [];
         $metadata = [];
 
-        try {
-            // 1) Sesiones de OneBox (paginadas)
-            while (true) {
-                $query = [
-                    'type'  => 'SESSION',
-                    // mismo formato que usabas: start=gte:YYYY-mm-ddT00...,lte:YYYY-mm-ddT23...
-                    'start' => sprintf(
-                        'gte:%sT00:00:00Z,lte:%sT23:59:59Z',
-                        $inicio,
-                        $fin
-                    ),
-                    'limit' => $limit,
-                    'offset'=> $offset,
-                ];
-
-                $url = $base . '/sessions?' . http_build_query($query);
-
-                $resp = wp_remote_get(
-                    $url,
-                    [
-                        'headers' => [
-                            'Authorization' => 'Bearer ' . $token,
-                        ],
-                        'timeout' => 20,
-                    ]
-                );
-
-                if (is_wp_error($resp)) {
-                    if (defined('WP_DEBUG') && WP_DEBUG) {
-                        error_log(
-                            '[Cloudari OneBox] getRangeSessions wp_remote_get error: ' .
-                            $resp->get_error_message()
-                        );
-                    }
-                    break;
-                }
-
-                $body = json_decode(wp_remote_retrieve_body($resp), true);
-                if (!is_array($body)) {
-                    break;
-                }
-
-                if (!empty($body['data']) && is_array($body['data'])) {
-                    $all = array_merge($all, $body['data']);
-                }
-
-                if (isset($body['metadata']) && is_array($body['metadata'])) {
-                    $metadata = $body['metadata'];
-                }
-
-                $total = isset($body['metadata']['total']) ? (int) $body['metadata']['total'] : 0;
-                if (!$total) {
-                    break;
-                }
-
-                $offset += $limit;
-                if ($offset >= $total) {
-                    break;
-                }
+        foreach ($integrations as $integration) {
+            if (!$integration instanceof OneboxIntegration) {
+                continue;
             }
 
-            // 2) Filtro extra: por si API devuelve algo anterior a hoy
+            if ($integration->apiCatalogUrl === '' || !$integration->hasCredentials()) {
+                continue;
+            }
+
+            $token = Auth::getJwt($integration);
+            if (!$token) {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log('[Cloudari OneBox] getRangeSessions: no JWT token for ' . $integration->slug);
+                }
+                continue;
+            }
+
+            $base = rtrim($integration->apiCatalogUrl, '/');
+            $offset = 0;
+
             try {
-                $hoyUTC = new \DateTime('today', new \DateTimeZone('UTC'));
-                $all = array_values(
-                    array_filter(
-                        $all,
-                        static function ($s) use ($hoyUTC) {
-                            if (empty($s['date']['start'])) {
-                                return false;
-                            }
-                            try {
-                                $d = new \DateTime($s['date']['start']);
-                                return $d >= $hoyUTC;
-                            } catch (\Exception $e) {
-                                return false;
-                            }
+                while (true) {
+                    $query = [
+                        'type'  => 'SESSION',
+                        'start' => sprintf(
+                            'gte:%sT00:00:00Z,lte:%sT23:59:59Z',
+                            $inicio,
+                            $fin
+                        ),
+                        'limit' => $limit,
+                        'offset'=> $offset,
+                    ];
+
+                    $url = $base . '/sessions?' . http_build_query($query);
+
+                    $resp = wp_remote_get(
+                        $url,
+                        [
+                            'headers' => [
+                                'Authorization' => 'Bearer ' . $token,
+                            ],
+                            'timeout' => 20,
+                        ]
+                    );
+
+                    if (is_wp_error($resp)) {
+                        if (defined('WP_DEBUG') && WP_DEBUG) {
+                            error_log(
+                                '[Cloudari OneBox] getRangeSessions wp_remote_get error: ' .
+                                $resp->get_error_message()
+                            );
                         }
-                    )
-                );
-            } catch (\Throwable $e) {
-                // Si falla el filtro, no rompemos
-            }
+                        break;
+                    }
 
-            // 3) Añadir sesiones de eventos manuales dentro del mismo rango
-            try {
-                $manualSessions = ManualRepository::getForCalendar($inicio, $fin);
-                if (is_array($manualSessions) && !empty($manualSessions)) {
-                    $all = array_merge($all, $manualSessions);
+                    $body = json_decode(wp_remote_retrieve_body($resp), true);
+                    if (!is_array($body)) {
+                        break;
+                    }
+
+                    $batch = [];
+                    if (!empty($body['data']) && is_array($body['data'])) {
+                        foreach ($body['data'] as $session) {
+                            if (!is_array($session)) {
+                                continue;
+                            }
+                            $batch[] = self::applyIntegrationContext($session, $integration);
+                        }
+                    }
+
+                    if (!empty($batch)) {
+                        $all = array_merge($all, $batch);
+                    }
+
+                    if (isset($body['metadata']) && is_array($body['metadata'])) {
+                        $metadata = $body['metadata'];
+                    }
+
+                    $total = isset($body['metadata']['total']) ? (int) $body['metadata']['total'] : 0;
+                    if (!$total) {
+                        break;
+                    }
+
+                    $offset += $limit;
+                    if ($offset >= $total) {
+                        break;
+                    }
                 }
             } catch (\Throwable $e) {
                 if (defined('WP_DEBUG') && WP_DEBUG) {
                     error_log(
                         sprintf(
-                            '[Cloudari OneBox] getRangeSessions manual merge error (%s → %s): %s',
+                            '[Cloudari OneBox] getRangeSessions exception (%s -> %s) [%s]: %s @ %s:%d',
                             $inicio,
                             $fin,
-                            $e->getMessage()
+                            $integration->slug,
+                            $e->getMessage(),
+                            $e->getFile(),
+                            $e->getLine()
                         )
                     );
                 }
             }
+        }
 
-            // Ajustar metadata total al total real combinado
-            $metadata['total'] = count($all);
-            $metadata['offset'] = 0;
-            $metadata['limit']  = $limit;
+        try {
+            $hoyUTC = new \DateTime('today', new \DateTimeZone('UTC'));
+            $all = array_values(
+                array_filter(
+                    $all,
+                    static function ($s) use ($hoyUTC) {
+                        if (empty($s['date']['start'])) {
+                            return false;
+                        }
+                        try {
+                            $d = new \DateTime($s['date']['start']);
+                            return $d >= $hoyUTC;
+                        } catch (\Exception $e) {
+                            return false;
+                        }
+                    }
+                )
+            );
+        } catch (\Throwable $e) {
+            // no-op
+        }
 
-            return [
-                'data'     => $all,
-                'metadata' => $metadata,
-            ];
+        try {
+            $manualSessions = ManualRepository::getForCalendar($inicio, $fin);
+            if (is_array($manualSessions) && !empty($manualSessions)) {
+                $all = array_merge($all, $manualSessions);
+            }
         } catch (\Throwable $e) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
                 error_log(
                     sprintf(
-                        '[Cloudari OneBox] getRangeSessions exception (%s → %s): %s @ %s:%d',
+                        '[Cloudari OneBox] getRangeSessions manual merge error (%s -> %s): %s',
                         $inicio,
                         $fin,
-                        $e->getMessage(),
-                        $e->getFile(),
-                        $e->getLine()
+                        $e->getMessage()
                     )
                 );
             }
-
-            return [
-                'data'     => [],
-                'metadata' => ['error' => 'range_exception'],
-            ];
         }
+
+        $metadata['total']  = count($all);
+        $metadata['offset'] = 0;
+        $metadata['limit']  = $limit;
+
+        return [
+            'data'     => $all,
+            'metadata' => $metadata,
+        ];
+    }
+
+    private static function applyIntegrationContext(array $session, OneboxIntegration $integration): array
+    {
+        $eventId = $session['event']['id'] ?? null;
+        if ($eventId && $integration->purchaseBaseUrl !== '') {
+            $session['url'] = $integration->purchaseBaseUrl . $eventId;
+        }
+
+        if (!isset($session['cloudari']) || !is_array($session['cloudari'])) {
+            $session['cloudari'] = [];
+        }
+
+        $session['cloudari']['integration'] = $integration->slug;
+        $session['cloudari']['integration_label'] = $integration->label;
+        if ($integration->purchaseBaseUrl !== '') {
+            $session['cloudari']['purchase_base'] = $integration->purchaseBaseUrl;
+        }
+
+        return $session;
     }
 }

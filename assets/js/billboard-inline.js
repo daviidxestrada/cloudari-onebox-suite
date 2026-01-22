@@ -500,16 +500,15 @@
       const baseId = ev?.event?.id ?? ev?.id;
 
       let targetUrl;
+      const evUrl =
+        typeof ev.url === "string" && ev.url.trim() !== "" ? ev.url.trim() : "";
 
       if (isManual) {
         // Eventos manuales: usan siempre su propia URL (_url_evento)
-        targetUrl =
-          typeof ev.url === "string" && ev.url.trim() !== ""
-            ? ev.url
-            : "#";
+        targetUrl = evUrl || "#";
       } else {
-        // Eventos OneBox: SIEMPRE URL de compra del perfil (base + id)
-        targetUrl = buildPurchaseUrl(baseId, null);
+        // Eventos OneBox: preferir URL precalculada por integracion si existe
+        targetUrl = evUrl || buildPurchaseUrl(baseId, null);
       }
 
       const finalUrl = getSpecialRedirectUrl(baseId, targetUrl);
