@@ -2,7 +2,8 @@
 
 namespace Cloudari\Onebox\Presentation\Assets;
 
-use Cloudari\Onebox\Domain\Theatre\ProfileRepository;
+use Cloudari\Onebox\Domain\MainProfile\MainProfileRepository;
+use Cloudari\Onebox\Domain\Onebox\OneboxIntegrationRepository;
 use Cloudari\Onebox\Infrastructure\Onebox\Sessions;
 use Cloudari\Onebox\Domain\Events\EventOverridesRepository;
 
@@ -33,7 +34,8 @@ final class Enqueue
      */
     public static function calendar(): void
     {
-        $profile = ProfileRepository::getActive();
+        $mainProfile = MainProfileRepository::get();
+        $integration = OneboxIntegrationRepository::getActive();
 
         // CSS principal del calendario
         wp_enqueue_style(
@@ -52,11 +54,11 @@ final class Enqueue
                 '--cloudari-text:%4$s;' .
                 '--cloudari-selected-day:%5$s;' .
             '}',
-            esc_html($profile->colorPrimary),
-            esc_html($profile->colorAccent),
-            esc_html($profile->colorBackground),
-            esc_html($profile->colorText),
-            esc_html($profile->colorSelectedDay)
+            esc_html($mainProfile->colorPrimary),
+            esc_html($mainProfile->colorAccent),
+            esc_html($mainProfile->colorBackground),
+            esc_html($mainProfile->colorText),
+            esc_html($mainProfile->colorSelectedDay)
         );
 
         wp_add_inline_style('cloudari-calendar', $inlineCss);
@@ -85,8 +87,8 @@ final class Enqueue
                 'sesiones'         => $sesiones,
                 'nonce'            => wp_create_nonce('cloudari_calendar_nonce'),
                 'ajaxSesiones'     => $ajaxUrl,
-                'urlOnebox'        => $profile->apiCatalogUrl,
-                'purchaseBase'     => $profile->purchaseBaseUrl,
+                'urlOnebox'        => $integration->apiCatalogUrl,
+                'purchaseBase'     => $integration->purchaseBaseUrl,
                 'specialRedirects' => $overrideMaps['specialRedirects'] ?? [],
             ]
         );
@@ -99,7 +101,8 @@ final class Enqueue
      */
     public static function billboard(): void
     {
-        $profile = ProfileRepository::getActive();
+        $mainProfile = MainProfileRepository::get();
+        $integration = OneboxIntegrationRepository::getActive();
 
         /**
          * 1) Estilos inline para colores base (CSS vars)
@@ -112,8 +115,8 @@ final class Enqueue
                 '--cloudari-primary:%1$s;' .
                 '--cloudari-accent:%2$s;' .
             '}',
-            esc_html($profile->colorPrimary),
-            esc_html($profile->colorAccent)
+            esc_html($mainProfile->colorPrimary),
+            esc_html($mainProfile->colorAccent)
         );
 
         wp_add_inline_style('cloudari-billboard-inline', $inlineCss);
@@ -154,7 +157,7 @@ final class Enqueue
                 'billboardEndpoint' => '/wp-json/cloudari/v1/billboard-events',
 
                 // Mantener compat con tu lógica actual
-                'purchaseBase'      => $profile->purchaseBaseUrl,
+                'purchaseBase'      => $integration->purchaseBaseUrl,
                 'specialRedirects'  => $overrideMaps['specialRedirects']  ?? [],
                 'categoryOverrides' => $overrideMaps['categoryOverrides'] ?? [],
             ]
@@ -179,7 +182,7 @@ final class Enqueue
      */
     public static function countdown(): void
     {
-        $profile      = ProfileRepository::getActive();
+        $integration  = OneboxIntegrationRepository::getActive();
         $overrideMaps = EventOverridesRepository::getEnvMaps();
 
         // CSS
@@ -206,7 +209,7 @@ final class Enqueue
             'cloudariCountdown',
             [
                 'ajaxSesiones'     => $ajaxUrl,
-                'purchaseBase'     => $profile->purchaseBaseUrl,
+                'purchaseBase'     => $integration->purchaseBaseUrl,
                 'specialRedirects' => $overrideMaps['specialRedirects'] ?? [],
                 'extraDaysDefault' => 180,
                 'cacheTtlMs'       => 6 * 60 * 60 * 1000,
