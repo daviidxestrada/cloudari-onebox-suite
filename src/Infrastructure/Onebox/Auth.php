@@ -1,13 +1,12 @@
 <?php
 namespace Cloudari\Onebox\Infrastructure\Onebox;
 
-use Cloudari\Onebox\Domain\Onebox\OneboxIntegrationRepository;
+use Cloudari\Onebox\Domain\Theatre\ProfileRepository;
 
 final class Auth
 {
     private const TRANSIENT_JWT     = 'cloudari_onebox_jwt_token';
     private const TRANSIENT_REFRESH = 'cloudari_onebox_refresh_token';
-    private const TRANSIENT_ACTIVE  = 'cloudari_onebox_active_integration_cache';
 
     /**
      * Devuelve el JWT, usando caché (transient) y el perfil activo
@@ -20,15 +19,8 @@ final class Auth
             return $cached;
         }
 
-        // 2) Sacamos la integracion activa
-        $profile = OneboxIntegrationRepository::getActive();
-
-        // Si cambia la integracion activa, reiniciamos tokens
-        $cachedActive = get_transient(self::TRANSIENT_ACTIVE);
-        if ($cachedActive !== $profile->slug) {
-            self::resetTokens();
-            set_transient(self::TRANSIENT_ACTIVE, $profile->slug, DAY_IN_SECONDS);
-        }
+        // 2) Sacamos el perfil activo
+        $profile = ProfileRepository::getActive();
 
         if (!$profile->hasCredentials()) {
             // Falta channel o client_secret

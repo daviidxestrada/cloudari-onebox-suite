@@ -1,7 +1,7 @@
 <?php
 namespace Cloudari\Onebox\Infrastructure\Onebox;
 
-use Cloudari\Onebox\Domain\Onebox\OneboxIntegrationRepository;
+use Cloudari\Onebox\Domain\Theatre\ProfileRepository;
 use Cloudari\Onebox\Domain\ManualEvents\Repository as ManualRepository;
 
 if (!defined('ABSPATH')) {
@@ -52,8 +52,7 @@ final class Sessions
         $inicio = substr(trim($inicio), 0, 10);
         $fin    = substr(trim($fin), 0, 10);
 
-        // @todo Cuando existan multiples integraciones, combinar sesiones de cada una.
-        $profile = OneboxIntegrationRepository::getActive();
+        $profile = ProfileRepository::getActive();
         if (!$profile || empty($profile->apiCatalogUrl)) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
                 error_log('[Cloudari OneBox] getRangeSessions: no profile or apiCatalogUrl');
