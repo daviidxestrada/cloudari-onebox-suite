@@ -39,6 +39,10 @@ Notas:
 - Debe existir al menos una integracion.
 - Puedes marcar una integracion como default (fallback para purchaseBase).
 
+Opcionales (wp-config.php):
+- `define('CLOUDARI_ONEBOX_PUBLIC_REST', false);` para restringir REST a admins.
+- `define('CLOUDARI_ONEBOX_REQUIRE_AJAX_NONCE', false);` para desactivar nonce en AJAX si hay cache agresiva.
+
 == Shortcodes ==
 Calendario:
 `[cloudari_calendar]`
@@ -76,6 +80,7 @@ Custom post types / taxonomy:
 
 == Caching ==
 - Cartelera: cache server-side (5 min).
+- Sesiones calendario/contador: cache server-side por rango (5 min).
 - Tokens OneBox: cache por integracion con transients.
 - Para limpiar cache, guarda el Perfil MAIN.
 
@@ -86,9 +91,17 @@ Custom post types / taxonomy:
 - Usar HTTPS y cache a nivel de servidor si aplica.
 
 == Changelog ==
+= 1.1 =
+* Fix de autoupdates (plugin-update-checker).
+* AJAX del calendario/contador con nonce + URL admin-ajax dinamica.
+* Cache de sesiones por rango.
+
 = 1.0 =
 * Release inicial con multi-integracion, eventos manuales y overrides.
 
 == Upgrade Notice ==
+= 1.1 =
+Actualizacion interna: autoupdates, nonce AJAX y cache de sesiones.
+
 = 1.0 =
 Primera version estable.

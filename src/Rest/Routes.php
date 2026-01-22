@@ -17,6 +17,15 @@ final class Routes
     private const BILLBOARD_CACHE_KEY_PREFIX = 'cloudari_onebox_billboard_events_v1_';
     private const BILLBOARD_CACHE_TTL        = 5 * MINUTE_IN_SECONDS;
 
+    public static function publicPermission(): bool
+    {
+        if (defined('CLOUDARI_ONEBOX_PUBLIC_REST') && !CLOUDARI_ONEBOX_PUBLIC_REST) {
+            return current_user_can('manage_options');
+        }
+
+        return true;
+    }
+
     public static function register(): void
     {
         register_rest_route(
@@ -25,7 +34,7 @@ final class Routes
             [
                 'methods'             => 'GET',
                 'callback'            => [self::class, 'ping'],
-                'permission_callback' => '__return_true',
+                'permission_callback' => [self::class, 'publicPermission'],
             ]
         );
 
@@ -35,7 +44,7 @@ final class Routes
             [
                 'methods'             => 'GET',
                 'callback'            => [self::class, 'getBillboardEvents'],
-                'permission_callback' => '__return_true',
+                'permission_callback' => [self::class, 'publicPermission'],
             ]
         );
 
@@ -45,7 +54,7 @@ final class Routes
             [
                 'methods'             => 'GET',
                 'callback'            => [self::class, 'getManualEvents'],
-                'permission_callback' => '__return_true',
+                'permission_callback' => [self::class, 'publicPermission'],
             ]
         );
     }

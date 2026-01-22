@@ -5,6 +5,7 @@ namespace Cloudari\Onebox\Presentation\Assets;
 use Cloudari\Onebox\Domain\Theatre\ProfileRepository;
 use Cloudari\Onebox\Infrastructure\Onebox\Sessions;
 use Cloudari\Onebox\Domain\Events\EventOverridesRepository;
+use Cloudari\Onebox\Presentation\Ajax\CalendarAjax;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -63,7 +64,7 @@ final class Enqueue
         );
 
         $sesiones = Sessions::getDefaultRangeSessions();
-        $ajaxUrl = '/wp-admin/admin-ajax.php?action=cloudari_get_sessions';
+        $ajaxUrl = add_query_arg('action', CalendarAjax::ACTION, admin_url('admin-ajax.php'));
         $overrideMaps = EventOverridesRepository::getEnvMaps();
 
         wp_localize_script(
@@ -161,13 +162,14 @@ final class Enqueue
             true
         );
 
-        $ajaxUrl = '/wp-admin/admin-ajax.php?action=cloudari_get_sessions';
+        $ajaxUrl = add_query_arg('action', CalendarAjax::ACTION, admin_url('admin-ajax.php'));
 
         wp_localize_script(
             'cloudari-countdown',
             'cloudariCountdown',
             [
                 'ajaxSesiones'     => $ajaxUrl,
+                'nonce'            => wp_create_nonce('cloudari_calendar_nonce'),
                 'purchaseBase'     => $purchaseBase,
                 'specialRedirects' => $overrideMaps['specialRedirects'] ?? [],
                 'extraDaysDefault' => 180,

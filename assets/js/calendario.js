@@ -39,6 +39,18 @@ document.addEventListener('DOMContentLoaded', function () {
     return map[eventId] ? map[eventId] : url;
   }
 
+
+  function buildAjaxUrl(inicio, fin) {
+    const base = String(oneboxData.ajaxSesiones || '');
+    const nonce = oneboxData.nonce ? encodeURIComponent(oneboxData.nonce) : '';
+    const glue = base.includes('?') ? '&' : '?';
+    let url = `${base}${glue}inicio=${encodeURIComponent(inicio)}&fin=${encodeURIComponent(fin)}`;
+    if (nonce) {
+      url += `&nonce=${nonce}`;
+    }
+    return url;
+  }
+
   let sesiones = oneboxData.sesiones;
 
   // Configuración inicial
@@ -463,7 +475,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (eventosPrecargados[cacheKey]) return;
 
     const rango = obtenerRangoFechas(mes, anio);
-    const urlWP = `${oneboxData.ajaxSesiones}&inicio=${rango.inicio}&fin=${rango.fin}`;
+    const urlWP = buildAjaxUrl(rango.inicio, rango.fin);
 
     fetch(urlWP, { method: 'GET', credentials: 'same-origin' })
       .then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
@@ -493,7 +505,7 @@ document.addEventListener('DOMContentLoaded', function () {
     anioCargando = anio;
 
     const rango = obtenerRangoFechas(mes, anio);
-    const urlWP = `${oneboxData.ajaxSesiones}&inicio=${rango.inicio}&fin=${rango.fin}`;
+    const urlWP = buildAjaxUrl(rango.inicio, rango.fin);
     const cacheKey = `${anio}-${mes}`;
 
     if (eventosPrecargados[cacheKey]) {

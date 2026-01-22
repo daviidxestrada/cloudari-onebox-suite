@@ -9,16 +9,29 @@
  * Text Domain:       cloudari-onebox
  */
 
-if (file_exists(__DIR__ . '/lib/plugin-update-checker/plugin-update-checker.php')) {
-    require_once __DIR__ . '/lib/plugin-update-checker/plugin-update-checker.php';
+$pucFile = __DIR__ . '/lib/plugin-update-checker-5.6/plugin-update-checker.php';
+if (!file_exists($pucFile)) {
+    $pucFile = __DIR__ . '/lib/plugin-update-checker/plugin-update-checker.php';
+}
 
-    if (class_exists('\YahnisElsts\PluginUpdateChecker\v5\PucFactory')) {
-        $updateChecker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
+if (file_exists($pucFile)) {
+    require_once $pucFile;
+
+    $factory = null;
+    if (class_exists('\YahnisElsts\PluginUpdateChecker\v5p6\PucFactory')) {
+        $factory = '\YahnisElsts\PluginUpdateChecker\v5p6\PucFactory';
+    } elseif (class_exists('\YahnisElsts\PluginUpdateChecker\v5\PucFactory')) {
+        $factory = '\YahnisElsts\PluginUpdateChecker\v5\PucFactory';
+    }
+
+    if ($factory) {
+        $updateChecker = $factory::buildUpdateChecker(
             'https://github.com/daviidxestrada/cloudari-onebox-suite',
             __FILE__,
             'cloudari-onebox-suite'
         );
 
+        // Rama que usas
         $updateChecker->setBranch('main');
     }
 }

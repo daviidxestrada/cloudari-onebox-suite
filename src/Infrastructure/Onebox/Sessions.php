@@ -14,6 +14,9 @@ if (!defined('ABSPATH')) {
  */
 final class Sessions
 {
+    private const SESSIONS_CACHE_KEY_PREFIX = 'cloudari_onebox_sessions_v1_';
+    private const SESSIONS_CACHE_TTL        = 5 * MINUTE_IN_SECONDS;
+
     public static function getDefaultRangeSessions(): array
     {
         try {
@@ -49,6 +52,13 @@ final class Sessions
 
         $profile = ProfileRepository::getActive();
         $integrations = $profile->getIntegrations();
+
+        $profileSlug = sanitize_key($profile->slug) ?: 'default';
+        $cacheKey = self::buildCacheKey($profileSlug, $inicio, $fin);
+        $cached = get_transient($cacheKey);
+        if ($cached !== false && is_array($cached)) {
+            return $cached;
+        }
 
         $limit    = 100;
         $offset   = 0;
@@ -204,10 +214,19 @@ final class Sessions
         $metadata['offset'] = 0;
         $metadata['limit']  = $limit;
 
-        return [
+        $response = [
             'data'     => $all,
             'metadata' => $metadata,
         ];
+
+        set_transient($cacheKey, $response, self::SESSIONS_CACHE_TTL);
+
+        return $response;
+    }
+
+    private static function buildCacheKey(string $profileSlug, string $inicio, string $fin): string
+    {
+        return self::SESSIONS_CACHE_KEY_PREFIX . $profileSlug . '_' . $inicio . '_' . $fin;
     }
 
     private static function applyIntegrationContext(array $session, OneboxIntegration $integration): array
