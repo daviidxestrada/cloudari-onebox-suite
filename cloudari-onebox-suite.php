@@ -1,0 +1,79 @@
+<?php
+/**
+ * Plugin Name:       Cloudari OneBox Suite (Calendario + Cartelera)
+ * Description:       Suite Cloudari para integrar OneBox (calendario, cartelera y eventos manuales) en múltiples teatros con Elementor vía shortcodes.
+ * Version:           1.0
+ * Author:            Cloudari
+ * Requires at least: 6.0
+ * Requires PHP:      8.0
+ * Text Domain:       cloudari-onebox
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
+/**
+ * Constantes básicas del plugin
+ */
+define( 'CLOUDARI_ONEBOX_VER',  '0.1.0' );
+define( 'CLOUDARI_ONEBOX_FILE', __FILE__ );
+define( 'CLOUDARI_ONEBOX_DIR',  plugin_dir_path( __FILE__ ) );
+define( 'CLOUDARI_ONEBOX_URL',  plugin_dir_url( __FILE__ ) );
+
+/**
+ * Flag global para controlar si el plugin puede pintar cosas en el front.
+ *
+ * - Se puede sobreescribir desde wp-config.php:
+ *      define('CLOUDARI_ONEBOX_ENABLE_OUTPUT', false);
+ * - Más adelante lo combinaremos con el flag `outputEnabled` del perfil de teatro.
+ */
+if ( ! defined( 'CLOUDARI_ONEBOX_ENABLE_OUTPUT' ) ) {
+    define( 'CLOUDARI_ONEBOX_ENABLE_OUTPUT', true );
+}
+
+/**
+ * Autoloader de la librería
+ */
+require_once CLOUDARI_ONEBOX_DIR . 'src/Support/Autoloader.php';
+
+Cloudari\Onebox\Support\Autoloader::register(
+    'Cloudari\\Onebox\\',
+    CLOUDARI_ONEBOX_DIR . 'src/'
+);
+
+/**
+ * Bootstrap principal del plugin
+ */
+add_action( 'plugins_loaded', static function () {
+
+    // i18n
+    load_plugin_textdomain(
+        'cloudari-onebox',
+        false,
+        dirname( plugin_basename( CLOUDARI_ONEBOX_FILE ) ) . '/languages'
+    );
+
+    // Boot principal (menús, shortcodes, AJAX, REST, etc.)
+    $plugin = new Cloudari\Onebox\Plugin();
+    $plugin->boot();
+} );
+
+/**
+ * Hooks de activación / desactivación
+ * (útiles para sembrar taxonomías, crear opciones por defecto, limpiar cron, etc.)
+ */
+register_activation_hook( __FILE__, function () {
+    // Sembrar categorías por defecto de eventos manuales, por si acaso
+    if ( class_exists( '\Cloudari\Onebox\Domain\ManualEvents\Taxonomy' ) ) {
+        \Cloudari\Onebox\Domain\ManualEvents\Taxonomy::register();
+        \Cloudari\Onebox\Domain\ManualEvents\Taxonomy::seedDefaults();
+    }
+
+    // Aquí podríamos crear una opción de perfil con valores por defecto si no existe.
+} );
+
+register_deactivation_hook( __FILE__, function () {
+    // Aquí, si en el futuro añadimos cron jobs o transients especiales,
+    // podríamos limpiarlos. De momento lo dejamos como placeholder.
+} );

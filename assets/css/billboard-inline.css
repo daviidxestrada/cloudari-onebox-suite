@@ -1,0 +1,168 @@
+#obx-cards{
+
+  /* Ahora la cartelera toma los colores globales del perfil */
+
+  --brand: var(--cloudari-primary, #009AD8); /* barra superior, etc. */
+
+  --cta:    #D14100; /* botones “Entradas” */
+
+  --ink:#0b0f1a; --muted:#475569;
+
+  --line:#e5e7eb; --soft:#f3f4f6; --white:#fff; --shadow:0 12px 32px rgba(2,6,23,.10);
+
+  --gap:16px; --radius:14px;
+
+  max-width:1100px;margin:0 auto;padding:8px 16px 28px;background:transparent;
+
+  font-family:"Poppins",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+
+  color:var(--ink);
+
+}
+
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+.obx-head{display:grid;grid-template-columns:1fr;row-gap:10px;align-items:start}
+
+.obx-actions{display:grid;grid-template-columns:minmax(0,1fr) 200px;gap:8px;width:100%}
+
+.obx-actions input,.obx-actions select{padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--white);color:var(--ink);min-width:0}
+
+@media (max-width:480px){.obx-actions{grid-template-columns:1fr}}
+
+.obx-grid{margin-top:12px;display:grid;gap:var(--gap);grid-template-columns:repeat(2,minmax(0,1fr))}
+
+.obx-card{
+
+  background:var(--white);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;
+
+  box-shadow:0 2px 6px rgba(0,0,0,.05);border:1px solid var(--line);
+
+  content-visibility:auto;contain-intrinsic-size:400px 520px;
+
+}
+
+.obx-media{position:relative;background:var(--soft);aspect-ratio:16/9}
+
+.obx-media::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 1px rgba(2,6,23,.06);pointer-events:none}
+
+.obx-media img{width:100%;height:100%;object-fit:cover;display:block}
+
+.obx-topbar{height:4px;background:var(--brand);width:100%}
+
+.obx-body{padding:12px 14px 16px;display:flex;flex-direction:column;gap:8px}
+
+.obx-h3{font-weight:900;margin:6px 0 0;font-size:1rem;color:#000;text-transform:uppercase;line-height:1.2;word-break:break-word}
+
+.obx-datebar{display:flex;align-items:flex-start;gap:8px;padding:4px 0;color:#1f2937}
+
+.obx-datebar svg{width:16px;height:16px;flex:0 0 auto;color:var(--muted)}
+
+.obx-datebar__text{font-size:.80rem;line-height:1.25;white-space:normal;word-break:break-word}
+
+
+
+/* Meta row (pill categoría + CTA) */
+
+.obx-metaRow{display:flex;align-items:center;gap:8px;margin-top:4px;overflow:hidden;max-width:100%;min-width:0}
+
+
+
+/* Pills base */
+
+.obx-pill{
+
+  display:inline-flex;align-items:center;justify-content:center;
+
+  padding:8px 14px;font-size:.6rem;font-weight:700!important;line-height:1.2;border-radius:9999px;
+
+  text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;flex-shrink:1;min-width:0;max-width:100%;
+
+  box-sizing:border-box;transition:background-color .18s,color .18s,border-color .18s,transform .12s
+
+}
+
+
+
+/* Categoría (canónica) */
+
+.obx-pill--cat{color:#fff;background:var(--cat,#111827);border:0;cursor:default}
+
+.obx-pill--cat:hover{transform:translateY(-1px)}
+
+
+
+/* CTA */
+
+.obx-pill--cta{
+
+  background:var(--cta,#d14100);
+
+  border:1.5px solid var(--cta,#d14100);
+
+  color:#fff !important;
+
+  cursor:pointer;
+
+  text-decoration:none
+
+}
+
+.obx-pill--cta:hover{
+
+  background:#fff;
+
+  color:var(--cta,#d14100) !important;
+
+  border-color:var(--cta,#d14100)
+
+}
+
+
+
+/* Colores fijos para canónicas */
+
+.obx-cat--musica  {--cat:#047857}
+
+.obx-cat--humor   {--cat:#B45309}
+
+.obx-cat--musical {--cat:#5F61F2}
+
+.obx-cat--teatro  {--cat:#3B0764}
+
+.obx-cat--talk    {--cat:#0369A1}
+
+
+
+/* Skeleton / vacío */
+
+.obx-skel{animation:pulse 1.3s ease-in-out infinite;background:linear-gradient(90deg,#eee,#f6f6f6,#eee);background-size:200% 100%}
+
+@keyframes pulse{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+.obx-empty{border:1px dashed var(--line);padding:18px;border-radius:14px;background:var(--soft);text-align:center;color:var(--muted)}
+
+.obx-msg{border:1px solid var(--line);padding:12px 14px;border-radius:12px;background:#fff;color:#8a1313}
+
+
+
+/* Responsive */
+
+@media (min-width:768px) and (max-width:1023.98px){.obx-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+@media (min-width:1024px){
+
+  .obx-pill{ font-size: .75rem;}
+
+  .obx-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}
+
+  #obx-cards{max-width:none;margin:0;padding-top:12px;padding-bottom:32px}
+
+}
+
+@media (max-width:767.98px){
+
+  .obx-card{box-shadow:0 2px 6px rgba(0,0,0,.05);border:1px solid var(--line);border-radius:12px}
+
+}
+

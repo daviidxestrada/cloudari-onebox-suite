@@ -1,0 +1,914 @@
+/* =========================
+
+   RESET + FIX ELEMENTOR
+
+========================= */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+
+
+.elementor-widget-shortcode,
+
+.elementor-widget-shortcode .elementor-widget-container,
+
+.elementor-widget-shortcode .elementor-shortcode,
+
+.elementor-section,
+
+.elementor-column,
+
+.elementor-container{
+
+  display:block !important;
+
+  width:100% !important;
+
+  max-width:100% !important;
+
+  overflow: visible !important; /* ← que el popup NO se corte */
+
+}
+
+
+
+/* =========================
+
+   VARIABLES + PALETA CLOUDARI
+
+========================= */
+
+:root{
+
+  --cloudari-primary:   #009AD8;
+
+  --cloudari-accent:    #D14100;
+
+  --cloudari-bg:        #FFFFFF;
+
+  --cloudari-text:      #000000;
+
+
+
+  --azul-principal: var(--cloudari-primary);
+
+
+
+  --gap: clamp(0.25rem, 0.8vw, 0.625rem);
+
+  --cell-min: 2.75rem;
+
+  --dot: 0.5rem;
+
+
+
+  --brand:       var(--azul-principal);
+
+  --brand-dark:  color-mix(in srgb, var(--azul-principal) 80%, black 20%);
+
+  --selected-bg: color-mix(in srgb, var(--azul-principal) 40%, white 60%);
+
+  --selected-fg: color-mix(in srgb, var(--azul-principal) 10%, black 90%);
+
+  --hover-gray:  #dcdcdc;
+
+}
+
+
+
+/* =========================
+
+   CONTENEDOR
+
+========================= */
+
+.calendario-container {
+
+  width: 100% !important;
+
+  max-width: 100% !important;
+
+  /* ANTES: overflow-x:auto (metía scroll interno) */
+
+  overflow-x: visible !important;
+
+  overflow-y: visible !important;
+
+  display: block;
+
+  position: relative;
+
+  z-index: 20 !important;
+
+  padding-inline: 0;
+
+
+
+  background-color: var(--cloudari-bg);
+
+  color: var(--cloudari-text);
+
+}
+
+
+
+/* =========================
+
+   CABECERA
+
+========================= */
+
+.header {
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  margin: 0 0 20px 0;
+
+  position: relative;
+
+  z-index: 0;
+
+}
+
+
+
+.mes-anio {
+
+  font-size: 18px;
+
+  font-weight: 700;
+
+  color: var(--cloudari-text);
+
+}
+
+
+
+/* BOTONES DE NAVEGACIÓN – blindados contra Elementor / tema */
+
+.calendario-container .nav-buttons,
+
+.calendario-container .nav-buttons:focus,
+
+.calendario-container .nav-buttons:active,
+
+.calendario-container .nav-buttons:hover {
+
+  background: transparent !important;
+
+  border: none !important;
+
+  box-shadow: none !important;
+
+  outline: none !important;
+
+  font-size: 18px;
+
+  cursor: pointer;
+
+  position: relative;
+
+  z-index: 0;
+
+  padding: 6px 8px;
+
+  border-radius: 6px;
+
+  color: var(--azul-principal) !important;
+
+  transition: background-color 0.15s ease, color 0.15s ease;
+
+}
+
+
+
+/* Estados propios */
+
+.calendario-container .nav-buttons:hover:not(.disabled) {
+
+  color: var(--hover-gray) !important;
+
+}
+
+
+
+.calendario-container .nav-buttons:active:not(.disabled) {
+
+  color: color-mix(in srgb, var(--azul-principal) 80%, black 20%) !important;
+
+}
+
+
+
+.calendario-container .nav-buttons.disabled {
+
+  cursor: not-allowed;
+
+  opacity: 0.5;
+
+}
+
+
+
+/* El SVG hereda el color del botón y no intercepta clics */
+
+.calendario-container .nav-buttons svg {
+
+  fill: currentColor;
+
+  position: relative !important;
+
+  z-index: 0 !important;
+
+  pointer-events: none !important;
+
+}
+
+
+
+/* =========================
+
+   GRID ESCRITORIO (31 columnas)
+
+========================= */
+
+.encabezados-dias {
+
+  display: grid;
+
+  /* ANTES: minmax(35px,1fr) → forzaba anchura mínima y provocaba scroll
+
+     AHORA: minmax(0,1fr) para que las 31 columnas SIEMPRE quepan en el viewport */
+
+  grid-template-columns: repeat(31, minmax(0, 1fr));
+
+  gap: 5px;
+
+  width: 100%;
+
+  margin: 0 0 5px 0;
+
+}
+
+
+
+.calendario {
+
+  display: grid;
+
+  grid-template-columns: repeat(31, minmax(0, 1fr));
+
+  gap: 5px;
+
+  width: 100%;
+
+}
+
+
+
+.dia-header {
+
+  text-align: center;
+
+  padding: 5px 2px;
+
+  font-weight: 700;
+
+  color: var(--cloudari-text);
+
+  font-size: 12px;
+
+}
+
+
+
+/* =========================
+
+   CELDAS
+
+========================= */
+
+.celda-dia {
+
+  position: relative;
+
+  text-align: center;
+
+  padding: 10px 2px;
+
+  cursor: pointer;
+
+  transition: background-color 0.25s ease, box-shadow .2s ease;
+
+  min-height: 50px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: flex-start;
+
+  border-radius: 6px;
+
+  overflow: visible;
+
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.04) inset;
+
+}
+
+
+
+.celda-dia:hover {
+
+  background-color: var(--hover-gray);
+
+  z-index: 10;
+
+}
+
+
+
+.numero-dia {
+
+  font-weight: 700;
+
+  font-size: 14px;
+
+  margin: 0 0 15px 0;
+
+  color: var(--cloudari-text);
+
+}
+
+
+
+/* Punto indicador */
+
+.indicador-evento {
+
+  width: var(--dot);
+
+  height: var(--dot);
+
+  background-color: var(--azul-principal);
+
+  position: absolute;
+
+  bottom: 10px;
+
+  left: 50%;
+
+  transform: translateX(-50%);
+
+  border-radius: 2px;
+
+  display: block;
+
+  transition: transform .2s ease;
+
+  will-change: transform;
+
+}
+
+
+
+.celda-dia:hover .indicador-evento {
+
+  transform: translateX(-50%) scale(1.7);
+
+}
+
+
+
+/* =========================
+
+   ESTADOS
+
+========================= */
+
+.celda-dia.dia-seleccionado {
+
+  background: var(--cloudari-selected-day, var(--cloudari-primary, #009AD8));
+
+  color: var(--selected-fg);
+
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.08) inset;
+
+}
+
+
+
+.dia-seleccionado .numero-dia {
+
+  color: var(--selected-fg);
+
+}
+
+
+
+.dia-seleccionado .indicador-evento {
+
+  background-color: var(--selected-fg);
+
+}
+
+
+
+.celda-dia.vacia {
+
+  background-color: rgba(222, 222, 222, 0.45);
+
+  pointer-events: none;
+
+}
+
+
+
+.celda-dia.dia-pasado {
+
+  opacity: 0.5;
+
+  color: #999;
+
+}
+
+
+
+/* =========================
+
+   POPUP
+
+========================= */
+
+.popup-eventos {
+
+  position: absolute;
+
+  bottom: 120%;
+
+  left: 50%;
+
+  transform: translateX(-50%) translateY(10px);
+
+  background-color: #fff;
+
+  border-radius: 8px;
+
+  box-shadow: 0 3px 15px rgba(0,0,0,0.2);
+
+  width: min(320px, 92vw);
+
+  z-index: 1000 !important;
+
+  text-align: left;
+
+  padding: 0;
+
+  margin: 0 0 15px 0;
+
+  opacity: 0;
+
+  visibility: hidden;
+
+  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+
+  overflow: hidden;
+
+}
+
+
+
+.popup-active {
+
+  opacity: 1;
+
+  visibility: visible;
+
+  transform: translateX(-50%) translateY(0);
+
+}
+
+
+
+.popup-eventos:after {
+
+  content: '';
+
+  position: absolute;
+
+  bottom: -8px;
+
+  left: 50%;
+
+  transform: translateX(-50%);
+
+  border-left: 8px solid transparent;
+
+  border-right: 8px solid transparent;
+
+  border-top: 8px solid #fff;
+
+}
+
+
+
+/* Alineaciones laterales */
+
+.popup-eventos.align-right{
+
+  left: auto;
+
+  right: 0;
+
+  transform: translateY(0);
+
+}
+
+.popup-eventos.align-right:after{
+
+  left: auto;
+
+  right: 20px;
+
+}
+
+
+
+.popup-eventos.align-left{
+
+  left: 0;
+
+  right: auto;
+
+  transform: translateY(0);
+
+}
+
+.popup-eventos.align-left:after{
+
+  left: 20px;
+
+  right: auto;
+
+}
+
+
+
+/* Cabecera popup */
+
+.evento-fecha {
+
+  background-color: var(--azul-principal);
+
+  color: #fff;
+
+  padding: 12px 15px;
+
+  font-size: 14px;
+
+  font-weight: 700;
+
+}
+
+
+
+/* Tarjeta de evento */
+
+.evento-item {
+
+  padding: 0;
+
+  background-color: #fff;
+
+  margin: 0;
+
+  border-bottom: 1px solid #eee;
+
+}
+
+.evento-item:last-child { border-bottom: none; }
+
+
+
+.evento-contenido {
+
+  display: flex;
+
+  align-items: stretch;
+
+  min-height: 85px;
+
+  padding-left: 12px;
+
+  gap: 12px;
+
+}
+
+
+
+.evento-info {
+
+  flex: 1;
+
+  padding: 12px 15px 12px 0;
+
+  display: flex;
+
+  flex-direction: column;
+
+  justify-content: space-between;
+
+  min-width: 0;
+
+}
+
+
+
+.evento-contenido:not(:has(.evento-imagen)) {
+
+  min-height: auto;
+
+  padding: 15px;
+
+  flex-direction: column;
+
+}
+
+
+
+/* Imagen */
+
+.evento-imagen {
+
+  width: 140px;
+
+  min-width: 140px;
+
+  height: 85px;
+
+  overflow: hidden;
+
+  background-color: transparent;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border-radius: 6px;
+
+  aspect-ratio: 14 / 8;
+
+}
+
+
+
+.evento-imagen img {
+
+  width: 100%;
+
+  padding: 5px 2px;
+
+  height: 100%;
+
+  object-fit: cover;
+
+  display: block;
+
+  border-radius: 14px;
+
+}
+
+
+
+.evento-lugar {
+
+  font-weight: 700;
+
+  font-size: 14px;
+
+  color: #333;
+
+  margin-bottom: 4px;
+
+  line-height: 1.3;
+
+}
+
+
+
+.evento-titulo {
+
+  font-size: 13px;
+
+  margin-bottom: 8px;
+
+  color: #666;
+
+  flex-grow: 1;
+
+}
+
+
+
+.evento-accion {
+
+  display: flex;
+
+  justify-content: flex-end;
+
+  margin-top: auto;
+
+}
+
+
+
+/* Botón tickets */
+
+.btn-tickets {
+
+  background-color: #fff !important;
+
+  color: var(--cloudari-accent) !important;
+
+  border: 2px solid var(--cloudari-accent) !important;
+
+  padding: 6px 12px;
+
+  border-radius: 6px;
+
+  font-size: 12px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  z-index: 1002;
+
+  transition: all 0.2s;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 6px;
+
+}
+
+
+
+.btn-tickets:hover {
+
+  background-color: var(--cloudari-accent) !important;
+
+  color: #fff !important;
+
+}
+
+
+
+.btn-tickets svg {
+
+  width: 16px;
+
+  height: 16px;
+
+}
+
+
+
+/* =========================
+
+   RESPONSIVE
+
+========================= */
+
+@media (max-width:1199.98px){
+
+  .encabezados-dias,
+
+  .calendario {
+
+    display:grid;
+
+    grid-template-columns: repeat(7, minmax(var(--cell-min), 1fr));
+
+    gap: var(--gap);
+
+    width:100%;
+
+    max-width:100%;
+
+    margin:0;
+
+  }
+
+  .calendario { grid-auto-rows: auto; }
+
+  .celda-dia { aspect-ratio: 1 / 1; }
+
+}
+
+
+
+/* Tablet */
+
+@media (max-width: 992px){
+
+  :root{ --cell-min: 2.625rem; }
+
+  .popup-eventos { width: min(300px, 92vw); }
+
+  .evento-contenido { padding-left: 10px; gap: 10px; }
+
+  .evento-imagen { width: 100px; min-width: 100px; height: 70px; }
+
+}
+
+
+
+/* Móvil */
+
+@media (max-width: 768px){
+
+  :root{ --cell-min: 2.5rem; }
+
+  .calendario-container{ overflow-x:hidden; }
+
+
+
+  .popup-eventos{
+
+    position: fixed;
+
+    top: 50%;
+
+    left: 50%;
+
+    transform: translate(-50%, -50%);
+
+    width: 90%;
+
+    max-width: 320px;
+
+    bottom: auto;
+
+    margin: 0;
+
+    z-index: 1000;
+
+  }
+
+  .popup-active{
+
+    opacity: 1;
+
+    visibility: visible;
+
+    transform: translate(-50%, -50%);
+
+    pointer-events: auto;
+
+  }
+
+  .popup-eventos:after{ display:none; }
+
+
+
+  .evento-contenido { padding-left: 8px; gap: 8px; }
+
+  .evento-imagen { width: 88px; min-width: 88px; height: 64px; }
+
+  .evento-info { padding: 10px 12px 10px 0; }
+
+  .evento-lugar { font-size: 13px; }
+
+  .evento-titulo { font-size: 12px; }
+
+}
+
+
+
+/* Teléfonos pequeños */
+
+@media (max-width: 576px){
+
+  :root{ --cell-min: 2.25rem; }
+
+
+
+  .popup-eventos { width: 95%; max-width: 300px; }
+
+  .evento-contenido { padding-left: 6px; gap: 6px; }
+
+  .evento-imagen { width: 72px; min-width: 72px; height: 58px; }
+
+}
+
