@@ -513,7 +513,7 @@
 
       const finalUrl = getSpecialRedirectUrl(baseId, targetUrl);
 
-      // ✅ CTA label configurable para eventos manuales
+      // CTA label configurable para eventos manuales
       const ctaLabel =
         isManual && typeof ev?.cloudari?.cta_label === "string" && ev.cloudari.cta_label.trim() !== ""
           ? ev.cloudari.cta_label.trim()
@@ -563,7 +563,7 @@
         categoryClass = canon.cls;
       }
 
-      // ✅ color de categoría (si viene del backend)
+      // Color de categoría (si viene del backend)
       const categoryColor = pickCategoryColor(ev);
       const categoryTextColor = categoryColor ? pickTextColor(categoryColor) : "";
 
@@ -707,7 +707,7 @@
    *  UI
    *  ========================= */
 
-  // ✅ UPDATED: ahora incluye también categorías custom/manual (ej: "mercado")
+  // Actualizado: ahora incluye también categorías custom/manual (ej: "mercado")
   function populateCategoryFilter($select, list) {
     if (!$select) return;
 

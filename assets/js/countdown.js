@@ -54,7 +54,7 @@
     return {
       date: new Date(s0.date.start),
       image: getCalendarImage(s0),
-      url: typeof s0?.url === "string" ? s0.url.trim() : "", // ✅ NUEVO
+      url: typeof s0?.url === "string" ? s0.url.trim() : "", // Nuevo
       title:
         (s0.event?.texts?.title?.["es-ES"]) ||
         s0.event?.name ||
@@ -65,7 +65,7 @@
 
 
   function buildPurchaseUrl(eventId, sessionUrl) {
-    // ✅ Manual events: si la sesión trae URL propia, la respetamos
+    // Manual events: si la sesión trae URL propia, la respetamos
     if (sessionUrl && String(sessionUrl).trim() !== "") {
       return String(sessionUrl).trim();
     }
@@ -155,7 +155,7 @@
     }
 
     if (link) {
-      // ✅ Prioridad: URL de la sesión (manual / OneBox) -> override -> purchaseBase+id
+      // Prioridad: URL de la sesión (manual / OneBox) -> override -> purchaseBase+id
       const sessionUrl = (bundle && typeof bundle.url === "string") ? bundle.url.trim() : "";
       const baseUrl = sessionUrl || buildPurchaseUrl(eventId) || "#";
       link.href = applyOverride(eventId, baseUrl);
@@ -185,7 +185,7 @@
       const obj = JSON.parse(raw);
       const dt = new Date(obj.iso);
       if (dt > now() && Date.now() - obj.savedAt < CONFIG.cacheTtlMs) {
-        return { date: dt, image: obj.image, title: obj.title, url: obj.url || "" }; // ✅
+        return { date: dt, image: obj.image, title: obj.title, url: obj.url || "" };
       }
     } catch (e) {
       // ignore
@@ -202,7 +202,7 @@
           iso: bundle.date.toISOString(),
           image: bundle.image,
           title: bundle.title,
-          url: bundle.url || "", // ✅
+          url: bundle.url || "",
           savedAt: Date.now(),
         })
       );

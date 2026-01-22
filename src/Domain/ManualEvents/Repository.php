@@ -22,7 +22,7 @@ final class Repository
     private const META_URL         = '_url_evento';
     private const META_IMG_ID      = '_imagen_evento_id';
 
-    // ✅ CTA label (texto del botón)
+    // CTA label (texto del botón)
     private const META_CTA_LABEL   = '_manual_event_cta_label';
 
     /**
@@ -85,7 +85,7 @@ final class Repository
     }
 
     /**
-     * ✅ Lee y limpia CTA label del post (máx 30 chars aprox para UI)
+     * Lee y limpia CTA label del post (máx 30 chars aprox para UI)
      */
     private static function getCtaLabel(int $post_id): string
     {
@@ -200,7 +200,7 @@ final class Repository
 
         if ($dtEnd < $dtStart) return [];
 
-        // ✅ CTA label por evento (se copia a cada sesión)
+        // CTA label por evento (se copia a cada sesión)
         $ctaLabel = self::getCtaLabel($post_id);
 
         // Filtrado por rango pedido (inicio/fin del AJAX)

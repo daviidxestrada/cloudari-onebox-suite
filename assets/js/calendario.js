@@ -167,16 +167,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
           const isManual = Boolean(evento?.cloudari?.manual);
 
-          // ✅ CTA label: si viene del backend (manual), lo usamos. Si no, fallback "Tickets"
+          // CTA label: si viene del backend (manual), lo usamos. Si no, fallback "Tickets"
           const ctaLabel =
             (typeof evento?.cloudari?.cta_label === 'string' && evento.cloudari.cta_label.trim() !== '')
               ? evento.cloudari.cta_label.trim()
               : '';
 
-          // ✅ URL con prioridades correctas
+          // URL con prioridades correctas
           const urlFinal = buildEventUrl(idEvento, evento.url);
 
-          // 👇 Hora display con rango SOLO para manuales con date.end
+          // Hora display con rango SOLO para manuales con date.end
           const horaEvento = buildHoraDisplay(evento, fechaEvento);
 
           const eventoInfo = {
@@ -390,7 +390,7 @@ document.addEventListener('DOMContentLoaded', function () {
           const botonTickets = document.createElement('button');
           botonTickets.className = 'btn-tickets';
 
-          // ✅ Texto del botón: manual usa ctaLabel si existe
+          // Texto del botón: manual usa ctaLabel si existe
           const btnLabel = (evento.isManual && evento.ctaLabel) ? evento.ctaLabel : 'Tickets';
 
           botonTickets.innerHTML = `

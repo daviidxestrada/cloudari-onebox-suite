@@ -16,7 +16,7 @@ final class MetaBox
     private const META_URL              = '_url_evento';
     private const META_IMG_ID           = '_imagen_evento_id';
 
-    // ✅ NUEVO: texto del botón (CTA) para manuales
+    // Nuevo: texto del botón (CTA) para manuales
     private const META_CTA_LABEL        = '_manual_event_cta_label';
 
     public static function register(): void
@@ -41,7 +41,7 @@ final class MetaBox
         // URL del evento
         $url_evento = get_post_meta($post_id, self::META_URL, true);
 
-        // ✅ CTA label
+        // CTA label
         $cta_label = (string) get_post_meta($post_id, self::META_CTA_LABEL, true);
 
         // Imagen
@@ -128,7 +128,7 @@ final class MetaBox
                        placeholder="https://...">
             </p>
 
-            <!-- ✅ NUEVO: texto del botón -->
+            <!-- Nuevo: texto del botón -->
             <p>
                 <label for="manual_cta_label"><strong>Texto del botón (opcional):</strong></label><br>
                 <input type="text"
@@ -630,7 +630,7 @@ final class MetaBox
             : '';
         update_post_meta($post_id, self::META_URL, $url);
 
-        // ✅ CTA label
+        // CTA label
         $cta = isset($_POST['manual_cta_label'])
             ? sanitize_text_field(wp_unslash($_POST['manual_cta_label']))
             : '';
@@ -769,7 +769,7 @@ final class MetaBox
             if ($term_id > 0) {
                 wp_set_object_terms($post_id, [$term_id], Taxonomy::TAXONOMY, false);
             } else {
-                // ✅ permitir “limpiar” categoría desde el select
+                // Permitir limpiar categoria desde el select
                 wp_set_object_terms($post_id, [], Taxonomy::TAXONOMY, false);
             }
         }

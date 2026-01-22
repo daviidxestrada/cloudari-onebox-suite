@@ -84,7 +84,7 @@ final class EventOverridesRepository
     }
 
     /**
-     * 🔥 NUEVO:
+     * Nuevo:
      * Devuelve los mapas listos para inyectar en JS:
      *
      * [
