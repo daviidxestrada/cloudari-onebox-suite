@@ -9,18 +9,32 @@
  * Text Domain:       cloudari-onebox
  */
 
-require_once __DIR__ . '/lib/plugin-update-checker/plugin-update-checker.php';
+$pucFile = __DIR__ . '/lib/plugin-update-checker-5.6/plugin-update-checker.php';
+if (!file_exists($pucFile)) {
+    $pucFile = __DIR__ . '/lib/plugin-update-checker/plugin-update-checker.php';
+}
 
-use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+if (file_exists($pucFile)) {
+    require_once $pucFile;
 
-$updateChecker = PucFactory::buildUpdateChecker(
-    'https://github.com/daviidxestrada/cloudari-onebox-suite',
-    __FILE__,
-    'cloudari-onebox-suite'
-);
+    $factory = null;
+    if (class_exists('\YahnisElsts\PluginUpdateChecker\v5p6\PucFactory')) {
+        $factory = '\YahnisElsts\PluginUpdateChecker\v5p6\PucFactory';
+    } elseif (class_exists('\YahnisElsts\PluginUpdateChecker\v5\PucFactory')) {
+        $factory = '\YahnisElsts\PluginUpdateChecker\v5\PucFactory';
+    }
 
-// Rama que usas
-$updateChecker->setBranch('main');
+    if ($factory) {
+        $updateChecker = $factory::buildUpdateChecker(
+            'https://github.com/daviidxestrada/cloudari-onebox-suite',
+            __FILE__,
+            'cloudari-onebox-suite'
+        );
+
+        // Rama que usas
+        $updateChecker->setBranch('main');
+    }
+}
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;

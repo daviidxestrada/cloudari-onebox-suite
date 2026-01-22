@@ -30,6 +30,19 @@ final class CalendarAjax
         nocache_headers();
         header('Content-Type: application/json; charset=' . get_option('blog_charset'));
 
+        $requireNonce = !defined('CLOUDARI_ONEBOX_REQUIRE_AJAX_NONCE') || CLOUDARI_ONEBOX_REQUIRE_AJAX_NONCE;
+        if ($requireNonce) {
+            $nonce = isset($_REQUEST['nonce']) ? sanitize_text_field(wp_unslash($_REQUEST['nonce'])) : '';
+            if (!wp_verify_nonce($nonce, 'cloudari_calendar_nonce')) {
+                wp_send_json_error(
+                    [
+                        'error' => 'Invalid nonce',
+                    ],
+                    403
+                );
+            }
+        }
+
         $inicio = isset($_GET['inicio']) ? sanitize_text_field(wp_unslash($_GET['inicio'])) : '';
         $fin    = isset($_GET['fin'])    ? sanitize_text_field(wp_unslash($_GET['fin']))    : '';
 

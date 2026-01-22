@@ -96,12 +96,14 @@
   async function getSessions(inicio, fin) {
     const ajaxBase = CONFIG.ajaxSesiones;
     if (!ajaxBase) return null;
+    const nonce = CONFIG.nonce ? encodeURIComponent(CONFIG.nonce) : "";
     const url =
       ajaxBase +
       "&inicio=" +
       encodeURIComponent(inicio) +
       "&fin=" +
-      encodeURIComponent(fin);
+      encodeURIComponent(fin) +
+      (nonce ? "&nonce=" + nonce : "");
 
     const res = await fetch(url, { credentials: "same-origin" });
     if (!res.ok) return null;
