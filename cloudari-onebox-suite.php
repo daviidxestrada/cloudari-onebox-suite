@@ -33,6 +33,11 @@ if (file_exists($pucFile)) {
 
         // Rama que usas
         $updateChecker->setBranch('main');
+
+        // Token opcional para repos privados (definir en wp-config.php).
+        if ( defined( 'CLOUDARI_ONEBOX_GITHUB_TOKEN' ) && CLOUDARI_ONEBOX_GITHUB_TOKEN ) {
+            $updateChecker->setAuthentication( CLOUDARI_ONEBOX_GITHUB_TOKEN );
+        }
     }
 }
 
