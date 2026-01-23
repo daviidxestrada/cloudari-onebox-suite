@@ -1,0 +1,390 @@
+<!-- ========== WIDGET FECHAS (carteles desde OneBox) ========== -->
+<!-- Google Fonts: Outfit -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+<!-- ========== WIDGET FECHAS (OneBox) ========== -->
+<div
+  id="guru-conferencias-widget"
+  data-extra-days="365"
+  data-purchase-base="https://tickets.oneboxtds.com/laestacion/events/"
+  data-ajax-url="/wp-admin/admin-ajax.php?action=cloudari_get_sessions"
+>
+
+  <div class="gcw-container">
+    <div class="cards-grid">
+
+      <!-- ===== CARD 1 ===== -->
+      <article class="card" data-event-ids="42796">
+        <div class="card-top">
+          <div class="date-box" aria-hidden="true">
+            <div class="date-day" data-role="date-day">--</div>
+            <div class="date-month" data-role="date-month">---</div>
+          </div>
+          <div
+            class="poster-box"
+            data-role="poster"
+            role="img"
+            aria-label="Cartel del evento">
+          </div>
+        </div>
+
+        <h3 class="venue" data-role="venue">
+          Cargando…<br>
+          <span data-role="city"></span>
+        </h3>
+
+        <a href="#"
+           class="buy-btn"
+           data-role="buy-link"
+           aria-label="Comprar entradas">
+          COMPRAR
+        </a>
+      </article>
+
+      <!-- ===== CARD 2 ===== -->
+      <article class="card" data-event-ids="40010">
+        <div class="card-top">
+          <div class="date-box" aria-hidden="true">
+            <div class="date-day" data-role="date-day">--</div>
+            <div class="date-month" data-role="date-month">---</div>
+          </div>
+          <div
+            class="poster-box"
+            data-role="poster"
+            role="img"
+            aria-label="Cartel del evento">
+          </div>
+        </div>
+
+        <h3 class="venue" data-role="venue">
+          Cargando…<br>
+          <span data-role="city"></span>
+        </h3>
+
+        <a href="#"
+           class="buy-btn"
+           data-role="buy-link"
+           aria-label="Comprar entradas">
+          COMPRAR
+        </a>
+      </article>
+
+      <!-- ===== CARD 3 ===== -->
+      <article class="card" data-event-ids="46653">
+        <div class="card-top">
+          <div class="date-box" aria-hidden="true">
+            <div class="date-day" data-role="date-day">--</div>
+            <div class="date-month" data-role="date-month">---</div>
+          </div>
+          <div
+            class="poster-box"
+            data-role="poster"
+            role="img"
+            aria-label="Cartel del evento">
+          </div>
+        </div>
+
+        <h3 class="venue" data-role="venue">
+          Cargando…<br>
+          <span data-role="city"></span>
+        </h3>
+
+        <a href="#"
+           class="buy-btn"
+           data-role="buy-link"
+           aria-label="Comprar entradas">
+          COMPRAR
+        </a>
+      </article>
+
+    </div>
+  </div>
+</div>
+
+<style>
+/* ===== Estilo “FECHAS” (a prueba de Elementor) ===== */
+
+/* ===== Tipografía global del widget (pisando Elementor) ===== */
+#guru-conferencias-widget,
+#guru-conferencias-widget *{
+  font-family: "Outfit", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif !important;
+}
+
+
+#guru-conferencias-widget{
+  --teal:#0b6f82;
+  --yellow:#f5b400;
+  --blueText:#01425e;
+  --text:#111;
+  color: var(--text);
+}
+
+#guru-conferencias-widget .gcw-container{
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+#guru-conferencias-widget .cards-grid{
+  display:grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 40px 44px;
+  align-items:start;
+}
+
+#guru-conferencias-widget .card{
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+}
+
+#guru-conferencias-widget .card-top{
+  width:100%;
+  display:grid;
+  grid-template-columns: 110px 1fr;
+  gap: 16px;
+  align-items:center;
+  margin: 0 0 18px 0;
+}
+
+#guru-conferencias-widget .date-box{
+  background: var(--teal);
+  width:110px;
+  height:110px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  color:#fff;
+  text-transform:uppercase;
+}
+
+#guru-conferencias-widget .date-day{
+  font-weight:800;
+  font-size:30px;
+  line-height:1;
+  margin:0;
+}
+
+#guru-conferencias-widget .date-month{
+  font-weight:800;
+  font-size:30px;
+  line-height:1;
+  margin:2px 0 0 0;
+}
+
+/* “Tira” del cartel */
+#guru-conferencias-widget .poster-box{
+  width:100%;
+  background: rgba(0,0,0,.06); /* fallback/skeleton */
+  aspect-ratio: 680/370;
+  background-size: contain;
+  border-radius: 0;
+}
+
+#guru-conferencias-widget .venue{
+  font-weight:800;
+  font-size:34px;
+  line-height:1.05;
+  margin:0 0 18px 0;
+}
+
+#guru-conferencias-widget .buy-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background: var(--yellow);
+  color: var(--blueText);
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:0.02em;
+  height:44px;
+  padding:0 34px;
+  border-radius:3px;
+  text-decoration:none;
+  border:0;
+  cursor:pointer;
+  transition: background .2s ease, transform .2s ease, box-shadow .2s ease, scale .2s ease;
+  font-size: 1.5rem;
+}
+
+#guru-conferencias-widget .buy-btn:hover{
+  background:var(--yellow);
+  transform: translateY(-1px);
+  scale: 110%;
+  box-shadow:0 10px 18px rgba(0,0,0,.12);
+}
+
+/* Responsive */
+@media (max-width: 980px){
+  #guru-conferencias-widget .cards-grid{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px;
+  }
+}
+@media (max-width: 640px){
+  #guru-conferencias-widget .cards-grid{
+    grid-template-columns: 1fr;
+  }
+  #guru-conferencias-widget .venue{
+    font-size:30px;
+  }
+}
+</style>
+
+<script>
+(function () {
+  const root = document.getElementById("guru-conferencias-widget");
+  if (!root) return;
+
+  const extraDays = parseInt(root.dataset.extraDays || "365", 10);
+  const purchaseBase = root.dataset.purchaseBase || "";
+  const endpoint = "/wp-json/cloudari/v1/billboard-events";
+
+  const cards = [...root.querySelectorAll(".card[data-event-ids]")];
+  if (!cards.length) return;
+
+  const pad = n => String(n).padStart(2, "0");
+  const month = d =>
+    new Intl.DateTimeFormat("es-ES", { month: "short" })
+      .format(d).replace(".", "").toUpperCase();
+
+  const parseDate = v => {
+    const d = new Date(v || "");
+    return isNaN(d) ? null : d;
+  };
+
+  const pickImage = ev => {
+    const imgClassic =
+      ev?.images?.landscape?.[0]?.["es-ES"] ||
+      ev?.images?.main?.["es-ES"] ||
+      ev?.images?.portrait?.[0]?.["es-ES"] ||
+      "";
+    if (imgClassic) return imgClassic;
+
+    const media = ev?.media?.images;
+    const lang =
+      media?.["es-ES"] ||
+      media?.es_ES ||
+      media?.es ||
+      media?.en ||
+      null;
+    if (!lang) return "";
+
+    const order = ["LANDSCAPE", "SECONDARY", "MAIN", "PORTRAIT", "BANNER_HEADER"];
+    for (const k of order) {
+      const v = lang[k];
+      if (!v) continue;
+      if (Array.isArray(v)) {
+        const first = v.find(it => it?.value)?.value || v[0]?.value || v[0];
+        if (first) return first;
+      } else if (typeof v === "object" && v.value) {
+        return v.value;
+      } else if (typeof v === "string") {
+        return v;
+      }
+    }
+
+    return "";
+  };
+
+  const pickVenueName = ev =>
+    ev?.venue?.name ||
+    ev?.venue_name ||
+    ev?.venueName ||
+    ev?.place?.name ||
+    ev?.location?.name ||
+    "";
+
+  const pickVenueCity = ev =>
+    ev?.venue?.city ||
+    ev?.venue?.location?.city ||
+    ev?.city ||
+    ev?.place?.city ||
+    "";
+
+  const pickNextDate = ev => {
+    const now = new Date();
+    const max =
+      Number.isFinite(extraDays) && extraDays > 0
+        ? new Date(now.getTime() + extraDays * 86400000)
+        : null;
+
+    const sessions = Array.isArray(ev?.sessions) ? ev.sessions : [];
+    if (sessions.length) {
+      const future = sessions
+        .map(s => ({ ...s, d: parseDate(s?.date?.start) }))
+        .filter(s => s.d && s.d > now && (!max || s.d <= max))
+        .sort((a, b) => a.d - b.d)[0];
+      return future?.d || null;
+    }
+
+    const start = parseDate(ev?.date?.start);
+    const end = parseDate(ev?.date?.end);
+
+    if (start && start > now && (!max || start <= max)) return start;
+    if (start && end && end >= now) return start;
+    if (start) return start;
+    if (end) return end;
+    return null;
+  };
+
+  fetch(endpoint)
+    .then(r => r.json())
+    .then(res => {
+      const events = Array.isArray(res.data) ? res.data : [];
+
+      cards.forEach(card => {
+        const ids = card.dataset.eventIds.split(",").map(i => i.trim());
+        const event = events.find(e => ids.includes(String(e.id)));
+
+        const dayEl   = card.querySelector('[data-role="date-day"]');
+        const monthEl = card.querySelector('[data-role="date-month"]');
+        const poster  = card.querySelector('[data-role="poster"]');
+        const venueEl = card.querySelector('[data-role="venue"]');
+        const cityEl  = card.querySelector('[data-role="city"]');
+        const buyBtn  = card.querySelector('[data-role="buy-link"]');
+
+        if (!event) {
+          dayEl.textContent = "--";
+          monthEl.textContent = "---";
+          venueEl.innerHTML = "—<br><span data-role='city'></span>";
+          buyBtn.style.opacity = "0.5";
+          buyBtn.style.pointerEvents = "none";
+          return;
+        }
+
+        const pickedDate = pickNextDate(event);
+        if (pickedDate) {
+          dayEl.textContent = pad(pickedDate.getDate());
+          monthEl.textContent = month(pickedDate);
+        } else {
+          dayEl.textContent = "--";
+          monthEl.textContent = "---";
+        }
+
+        const img = pickImage(event);
+        poster.style.backgroundImage = img ? `url(${img})` : "";
+
+        const fixedVenue = "Gran Teatro CaixaBank Príncipe Pío";
+        venueEl.innerHTML = `${fixedVenue}<br><span data-role="city"></span>`;
+        if (cityEl) cityEl.textContent = "";
+
+        buyBtn.href = event.url || `${purchaseBase.replace(/\/?$/, "/")}${event.id}`;
+        buyBtn.target = "_blank";
+        buyBtn.rel = "noopener noreferrer";
+        buyBtn.style.opacity = "";
+        buyBtn.style.pointerEvents = "";
+      });
+    })
+    .catch(() => {});
+})();
+</script>

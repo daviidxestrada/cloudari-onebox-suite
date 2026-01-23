@@ -3,7 +3,7 @@ Contributors: cloudari
 Tags: onebox, theatre, calendar, billboard, events
 Requires at least: 6.0
 Requires PHP: 8.0
-Stable tag: 1.1
+Stable tag: 1.2.0
 
 Suite para integrar OneBox en WordPress: calendario, cartelera, contador y eventos manuales, con multiples integraciones por teatro.
 
@@ -53,6 +53,10 @@ Cartelera:
 Contador (por evento):
 `[cloudari_event_countdown event_id="123" extra_days="180" duration="90 min" age="12+"]`
 
+== Widgets (HTML) ==
+Los widgets HTML estan en la carpeta `widgets/`.
+Para usarlos en Elementor, anade un "Widget HTML" y pega el contenido del widget.
+
 == Manual events ==
 Se crean con el CPT `evento_manual` y la taxonomia `evento_manual_cat`.
 Se incluyen automaticamente en calendario y cartelera.
@@ -91,6 +95,9 @@ Custom post types / taxonomy:
 - Usar HTTPS y cache a nivel de servidor si aplica.
 
 == Changelog ==
+= 1.2.0 =
+* Carpeta `widgets/` con widgets HTML listos para pegar en Elementor.
+
 = 1.1 =
 * Fix de autoupdates (plugin-update-checker).
 * AJAX del calendario/contador con nonce + URL admin-ajax dinamica.
@@ -100,6 +107,9 @@ Custom post types / taxonomy:
 * Release inicial con multi-integracion, eventos manuales y overrides.
 
 == Upgrade Notice ==
+= 1.2.0 =
+Incluye widgets HTML listos para usar en Elementor (ver carpeta `widgets/`).
+
 = 1.1 =
 Actualizacion interna: autoupdates, nonce AJAX y cache de sesiones.
 

@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Cloudari OneBox Suite (Calendario + Cartelera)
  * Description:       Suite Cloudari para integrar OneBox (calendario, cartelera y eventos manuales) en múltiples teatros con Elementor vía shortcodes.
- * Version:           1.1
+ * Version:           1.2
  * Author:            Cloudari
  * Requires at least: 6.0
  * Requires PHP:      8.0
