@@ -3,7 +3,7 @@ Contributors: cloudari
 Tags: onebox, theatre, calendar, billboard, events
 Requires at least: 6.0
 Requires PHP: 8.0
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 
 Suite para integrar OneBox en WordPress: calendario, cartelera, contador y eventos manuales, con multiples integraciones por teatro.
 
