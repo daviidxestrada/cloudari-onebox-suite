@@ -7,11 +7,19 @@ Thumbs.db
 
 # Node / PHP tools (si los usas)
 node_modules/
-vendor/
+/vendor/
 composer.lock
 package-lock.json
 pnpm-lock.yaml
 yarn.lock
+
+# OJO: Este plugin incluye la libreria "plugin-update-checker" dentro de `lib/`.
+# Sus dependencias (Parsedown, PucReadmeParser, etc.) DEBEN ir commiteadas para que
+# el update checker funcione en produccion.
+!lib/plugin-update-checker-5.6/vendor/
+!lib/plugin-update-checker-5.6/vendor/**
+!lib/plugin-update-checker-5.6/Puc/v5p6/vendor/
+!lib/plugin-update-checker-5.6/Puc/v5p6/vendor/**
 
 # Builds / artefactos
 dist/
