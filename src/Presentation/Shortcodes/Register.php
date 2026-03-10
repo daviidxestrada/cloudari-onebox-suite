@@ -10,6 +10,8 @@ final class Register
     {
         add_shortcode('cloudari_calendar', [static::class, 'calendar']);
         add_shortcode('cloudari_billboard', [static::class, 'billboard']);
+        add_shortcode('cloudari_billboard_venues', [static::class, 'billboardVenues']);
+        add_shortcode('cloudari_billboard_spaces', [static::class, 'billboardVenues']);
         add_shortcode('cloudari_event_countdown', [static::class, 'eventCountdown']);
 
     }
@@ -88,6 +90,33 @@ final class Register
 
             <div id="obx-grid" class="obx-grid" aria-live="polite"></div>
 
+        </section>
+
+        <?php
+        return ob_get_clean();
+    }
+
+    public static function billboardVenues($atts = [], $content = ''): string
+    {
+        Enqueue::billboardVenues();
+
+        if (!CLOUDARI_ONEBOX_ENABLE_OUTPUT) {
+            return '<!-- Cloudari Billboard Venues desactivado por flag -->';
+        }
+
+        ob_start(); ?>
+
+        <section id="cloudari-billboard-venues" class="cloudari-billboard-venues" aria-labelledby="cloudari-billboard-venues-title">
+            <h2 id="cloudari-billboard-venues-title" class="sr-only">Cartelera por espacios</h2>
+
+            <header class="obx-head obxv-head">
+                <div class="obx-actions obxv-actions" role="search">
+                    <label class="sr-only" for="obxv-q">Buscar por espacio o evento</label>
+                    <input id="obxv-q" type="search" placeholder="Buscar por espacio o evento..." aria-label="Buscar por espacio o evento" />
+                </div>
+            </header>
+
+            <div id="obxv-list" class="obxv-list" aria-live="polite"></div>
         </section>
 
         <?php

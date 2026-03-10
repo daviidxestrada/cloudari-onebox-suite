@@ -3,10 +3,10 @@ namespace Cloudari\Onebox\Rest;
 
 use WP_REST_Request;
 use WP_Error;
-use Cloudari\Onebox\Domain\Theatre\ProfileRepository;
-use Cloudari\Onebox\Domain\Theatre\OneboxIntegration;
-use Cloudari\Onebox\Infrastructure\Onebox\Auth;
+use Cloudari\Onebox\Domain\Billboard\VenueBillboard;
 use Cloudari\Onebox\Domain\ManualEvents\Repository as ManualRepository;
+use Cloudari\Onebox\Domain\Theatre\ProfileRepository;
+use Cloudari\Onebox\Infrastructure\Onebox\Events;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -57,6 +57,16 @@ final class Routes
                 'permission_callback' => [self::class, 'publicPermission'],
             ]
         );
+
+        register_rest_route(
+            'cloudari/v1',
+            '/billboard-venues',
+            [
+                'methods'             => 'GET',
+                'callback'            => [self::class, 'getBillboardVenues'],
+                'permission_callback' => [self::class, 'publicPermission'],
+            ]
+        );
     }
 
     public static function ping(WP_REST_Request $request)
@@ -78,6 +88,7 @@ final class Routes
     public static function clearBillboardCache(): void
     {
         delete_transient(self::getBillboardCacheKey());
+        VenueBillboard::clearCache();
     }
 
     public static function getBillboardEvents(WP_REST_Request $request)
@@ -89,84 +100,8 @@ final class Routes
             return rest_ensure_response($cached);
         }
 
-        $profile = ProfileRepository::getActive();
-        $integrations = $profile->getIntegrations();
-
-        $limit  = 100;
-        $offset = 0;
-        $all    = [];
-
-        $nowIso = gmdate('Y-m-d\TH:i:s\Z');
-        $didFetch = false;
-
-        foreach ($integrations as $integration) {
-            if (!$integration instanceof OneboxIntegration) {
-                continue;
-            }
-
-            if ($integration->apiCatalogUrl === '' || !$integration->hasCredentials()) {
-                continue;
-            }
-
-            $jwt = Auth::getJwt($integration);
-            if (empty($jwt)) {
-                continue;
-            }
-
-            $didFetch = true;
-            $base   = rtrim($integration->apiCatalogUrl, '/');
-            $offset = 0;
-            $total  = null;
-
-            while (true) {
-                $query = [
-                    'limit'      => $limit,
-                    'offset'     => $offset,
-                    'for_sale'   => 'true',
-                    'on_catalog' => 'true',
-                    'expand'     => 'media',
-                    'start'      => 'gte:' . $nowIso,
-                ];
-
-                $url = $base . '/events?' . http_build_query($query);
-
-                $resp = wp_remote_get(
-                    $url,
-                    [
-                        'headers' => [
-                            'Authorization' => 'Bearer ' . $jwt,
-                        ],
-                        'timeout' => 20,
-                    ]
-                );
-
-                if (is_wp_error($resp)) {
-                    continue;
-                }
-
-                $body = json_decode(wp_remote_retrieve_body($resp), true);
-                $data = isset($body['data']) && is_array($body['data']) ? $body['data'] : [];
-
-                if (!empty($data)) {
-                    foreach ($data as $event) {
-                        if (!is_array($event)) {
-                            continue;
-                        }
-                        $all[] = self::applyIntegrationContext($event, $integration);
-                    }
-                }
-
-                $meta = $body['metadata'] ?? [];
-                if ($total === null) {
-                    $total = isset($meta['total']) ? (int)$meta['total'] : count($data);
-                }
-
-                $offset += $limit;
-                if ($offset >= $total || empty($data)) {
-                    break;
-                }
-            }
-        }
+        $response = Events::getUpcomingEvents();
+        $didFetch = !empty($response['cloudari']['did_fetch']);
 
         if (!$didFetch) {
             return new WP_Error(
@@ -176,15 +111,9 @@ final class Routes
             );
         }
 
-        $metadata = [
-            'limit'  => $limit,
-            'total'  => count($all),
-            'offset' => 0,
-        ];
-
         $response = [
-            'data'     => $all,
-            'metadata' => $metadata,
+            'data'     => isset($response['data']) && is_array($response['data']) ? $response['data'] : [],
+            'metadata' => isset($response['metadata']) && is_array($response['metadata']) ? $response['metadata'] : [],
         ];
 
         set_transient($cacheKey, $response, self::BILLBOARD_CACHE_TTL);
@@ -192,29 +121,14 @@ final class Routes
         return rest_ensure_response($response);
     }
 
+    public static function getBillboardVenues(WP_REST_Request $request)
+    {
+        return rest_ensure_response(VenueBillboard::get());
+    }
+
     public static function getManualEvents(WP_REST_Request $request)
     {
         $data = ManualRepository::getForRest();
         return rest_ensure_response($data);
-    }
-
-    private static function applyIntegrationContext(array $event, OneboxIntegration $integration): array
-    {
-        $eventId = $event['id'] ?? null;
-        if ($eventId && $integration->purchaseBaseUrl !== '') {
-            $event['url'] = $integration->purchaseBaseUrl . $eventId;
-        }
-
-        if (!isset($event['cloudari']) || !is_array($event['cloudari'])) {
-            $event['cloudari'] = [];
-        }
-
-        $event['cloudari']['integration'] = $integration->slug;
-        $event['cloudari']['integration_label'] = $integration->label;
-        if ($integration->purchaseBaseUrl !== '') {
-            $event['cloudari']['purchase_base'] = $integration->purchaseBaseUrl;
-        }
-
-        return $event;
     }
 }

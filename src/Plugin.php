@@ -67,6 +67,8 @@ final class Plugin
 
          * - /cloudari/v1/billboard-events
 
+         * - /cloudari/v1/billboard-venues
+
          * - /cloudari/v1/manual-events
 
          */
@@ -82,6 +84,10 @@ final class Plugin
          * - [cloudari_calendar]
 
          * - [cloudari_billboard]
+
+         * - [cloudari_billboard_venues]
+
+         * - [cloudari_billboard_spaces] (alias)
 
          */
 
@@ -111,7 +117,7 @@ final class Plugin
 
          * - Taxonomía "evento_manual_cat" (con términos por defecto)
 
-         * - Metabox de detalles (sesiones, URL, imagen, categoría)
+         * - Metabox de detalles (sesiones, URL, imagen, categoría, venue opcional, CTA)
 
          */
 

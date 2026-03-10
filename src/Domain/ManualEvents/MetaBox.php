@@ -15,6 +15,7 @@ final class MetaBox
     private const META_SESIONES         = '_sesiones_evento'; // existente (ahora soporta hora_fin)
     private const META_URL              = '_url_evento';
     private const META_IMG_ID           = '_imagen_evento_id';
+    private const META_VENUE            = '_manual_event_venue';
 
     // Nuevo: texto del botón (CTA) para manuales
     private const META_CTA_LABEL        = '_manual_event_cta_label';
@@ -40,6 +41,7 @@ final class MetaBox
 
         // URL del evento
         $url_evento = get_post_meta($post_id, self::META_URL, true);
+        $manualVenue = (string) get_post_meta($post_id, self::META_VENUE, true);
 
         // CTA label
         $cta_label = (string) get_post_meta($post_id, self::META_CTA_LABEL, true);
@@ -128,7 +130,21 @@ final class MetaBox
                        placeholder="https://...">
             </p>
 
+<<<<<<< HEAD
             <!-- Nuevo: texto del botón -->
+=======
+            <p>
+                <label for="manual_event_venue"><strong>Espacio / venue (opcional):</strong></label><br>
+                <input type="text"
+                       id="manual_event_venue"
+                       name="manual_event_venue"
+                       class="widefat"
+                       value="<?php echo esc_attr($manualVenue); ?>"
+                       placeholder="Si se deja vacio, se usa el venue del perfil">
+            </p>
+
+            <!-- NUEVO: texto del botón -->
+>>>>>>> develop
             <p>
                 <label for="manual_cta_label"><strong>Texto del botón (opcional):</strong></label><br>
                 <input type="text"
@@ -630,7 +646,21 @@ final class MetaBox
             : '';
         update_post_meta($post_id, self::META_URL, $url);
 
+<<<<<<< HEAD
         // CTA label
+=======
+        $manualVenue = isset($_POST['manual_event_venue'])
+            ? sanitize_text_field(wp_unslash($_POST['manual_event_venue']))
+            : '';
+        $manualVenue = trim((string) $manualVenue);
+        if ($manualVenue !== '') {
+            update_post_meta($post_id, self::META_VENUE, $manualVenue);
+        } else {
+            delete_post_meta($post_id, self::META_VENUE);
+        }
+
+        // ✅ CTA label
+>>>>>>> develop
         $cta = isset($_POST['manual_cta_label'])
             ? sanitize_text_field(wp_unslash($_POST['manual_cta_label']))
             : '';
@@ -773,5 +803,7 @@ final class MetaBox
                 wp_set_object_terms($post_id, [], Taxonomy::TAXONOMY, false);
             }
         }
+
+        \Cloudari\Onebox\Rest\Routes::clearBillboardCache();
     }
 }
