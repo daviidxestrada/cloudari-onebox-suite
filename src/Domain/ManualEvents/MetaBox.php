@@ -130,9 +130,6 @@ final class MetaBox
                        placeholder="https://...">
             </p>
 
-<<<<<<< HEAD
-            <!-- Nuevo: texto del botón -->
-=======
             <p>
                 <label for="manual_event_venue"><strong>Espacio / venue (opcional):</strong></label><br>
                 <input type="text"
@@ -144,7 +141,6 @@ final class MetaBox
             </p>
 
             <!-- NUEVO: texto del botón -->
->>>>>>> develop
             <p>
                 <label for="manual_cta_label"><strong>Texto del botón (opcional):</strong></label><br>
                 <input type="text"
@@ -646,9 +642,6 @@ final class MetaBox
             : '';
         update_post_meta($post_id, self::META_URL, $url);
 
-<<<<<<< HEAD
-        // CTA label
-=======
         $manualVenue = isset($_POST['manual_event_venue'])
             ? sanitize_text_field(wp_unslash($_POST['manual_event_venue']))
             : '';
@@ -660,7 +653,6 @@ final class MetaBox
         }
 
         // ✅ CTA label
->>>>>>> develop
         $cta = isset($_POST['manual_cta_label'])
             ? sanitize_text_field(wp_unslash($_POST['manual_cta_label']))
             : '';

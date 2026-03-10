@@ -124,10 +124,6 @@ Custom post types / taxonomy:
 - Usar HTTPS y cache a nivel de servidor si aplica.
 
 == Changelog ==
-<<<<<<< HEAD
-= 1.2.0 =
-* Carpeta `widgets/` con widgets HTML listos para pegar en Elementor.
-=======
 = 1.2.4 =
 * Nueva cartelera opcional por espacios con shortcodes `[cloudari_billboard_venues]` y `[cloudari_billboard_spaces]`.
 * Nuevo endpoint interno `GET /wp-json/cloudari/v1/billboard-venues`.
@@ -135,7 +131,6 @@ Custom post types / taxonomy:
 * Integracion de eventos manuales en la cartelera por espacios.
 * Nuevo campo opcional de `venue` para eventos manuales.
 * Nueva documentacion y metadatos de release alineados para merge a `main`.
->>>>>>> develop
 
 = 1.1 =
 * Fix de autoupdates (plugin-update-checker).
@@ -146,13 +141,8 @@ Custom post types / taxonomy:
 * Release inicial con multi-integracion, eventos manuales y overrides.
 
 == Upgrade Notice ==
-<<<<<<< HEAD
-= 1.2.0 =
-Incluye widgets HTML listos para usar en Elementor (ver carpeta `widgets/`).
-=======
 = 1.2.4 =
 Nueva cartelera opcional por espacios, soporte de venue manual y documentacion de release alineada.
->>>>>>> develop
 
 = 1.1 =
 Actualizacion interna: autoupdates, nonce AJAX y cache de sesiones.
