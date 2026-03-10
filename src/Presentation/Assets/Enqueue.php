@@ -140,6 +140,72 @@ final class Enqueue
         );
     }
 
+    public static function billboardVenues(): void
+    {
+        $profile = ProfileRepository::getActive();
+        $overrideMaps = EventOverridesRepository::getEnvMaps();
+
+        wp_register_style('cloudari-billboard-venues-inline', false);
+        wp_enqueue_style('cloudari-billboard-venues-inline');
+
+        $inlineCss = sprintf(
+            ':root{' .
+                '--cloudari-primary:%1$s;' .
+                '--cloudari-accent:%2$s;' .
+                '--cloudari-bg:%3$s;' .
+                '--cloudari-text:%4$s;' .
+            '}',
+            esc_html($profile->colorPrimary),
+            esc_html($profile->colorAccent),
+            esc_html($profile->colorBackground),
+            esc_html($profile->colorText)
+        );
+
+        wp_add_inline_style('cloudari-billboard-venues-inline', $inlineCss);
+
+        wp_enqueue_style(
+            'cloudari-billboard-css',
+            CLOUDARI_ONEBOX_URL . 'assets/css/billboard-inline.css',
+            [],
+            self::assetVersion('assets/css/billboard-inline.css')
+        );
+
+        wp_enqueue_style(
+            'cloudari-billboard-venues-css',
+            CLOUDARI_ONEBOX_URL . 'assets/css/billboard-venues.css',
+            ['cloudari-billboard-css'],
+            self::assetVersion('assets/css/billboard-venues.css')
+        );
+
+        wp_register_script(
+            'cloudari-billboard-venues-bootstrap',
+            '',
+            [],
+            CLOUDARI_ONEBOX_VER,
+            false
+        );
+
+        wp_enqueue_script('cloudari-billboard-venues-bootstrap');
+
+        wp_localize_script(
+            'cloudari-billboard-venues-bootstrap',
+            'cloudariBillboardVenues',
+            [
+                'endpoint'          => '/wp-json/cloudari/v1/billboard-venues',
+                'specialRedirects'  => $overrideMaps['specialRedirects'] ?? [],
+                'categoryOverrides' => $overrideMaps['categoryOverrides'] ?? [],
+            ]
+        );
+
+        wp_enqueue_script(
+            'cloudari-billboard-venues-js',
+            CLOUDARI_ONEBOX_URL . 'assets/js/billboard-venues.js',
+            ['cloudari-billboard-venues-bootstrap'],
+            self::assetVersion('assets/js/billboard-venues.js'),
+            true
+        );
+    }
+
     public static function countdown(): void
     {
         $profile = ProfileRepository::getActive();

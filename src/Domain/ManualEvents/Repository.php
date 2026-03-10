@@ -21,6 +21,7 @@ final class Repository
     private const META_SESIONES    = '_sesiones_evento';
     private const META_URL         = '_url_evento';
     private const META_IMG_ID      = '_imagen_evento_id';
+    private const META_VENUE       = '_manual_event_venue';
 
     // ✅ CTA label (texto del botón)
     private const META_CTA_LABEL   = '_manual_event_cta_label';
@@ -102,6 +103,59 @@ final class Repository
         return trim($v);
     }
 
+    private static function getManualVenueName(int $post_id, string $fallbackVenue): string
+    {
+        $manualVenue = trim((string) get_post_meta($post_id, self::META_VENUE, true));
+        if ($manualVenue !== '') {
+            return $manualVenue;
+        }
+
+        $fallbackVenue = trim($fallbackVenue);
+
+        return $fallbackVenue !== '' ? $fallbackVenue : 'Teatro';
+    }
+
+    private static function getCategoryTerm(int $post_id): ?\WP_Term
+    {
+        $terms = wp_get_object_terms($post_id, Taxonomy::TAXONOMY);
+        if (is_array($terms) && !empty($terms) && !is_wp_error($terms)) {
+            return $terms[0];
+        }
+
+        $fallback = get_term_by('slug', 'teatro', Taxonomy::TAXONOMY);
+        if ($fallback instanceof \WP_Term) {
+            return $fallback;
+        }
+
+        return null;
+    }
+
+    private static function buildCategoryPayload(?\WP_Term $term): ?array
+    {
+        if (!$term || is_wp_error($term)) {
+            return null;
+        }
+
+        $slug = (string) $term->slug;
+        $code = strtoupper($slug !== '' ? $slug : 'teatro');
+        $catColor = self::getCategoryColor($term);
+
+        $custom = ['code' => $code];
+        if ($catColor !== '') {
+            $custom['color'] = $catColor;
+        }
+
+        return [
+            'id'          => (int) $term->term_id,
+            'slug'        => $slug,
+            'name'        => (string) $term->name,
+            'description' => (string) $term->name,
+            'custom'      => $custom,
+            'code'        => $code,
+            'parent'      => ['code' => $code],
+        ];
+    }
+
     /**
      * Construye mapa de excepciones [YYYY-MM-DD => ['start'=>'HH:MM','end'=>'HH:MM']]
      */
@@ -171,7 +225,8 @@ final class Repository
         string $img_url,
         ?string $inicio,
         ?string $fin,
-        string $venueName
+        string $venueName,
+        ?array $category
     ): array
     {
         $mode = get_post_meta($post_id, self::META_MODE, true);
@@ -248,6 +303,9 @@ final class Repository
                 if ($ctaLabel !== '') {
                     $cloudari['cta_label'] = $ctaLabel;
                 }
+                if (!empty($category['custom']['color'])) {
+                    $cloudari['category_color'] = (string) $category['custom']['color'];
+                }
 
                 $fake = [
                     'id'   => 'manual-' . $post_id . '-range-' . $idx,
@@ -263,6 +321,7 @@ final class Repository
                     'images'=> ['landscape' => [['es-ES' => $img_url]]],
                     'price' => ['min' => ['value' => '']],
                     'url'   => $url,
+                    'category' => $category,
                     'cloudari' => $cloudari,
                 ];
 
@@ -314,6 +373,8 @@ final class Repository
             $url     = (string)get_post_meta($post_id, self::META_URL, true);
             $img_id  = (int)get_post_meta($post_id, self::META_IMG_ID, true);
             $img_url = $img_id ? (string)wp_get_attachment_image_url($img_id, 'full') : '';
+            $category = self::buildCategoryPayload(self::getCategoryTerm($post_id));
+            $manualVenueName = self::getManualVenueName($post_id, $venueName);
 
             $ctaLabel = self::getCtaLabel($post_id);
 
@@ -328,7 +389,8 @@ final class Repository
                     $img_url,
                     $inicio,
                     $fin,
-                    $venueName
+                    $manualVenueName,
+                    $category
                 );
                 if (!empty($rangeSessions)) {
                     $eventos = array_merge($eventos, $rangeSessions);
@@ -379,6 +441,9 @@ final class Repository
                 if ($ctaLabel !== '') {
                     $cloudari['cta_label'] = $ctaLabel;
                 }
+                if (!empty($category['custom']['color'])) {
+                    $cloudari['category_color'] = (string) $category['custom']['color'];
+                }
 
                 $fake = [
                     'id'   => 'manual-' . $post_id . '-' . $idx,
@@ -389,11 +454,12 @@ final class Repository
                         'name'  => $titulo,
                         'texts' => ['title' => ['es-ES' => $titulo]],
                     ],
-                    'venue' => ['name' => $venueName],
+                    'venue' => ['name' => $manualVenueName],
                     'date'  => $end_iso ? ['start' => $start_iso, 'end' => $end_iso] : ['start' => $start_iso],
                     'images'=> ['landscape' => [['es-ES' => $img_url]]],
                     'price' => ['min' => ['value' => '']],
                     'url'   => $url,
+                    'category' => $category,
                     'cloudari' => $cloudari,
                 ];
 
@@ -405,11 +471,39 @@ final class Repository
         return $eventos;
     }
 
+    public static function getUpcomingSessions(): array
+    {
+        $today = (new DateTime('today', wp_timezone()))->format('Y-m-d');
+        $now = new DateTime('now', wp_timezone());
+
+        $sessions = self::getForCalendar($today, null);
+
+        return array_values(
+            array_filter(
+                $sessions,
+                static function ($session) use ($now) {
+                    if (empty($session['date']['start'])) {
+                        return false;
+                    }
+
+                    try {
+                        $start = new DateTime((string) $session['date']['start']);
+                        return $start >= $now;
+                    } catch (Exception $e) {
+                        return false;
+                    }
+                }
+            )
+        );
+    }
+
     /**
      * Items para REST cartelera
      */
     public static function getForRest(): array
     {
+        $profile = ProfileRepository::getActive();
+
         $posts = get_posts([
             'post_type'      => PostType::SLUG,
             'post_status'    => 'publish',
@@ -426,6 +520,8 @@ final class Repository
             $url     = (string)get_post_meta($post_id, self::META_URL, true);
             $img_id  = (int)get_post_meta($post_id, self::META_IMG_ID, true);
             $img_url = $img_id ? (string)wp_get_attachment_image_url($img_id, 'full') : '';
+            $manualVenueName = self::getManualVenueName($post_id, (string) $profile->venueName);
+            $category = self::buildCategoryPayload(self::getCategoryTerm($post_id));
 
             $ctaLabel = self::getCtaLabel($post_id);
 
@@ -491,40 +587,13 @@ final class Repository
                 // ignore
             }
 
-            $term_obj = null;
-            $terms    = wp_get_object_terms($post_id, Taxonomy::TAXONOMY);
-            if (is_array($terms) && !empty($terms) && !is_wp_error($terms)) {
-                $term_obj = $terms[0];
-            } else {
-                $term_obj = get_term_by('slug', 'teatro', Taxonomy::TAXONOMY);
-            }
-
-            $slug    = ($term_obj && !is_wp_error($term_obj)) ? $term_obj->slug : 'teatro';
-            $code_up = strtoupper($slug);
-
-            $cat_color = self::getCategoryColor($term_obj);
-
-            $category = null;
-            if ($term_obj && !is_wp_error($term_obj)) {
-                $custom = ['code' => $code_up];
-                if ($cat_color !== '') $custom['color'] = $cat_color;
-
-                $category = [
-                    'id'          => (int) $term_obj->term_id,
-                    'slug'        => $term_obj->slug,
-                    'name'        => $term_obj->name,
-                    'description' => $term_obj->name,
-                    'custom'      => $custom,
-                    'code'        => $code_up,
-                    'parent'      => ['code' => $code_up],
-                ];
-            }
-
             $cloudari = [
                 'manual' => true,
                 'mode'   => $mode,
             ];
-            if ($cat_color !== '') $cloudari['category_color'] = $cat_color;
+            if (!empty($category['custom']['color'])) {
+                $cloudari['category_color'] = (string) $category['custom']['color'];
+            }
             if ($ctaLabel !== '')  $cloudari['cta_label']      = $ctaLabel;
 
             $salida[] = [
@@ -534,6 +603,8 @@ final class Repository
                 'images'   => ['landscape' => [['es-ES' => $img_url]]],
                 'date'     => ['start' => $start_iso, 'end' => $end_iso],
                 'url'      => $url,
+                'venue'    => ['name' => $manualVenueName],
+                'venues'   => [['name' => $manualVenueName]],
                 'category' => $category,
                 'cloudari' => $cloudari,
             ];
