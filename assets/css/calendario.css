@@ -50,7 +50,9 @@
 
 
 
-  --azul-principal: var(--cloudari-primary);
+  --azul-principal: var(--cloudari-calendar-nav, var(--cloudari-primary));
+
+  --calendar-text: var(--cloudari-calendar-text, var(--cloudari-text));
 
 
 
@@ -106,7 +108,7 @@
 
   background-color: var(--cloudari-bg);
 
-  color: var(--cloudari-text);
+  color: var(--calendar-text);
 
 }
 
@@ -142,7 +144,7 @@
 
   font-weight: 700;
 
-  color: var(--cloudari-text);
+  color: var(--calendar-text);
 
 }
 
@@ -278,7 +280,7 @@
 
   font-weight: 700;
 
-  color: var(--cloudari-text);
+  color: var(--calendar-text);
 
   font-size: 12px;
 
@@ -342,7 +344,7 @@
 
   margin: 0 0 15px 0;
 
-  color: var(--cloudari-text);
+  color: var(--calendar-text);
 
 }
 
@@ -698,7 +700,7 @@
 
   font-size: 14px;
 
-  color: #333;
+  color: var(--calendar-text);
 
   margin-bottom: 4px;
 
@@ -714,7 +716,7 @@
 
   margin-bottom: 8px;
 
-  color: #666;
+  color: var(--calendar-text);
 
   flex-grow: 1;
 

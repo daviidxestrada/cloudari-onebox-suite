@@ -3,6 +3,33 @@ namespace Cloudari\Onebox\Domain\Theatre;
 
 final class TheatreProfile
 {
+    private const WIDGET_COLOR_KEYS = [
+        'calendar' => [
+            'nav',
+            'text',
+        ],
+        'billboard' => [
+            'topbar',
+            'cta',
+            'card_bg',
+            'text',
+        ],
+        'venue_filters' => [
+            'active_bg',
+            'active_text',
+            'text',
+            'border',
+            'indicator',
+        ],
+        'countdown' => [
+            'panel_bg',
+            'title',
+            'border',
+            'number',
+            'poster_caption',
+        ],
+    ];
+
     public string $slug;
     public string $label;
     public string $venueName;
@@ -18,6 +45,9 @@ final class TheatreProfile
 
     public string $defaultIntegrationSlug;
 
+    /** @var array<string, array<string, string>> */
+    public array $widgetColors = [];
+
     public function __construct(
         string $slug,
         string $label,
@@ -28,7 +58,8 @@ final class TheatreProfile
         string $colorText,
         string $colorSelectedDay,
         array $integrations,
-        string $defaultIntegrationSlug
+        string $defaultIntegrationSlug,
+        array $widgetColors = []
     ) {
         $this->slug              = $slug;
         $this->label             = $label;
@@ -44,6 +75,7 @@ final class TheatreProfile
             $defaultIntegrationSlug,
             $this->integrations
         );
+        $this->widgetColors = self::normalizeWidgetColors($widgetColors);
     }
 
     public static function fromArray(array $data): self
@@ -90,7 +122,10 @@ final class TheatreProfile
             $data['color_selected_day']
                 ?? ($data['color_primary'] ?? '#009AD8'),
             $integrations,
-            (string)($data['default_integration'] ?? '')
+            (string)($data['default_integration'] ?? ''),
+            isset($data['widget_colors']) && is_array($data['widget_colors'])
+                ? $data['widget_colors']
+                : []
         );
     }
 
@@ -114,6 +149,7 @@ final class TheatreProfile
             'color_selected_day'   => $this->colorSelectedDay,
             'default_integration'  => $this->defaultIntegrationSlug,
             'integrations'         => $integrations,
+            'widget_colors'        => $this->widgetColors,
         ];
     }
 
@@ -141,6 +177,16 @@ final class TheatreProfile
     {
         return $this->integrations[$this->defaultIntegrationSlug]
             ?? (count($this->integrations) ? reset($this->integrations) : null);
+    }
+
+    public function getWidgetColors(): array
+    {
+        return $this->widgetColors;
+    }
+
+    public function getWidgetColor(string $widget, string $token): string
+    {
+        return $this->widgetColors[$widget][$token] ?? '';
     }
 
     private static function normalizeIntegrations(array $integrations): array
@@ -181,5 +227,36 @@ final class TheatreProfile
             return $slug;
         }
         return (string)array_key_first($integrations);
+    }
+
+    private static function normalizeWidgetColors(array $widgetColors): array
+    {
+        $normalized = [];
+
+        foreach (self::WIDGET_COLOR_KEYS as $widget => $tokens) {
+            $normalized[$widget] = [];
+            $rawWidget = isset($widgetColors[$widget]) && is_array($widgetColors[$widget])
+                ? $widgetColors[$widget]
+                : [];
+
+            foreach ($tokens as $token) {
+                $value = self::sanitizeColorValue($rawWidget[$token] ?? '');
+                $normalized[$widget][$token] = $value;
+            }
+        }
+
+        return $normalized;
+    }
+
+    private static function sanitizeColorValue($value): string
+    {
+        $value = is_string($value) ? trim($value) : '';
+        if ($value === '') {
+            return '';
+        }
+
+        $sanitized = sanitize_hex_color($value);
+
+        return is_string($sanitized) ? $sanitized : '';
     }
 }

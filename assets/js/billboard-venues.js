@@ -5,6 +5,7 @@
     ENDPOINT: "/wp-json/cloudari/v1/billboard-venues",
     IMG_PLACEHOLDER:
       "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==",
+    DEFAULT_CATEGORY_KEY: "teatro",
     CATEGORY_MAP: {
       teatro: { label: "Teatro", className: "obx-cat--teatro" },
       musica: { label: "Musica", className: "obx-cat--musica" },
@@ -19,7 +20,35 @@
       humor: ["humor", "comedia", "monologo", "standup", "stand up", "impro"],
       talk: ["talk", "charla", "conferencia", "coloquio", "debate", "ponencia"],
     },
+    CATEGORY_CODE_MAP: {
+      ARTET: "teatro",
+      ART: "teatro",
+      ARTE: "teatro",
+      TEATRO: "teatro",
+      CIRCO: "teatro",
+      DANZA: "teatro",
+      ARTCLA: "musica",
+      ARTMU: "musica",
+      MUS: "musica",
+      MUSICA: "musica",
+      MUSIC: "musica",
+      CONCIERTO: "musica",
+      ARTHU: "humor",
+      HUMOR: "humor",
+      HUM: "humor",
+      COMEDIA: "humor",
+      ARTMS: "musical",
+      ARTMUS: "musical",
+      MUSICAL: "musical",
+      TALK: "talk",
+      CONF: "talk",
+      CONFERENCIA: "talk",
+      CHARLA: "talk",
+    },
   });
+
+  let venuesPromise = null;
+  let instanceCounter = 0;
 
   const esc = (value) =>
     String(value ?? "").replace(/[&<>\"']/g, (match) => ({
@@ -60,10 +89,7 @@
       .replace(/\p{Diacritic}/gu, "")
       .trim();
 
-  const toTimestamp = (value) => {
-    const timestamp = Date.parse(value || "");
-    return Number.isNaN(timestamp) ? Number.POSITIVE_INFINITY : timestamp;
-  };
+  const normalizeCode = (value) => String(value || "").toUpperCase().trim();
 
   const sameDay = (left, right) =>
     left &&
@@ -153,13 +179,39 @@
     }
 
     const category = eventItem?.category || {};
+    const codeCandidates = [
+      category?.custom?.code,
+      category?.code,
+      category?.parent?.code,
+      category?.slug,
+      category?.custom?.slug,
+    ]
+      .filter(Boolean)
+      .map(normalizeCode);
+
+    for (const code of codeCandidates) {
+      if (CONFIG.CATEGORY_CODE_MAP[code]) {
+        return CONFIG.CATEGORY_CODE_MAP[code];
+      }
+
+      const partial = Object.keys(CONFIG.CATEGORY_CODE_MAP).find((candidate) =>
+        code.includes(candidate)
+      );
+      if (partial) {
+        return CONFIG.CATEGORY_CODE_MAP[partial];
+      }
+    }
+
     const haystack = normalizeText(
       [
+        eventItem?.title,
         category?.name,
         category?.description,
         category?.code,
+        category?.slug,
         category?.custom?.description,
         category?.custom?.code,
+        category?.custom?.slug,
       ]
         .filter(Boolean)
         .join(" ")
@@ -170,7 +222,7 @@
         CONFIG.CATEGORY_KEYWORDS[key].some((keyword) =>
           haystack.includes(normalizeText(keyword))
         )
-      ) || ""
+      ) || CONFIG.DEFAULT_CATEGORY_KEY
     );
   };
 
@@ -216,37 +268,25 @@
   const getVenueName = (eventItem, venue) =>
     String(eventItem?.venue?.name || venue?.name || "Espacio").trim();
 
+  const getVenueKey = (venue) =>
+    String(venue?.slug || venue?.id || venue?.name || "").trim();
+
   const getCtaLabel = (eventItem) => {
     const value = String(eventItem?.cloudari?.cta_label || "").trim();
     return value || "Entradas";
   };
 
-  const matchesEventQuery = (eventItem, query, venue) => {
-    if (!query) {
-      return true;
+  const renderSkeleton = ($tabs, $list) => {
+    if ($tabs) {
+      $tabs.innerHTML = `
+        <span class="obxv-tab obxv-tab--skeleton obx-skel" aria-hidden="true"></span>
+        <span class="obxv-tab obxv-tab--skeleton obx-skel" aria-hidden="true"></span>
+        <span class="obxv-tab obxv-tab--skeleton obx-skel" aria-hidden="true"></span>
+      `;
     }
 
-    const haystack = normalizeText(
-      [
-        eventItem?.title,
-        eventItem?.category?.name,
-        eventItem?.category?.description,
-        getVenueName(eventItem, venue),
-      ]
-        .filter(Boolean)
-        .join(" ")
-    );
-
-    return haystack.includes(query);
-  };
-
-  const renderSkeleton = ($list) => {
     $list.innerHTML = `
-      <section class="obxv-venue" aria-busy="true">
-        <div class="obxv-venue-head">
-          <div class="obx-skel" style="height:20px;width:220px;border-radius:6px"></div>
-          <div class="obx-skel" style="height:14px;width:96px;border-radius:6px"></div>
-        </div>
+      <section class="obxv-panel" aria-busy="true">
         <div class="obx-grid obxv-grid obxv-skeleton">
           <article class="obx-card">
             <div class="obx-media obx-skel" style="aspect-ratio:16/9"></div>
@@ -271,7 +311,11 @@
     `;
   };
 
-  const renderEmpty = ($list, message) => {
+  const renderEmpty = ($tabs, $list, message) => {
+    if ($tabs) {
+      $tabs.innerHTML = "";
+    }
+
     $list.innerHTML = `<p class="obx-empty">${esc(message)}</p>`;
   };
 
@@ -289,7 +333,7 @@
       formatRange(eventItem?.start || "", eventItem?.end || "") ||
       "Fecha pendiente";
     const venueName = getVenueName(eventItem, venue);
-    const eager = index < 6;
+    const eager = index < 4;
     const attrs = eager
       ? 'loading="eager" fetchpriority="high" decoding="async"'
       : 'loading="lazy" fetchpriority="low" decoding="async"';
@@ -337,85 +381,252 @@
     `;
   };
 
-  const buildVenueBlock = (venue) => {
+  const buildVenuePanel = (venue, panelId, tabId) => {
     const events = Array.isArray(venue?.events) ? venue.events : [];
-    const countLabel = events.length === 1 ? "1 evento" : `${events.length} eventos`;
+    const venueName = String(venue?.name || "Espacio").trim() || "Espacio";
+
+    if (!events.length) {
+      return `
+        <section class="obxv-panel" id="${esc(panelId)}" role="tabpanel" aria-labelledby="${esc(
+          tabId
+        )}">
+          <h3 class="sr-only">${esc(venueName)}</h3>
+          <p class="obx-empty">No hay eventos proximos para este espacio.</p>
+        </section>
+      `;
+    }
 
     return `
-      <section class="obxv-venue" data-venue="${esc(venue?.slug || venue?.id || "")}">
-        <header class="obxv-venue-head">
-          <div class="obxv-venue-label">
-            ${stageIcon}
-            <h3 class="obxv-venue-title">${esc(venue?.name || "Espacio")}</h3>
-          </div>
-          <p class="obxv-venue-meta">${esc(countLabel)}</p>
-        </header>
+      <section class="obxv-panel" id="${esc(panelId)}" role="tabpanel" aria-labelledby="${esc(
+        tabId
+      )}">
+        <h3 class="sr-only">${esc(venueName)}</h3>
         <div class="obx-grid obxv-grid">
-          ${events.map((eventItem, index) => buildEventCard(eventItem, venue, index)).join("")}
+          ${events
+            .map((eventItem, index) => buildEventCard(eventItem, venue, index))
+            .join("")}
         </div>
       </section>
     `;
   };
 
-  const renderVenues = ($list, venues, query) => {
-    const normalizedQuery = normalizeText(query);
-    const visible = venues
-      .map((venue) => {
-        const venueName = normalizeText(venue?.name);
-        const venueMatches = !normalizedQuery || venueName.includes(normalizedQuery);
+  const buildTabs = (venues, activeKey, panelId, widgetId) =>
+    venues
+      .map((venue, index) => {
+        const venueKey = getVenueKey(venue) || `venue-${index}`;
+        const tabId = `${widgetId}-tab-${index}`;
+        const isActive = venueKey === activeKey;
 
-        if (venueMatches) {
-          return venue;
-        }
-
-        const events = Array.isArray(venue?.events)
-          ? venue.events.filter((eventItem) =>
-              matchesEventQuery(eventItem, normalizedQuery, venue)
-            )
-          : [];
-
-        if (!events.length) {
-          return null;
-        }
-
-        return {
-          ...venue,
-          events,
-          event_count: events.length,
-          next_start: events[0]?.start || venue?.next_start || "",
-        };
+        return `
+          <button
+            type="button"
+            id="${esc(tabId)}"
+            class="obxv-tab"
+            role="tab"
+            aria-selected="${isActive ? "true" : "false"}"
+            aria-controls="${esc(panelId)}"
+            tabindex="${isActive ? "0" : "-1"}"
+            data-venue-key="${esc(venueKey)}"
+          >
+            <span class="obxv-tab__label">${esc(venue?.name || "Espacio")}</span>
+          </button>
+        `;
       })
-      .filter(Boolean)
-      .sort((left, right) => toTimestamp(left?.next_start) - toTimestamp(right?.next_start));
+      .join("");
 
-    if (!visible.length) {
-      renderEmpty(
-        $list,
-        normalizedQuery
-          ? "No hay coincidencias para esa busqueda."
-          : "No hay espacios con eventos proximos."
-      );
+  const scrollActiveTabIntoView = (state) => {
+    if (
+      typeof window === "undefined" ||
+      !window.matchMedia("(max-width: 1023.98px)").matches ||
+      !state.$tabsScroller
+    ) {
       return;
     }
 
-    $list.innerHTML = visible.map(buildVenueBlock).join("");
+    const activeButton = state.$tabs.querySelector(
+      'button[role="tab"][aria-selected="true"]'
+    );
+    if (!activeButton) {
+      return;
+    }
+
+    const scrollerRect = state.$tabsScroller.getBoundingClientRect();
+    const buttonRect = activeButton.getBoundingClientRect();
+    const nextLeft =
+      state.$tabsScroller.scrollLeft +
+      (buttonRect.left - scrollerRect.left) -
+      16;
+
+    state.$tabsScroller.scrollTo({
+      left: Math.max(0, nextLeft),
+      behavior: "smooth",
+    });
+  };
+
+  const renderWidget = (state, nextActiveKey, focusActive = false) => {
+    const venues = state.venues;
+    const fallbackKey = getVenueKey(venues[0]);
+    const activeKey = nextActiveKey || fallbackKey;
+    const venue =
+      venues.find((item) => getVenueKey(item) === activeKey) || venues[0] || null;
+
+    if (!venue) {
+      renderEmpty(state.$tabs, state.$list, "No hay espacios con eventos proximos.");
+      return;
+    }
+
+    const resolvedKey = getVenueKey(venue);
+    const activeIndex = Math.max(
+      venues.findIndex((item) => getVenueKey(item) === resolvedKey),
+      0
+    );
+    const tabId = `${state.widgetId}-tab-${activeIndex}`;
+
+    state.activeKey = resolvedKey;
+    state.$tabs.innerHTML = buildTabs(
+      venues,
+      resolvedKey,
+      state.panelId,
+      state.widgetId
+    );
+    state.$list.innerHTML = buildVenuePanel(venue, state.panelId, tabId);
+
+    if (focusActive) {
+      const activeButton = state.$tabs.querySelector(
+        'button[role="tab"][aria-selected="true"]'
+      );
+      activeButton?.focus();
+    }
+
+    scrollActiveTabIntoView(state);
+  };
+
+  const focusSiblingTab = (state, currentButton, direction) => {
+    const buttons = Array.from(
+      state.$tabs.querySelectorAll('button[role="tab"]')
+    );
+    if (!buttons.length) {
+      return;
+    }
+
+    const currentIndex = Math.max(buttons.indexOf(currentButton), 0);
+    const nextIndex = (currentIndex + direction + buttons.length) % buttons.length;
+    const nextButton = buttons[nextIndex];
+
+    if (!nextButton) {
+      return;
+    }
+
+    renderWidget(state, nextButton.dataset.venueKey || "", true);
+  };
+
+  const bindWidgetEvents = (state) => {
+    state.$tabs.addEventListener("click", (event) => {
+      const button = event.target.closest('button[role="tab"]');
+      if (!button) {
+        return;
+      }
+
+      renderWidget(state, button.dataset.venueKey || "", true);
+    });
+
+    state.$tabs.addEventListener("keydown", (event) => {
+      const button = event.target.closest('button[role="tab"]');
+      if (!button) {
+        return;
+      }
+
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        focusSiblingTab(state, button, 1);
+        return;
+      }
+
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        focusSiblingTab(state, button, -1);
+        return;
+      }
+
+      if (event.key === "Home") {
+        event.preventDefault();
+        const first = state.$tabs.querySelector('button[role="tab"]');
+        if (first) {
+          renderWidget(state, first.dataset.venueKey || "", true);
+        }
+        return;
+      }
+
+      if (event.key === "End") {
+        event.preventDefault();
+        const buttons = state.$tabs.querySelectorAll('button[role="tab"]');
+        const last = buttons[buttons.length - 1];
+        if (last) {
+          renderWidget(state, last.dataset.venueKey || "", true);
+        }
+      }
+    });
   };
 
   const fetchVenues = async () => {
-    const response = await fetch(getEndpoint(), {
-      method: "GET",
-      credentials: "same-origin",
-      headers: {
-        Accept: "application/json",
-      },
-    });
+    if (!venuesPromise) {
+      venuesPromise = fetch(getEndpoint(), {
+        method: "GET",
+        credentials: "same-origin",
+        headers: {
+          Accept: "application/json",
+        },
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
+          return response.json();
+        })
+        .then((payload) => (Array.isArray(payload?.data) ? payload.data : []))
+        .catch((error) => {
+          venuesPromise = null;
+          throw error;
+        });
     }
 
-    const payload = await response.json();
-    return Array.isArray(payload?.data) ? payload.data : [];
+    return venuesPromise;
+  };
+
+  const initWidget = (root, venues) => {
+    if (!root || root.dataset.cloudariBillboardVenuesReady === "1") {
+      return;
+    }
+
+    const $tabs = root.querySelector('[data-role="tabs"]');
+    const $tabsScroller = root.querySelector('[data-role="tabs-scroller"]');
+    const $list = root.querySelector('[data-role="list"]');
+    if (!$tabs || !$tabsScroller || !$list) {
+      return;
+    }
+
+    root.dataset.cloudariBillboardVenuesReady = "1";
+
+    if (!Array.isArray(venues) || !venues.length) {
+      renderEmpty($tabs, $list, "No hay espacios con eventos proximos.");
+      return;
+    }
+
+    instanceCounter += 1;
+    const state = {
+      root,
+      venues,
+      $tabs,
+      $tabsScroller,
+      $list,
+      activeKey: getVenueKey(venues[0]),
+      widgetId: `cloudari-billboard-venues-${instanceCounter}`,
+      panelId: `cloudari-billboard-venues-panel-${instanceCounter}`,
+    };
+
+    bindWidgetEvents(state);
+    renderWidget(state, state.activeKey);
   };
 
   const boot = async () => {
@@ -423,25 +634,40 @@
       return;
     }
 
-    const $list = document.getElementById("obxv-list");
-    const $query = document.getElementById("obxv-q");
-    if (!$list) {
+    const roots = Array.from(
+      document.querySelectorAll("[data-cloudari-billboard-venues]")
+    );
+    if (!roots.length) {
       return;
     }
 
-    renderSkeleton($list);
+    roots.forEach((root) => {
+      const $tabs = root.querySelector('[data-role="tabs"]');
+      const $list = root.querySelector('[data-role="list"]');
+
+      if ($list) {
+        renderSkeleton($tabs, $list);
+      }
+    });
 
     try {
       const venues = await fetchVenues();
       window.__CLOUDARI_VENUE_BILLBOARD__ = venues;
-      renderVenues($list, venues, $query?.value || "");
 
-      $query?.addEventListener("input", () => {
-        renderVenues($list, venues, $query.value || "");
+      roots.forEach((root) => {
+        initWidget(root, venues);
       });
     } catch (error) {
       console.error("Cloudari venue billboard error:", error);
-      renderEmpty($list, "No se pudo cargar la cartelera por espacios.");
+
+      roots.forEach((root) => {
+        const $tabs = root.querySelector('[data-role="tabs"]');
+        const $list = root.querySelector('[data-role="list"]');
+
+        if ($list) {
+          renderEmpty($tabs, $list, "No se pudo cargar la cartelera por espacios.");
+        }
+      });
     }
   };
 

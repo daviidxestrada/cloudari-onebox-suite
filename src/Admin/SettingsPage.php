@@ -8,6 +8,19 @@ use Cloudari\Onebox\Infrastructure\Onebox\Auth;
 
 final class SettingsPage
 {
+    private const LEGACY_WIDGET_FALLBACKS = [
+        'billboard.cta' => '#D14100',
+        'billboard.card_bg' => '#FFFFFF',
+        'billboard.text' => '#0B0F1A',
+        'venue_filters.active_bg' => 'Transparente',
+        'venue_filters.text' => '#0B0F1A',
+        'countdown.panel_bg' => '#FFFFFF',
+        'countdown.title' => 'Elementor Accent o #004743',
+        'countdown.border' => 'Elementor Border o #E6E6E6',
+        'countdown.number' => 'Heredado del tema',
+        'countdown.poster_caption' => '#FFFFFF',
+    ];
+
     public static function register(): void
     {
         add_menu_page(
@@ -38,6 +51,201 @@ final class SettingsPage
         );
     }
 
+    private static function sanitizeWidgetColors($raw): array
+    {
+        $normalized = [];
+
+        if (!is_array($raw)) {
+            return $normalized;
+        }
+
+        foreach ($raw as $widget => $tokens) {
+            $widgetKey = sanitize_key((string) $widget);
+            if ($widgetKey === '' || !is_array($tokens)) {
+                continue;
+            }
+
+            foreach ($tokens as $token => $value) {
+                $tokenKey = sanitize_key((string) $token);
+                if ($tokenKey === '') {
+                    continue;
+                }
+
+                $sanitized = sanitize_hex_color(is_string($value) ? $value : '');
+                $normalized[$widgetKey][$tokenKey] = is_string($sanitized) ? $sanitized : '';
+            }
+        }
+
+        return $normalized;
+    }
+
+    private static function getWidgetFallbackValue(TheatreProfile $profile, string $widgetKey, string $fieldKey): string
+    {
+        $mapKey = $widgetKey . '.' . $fieldKey;
+
+        if (isset(self::LEGACY_WIDGET_FALLBACKS[$mapKey])) {
+            return self::LEGACY_WIDGET_FALLBACKS[$mapKey];
+        }
+
+        return match ($mapKey) {
+            'calendar.nav' => $profile->colorPrimary,
+            'calendar.text' => $profile->colorText,
+            'billboard.topbar' => $profile->colorPrimary,
+            'venue_filters.active_text' => $profile->colorAccent,
+            'venue_filters.border' => $profile->colorPrimary,
+            'venue_filters.indicator' => $profile->colorAccent,
+            default => '',
+        };
+    }
+
+    private static function getWidgetCurrentValue(TheatreProfile $profile, string $widgetKey, string $fieldKey): string
+    {
+        $override = $profile->getWidgetColor($widgetKey, $fieldKey);
+        if ($override !== '') {
+            return $override;
+        }
+
+        return self::getWidgetFallbackValue($profile, $widgetKey, $fieldKey);
+    }
+
+    private static function getCurrentPreviewColor(string $value): string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return '';
+        }
+
+        if (preg_match('/#[0-9A-Fa-f]{6}/', $value, $matches) === 1) {
+            return strtoupper($matches[0]);
+        }
+
+        if (stripos($value, 'transpar') !== false) {
+            return 'transparent';
+        }
+
+        return '';
+    }
+
+    private static function getWidgetColorSections(TheatreProfile $profile): array
+    {
+        return [
+            'calendar' => [
+                'title' => 'Calendario',
+                'description' => 'Ajustes especificos del calendario. El dia seleccionado sigue teniendo su propio color base.',
+                'legacy_fields' => [
+                    [
+                        'name' => 'color_selected_day',
+                        'label' => 'Color de dia seleccionado',
+                        'value' => $profile->colorSelectedDay,
+                        'current' => $profile->colorSelectedDay,
+                        'description' => 'Color base del dia activo en el calendario.',
+                        'placeholder' => '',
+                    ],
+                ],
+                'fields' => [
+                    'nav' => [
+                        'label' => 'Color de flecha',
+                        'inherit' => self::getWidgetFallbackValue($profile, 'calendar', 'nav'),
+                        'current' => self::getWidgetCurrentValue($profile, 'calendar', 'nav'),
+                    ],
+                    'text' => [
+                        'label' => 'Color de texto',
+                        'inherit' => self::getWidgetFallbackValue($profile, 'calendar', 'text'),
+                        'current' => self::getWidgetCurrentValue($profile, 'calendar', 'text'),
+                    ],
+                ],
+            ],
+            'billboard' => [
+                'title' => 'Cartelera',
+                'description' => 'Overrides para las cards y el CTA de la cartelera.',
+                'fields' => [
+                    'topbar' => [
+                        'label' => 'Color barra superior',
+                        'inherit' => self::getWidgetFallbackValue($profile, 'billboard', 'topbar'),
+                        'current' => self::getWidgetCurrentValue($profile, 'billboard', 'topbar'),
+                    ],
+                    'cta' => [
+                        'label' => 'Color boton CTA',
+                        'inherit' => self::getWidgetFallbackValue($profile, 'billboard', 'cta'),
+                        'current' => self::getWidgetCurrentValue($profile, 'billboard', 'cta'),
+                    ],
+                    'card_bg' => [
+                        'label' => 'Color fondo tarjeta',
+                        'inherit' => self::getWidgetFallbackValue($profile, 'billboard', 'card_bg'),
+                        'current' => self::getWidgetCurrentValue($profile, 'billboard', 'card_bg'),
+                    ],
+                    'text' => [
+                        'label' => 'Color texto tarjeta',
+                        'inherit' => self::getWidgetFallbackValue($profile, 'billboard', 'text'),
+                        'current' => self::getWidgetCurrentValue($profile, 'billboard', 'text'),
+                    ],
+                ],
+            ],
+            'venue_filters' => [
+                'title' => 'Sistema de filtros por espacios',
+                'description' => 'Colores de las tabs/filtros que cambian de espacio en la cartelera por venues.',
+                'fields' => [
+                    'active_bg' => [
+                        'label' => 'Color fondo tab activa',
+                        'inherit' => self::getWidgetFallbackValue($profile, 'venue_filters', 'active_bg'),
+                        'current' => self::getWidgetCurrentValue($profile, 'venue_filters', 'active_bg'),
+                    ],
+                    'active_text' => [
+                        'label' => 'Color texto tab activa',
+                        'inherit' => self::getWidgetFallbackValue($profile, 'venue_filters', 'active_text'),
+                        'current' => self::getWidgetCurrentValue($profile, 'venue_filters', 'active_text'),
+                    ],
+                    'text' => [
+                        'label' => 'Color texto tabs inactivas',
+                        'inherit' => self::getWidgetFallbackValue($profile, 'venue_filters', 'text'),
+                        'current' => self::getWidgetCurrentValue($profile, 'venue_filters', 'text'),
+                    ],
+                    'border' => [
+                        'label' => 'Color linea base',
+                        'inherit' => self::getWidgetFallbackValue($profile, 'venue_filters', 'border'),
+                        'current' => self::getWidgetCurrentValue($profile, 'venue_filters', 'border'),
+                    ],
+                    'indicator' => [
+                        'label' => 'Color indicador activo',
+                        'inherit' => self::getWidgetFallbackValue($profile, 'venue_filters', 'indicator'),
+                        'current' => self::getWidgetCurrentValue($profile, 'venue_filters', 'indicator'),
+                    ],
+                ],
+            ],
+            'countdown' => [
+                'title' => 'Contador',
+                'description' => 'Colores de fondo, titulos y cajas del widget countdown.',
+                'fields' => [
+                    'panel_bg' => [
+                        'label' => 'Color fondo panel',
+                        'inherit' => self::getWidgetFallbackValue($profile, 'countdown', 'panel_bg'),
+                        'current' => self::getWidgetCurrentValue($profile, 'countdown', 'panel_bg'),
+                    ],
+                    'title' => [
+                        'label' => 'Color titulo',
+                        'inherit' => self::getWidgetFallbackValue($profile, 'countdown', 'title'),
+                        'current' => self::getWidgetCurrentValue($profile, 'countdown', 'title'),
+                    ],
+                    'border' => [
+                        'label' => 'Color borde',
+                        'inherit' => self::getWidgetFallbackValue($profile, 'countdown', 'border'),
+                        'current' => self::getWidgetCurrentValue($profile, 'countdown', 'border'),
+                    ],
+                    'number' => [
+                        'label' => 'Color numeros',
+                        'inherit' => self::getWidgetFallbackValue($profile, 'countdown', 'number'),
+                        'current' => self::getWidgetCurrentValue($profile, 'countdown', 'number'),
+                    ],
+                    'poster_caption' => [
+                        'label' => 'Color texto poster',
+                        'inherit' => self::getWidgetFallbackValue($profile, 'countdown', 'poster_caption'),
+                        'current' => self::getWidgetCurrentValue($profile, 'countdown', 'poster_caption'),
+                    ],
+                ],
+            ],
+        ];
+    }
+
     public static function render(): void
     {
         if (!current_user_can('manage_options')) {
@@ -61,6 +269,7 @@ final class SettingsPage
             $colorSelectedDay = sanitize_hex_color(
                 $_POST['color_selected_day'] ?? ($colorPrimary ?: '#009AD8')
             );
+            $widgetColors = self::sanitizeWidgetColors($_POST['widget_colors'] ?? []);
 
             $rawIntegrations = $_POST['integrations'] ?? [];
             $integrations = [];
@@ -154,7 +363,8 @@ final class SettingsPage
                 $colorText ?: '#000000',
                 $colorSelectedDay ?: ($colorPrimary ?: '#009AD8'),
                 $integrations,
-                $defaultIntegration
+                $defaultIntegration,
+                $widgetColors
             );
 
             ProfileRepository::save($profile);
@@ -170,6 +380,8 @@ final class SettingsPage
         if ($defaultIntegration === '' || !isset($integrations[$defaultIntegration])) {
             $defaultIntegration = (string) array_key_first($integrations);
         }
+        $widgetColors = $active->getWidgetColors();
+        $widgetSections = self::getWidgetColorSections($active);
         ?>
         <div class="wrap">
             <h1>Cloudari OneBox - Perfil MAIN</h1>
@@ -301,49 +513,135 @@ final class SettingsPage
                     <button type="button" class="button" id="cloudari-add-integration">Anadir integracion</button>
                 </p>
 
-                <h2 class="title">Paleta de colores</h2>
+                <h2 class="title">Paleta global</h2>
+                <p class="description">Estos colores actuan como base compartida para todos los widgets. Debajo puedes sobrescribirlos por widget.</p>
                 <table class="form-table" role="presentation">
                     <tr>
                         <th scope="row"><label for="color_primary">Color principal</label></th>
                         <td>
                             <input name="color_primary" id="color_primary" type="text"
-                                   class="regular-text"
+                                   class="regular-text code"
                                    value="<?php echo esc_attr($active->colorPrimary); ?>">
+                            <p class="description cloudari-color-current">
+                                <span>Color actual: <code><?php echo esc_html($active->colorPrimary); ?></code></span>
+                                <span class="cloudari-color-chip" style="--cloudari-chip-color: <?php echo esc_attr(self::getCurrentPreviewColor($active->colorPrimary)); ?>"></span>
+                            </p>
                         </td>
                     </tr>
                     <tr>
                         <th scope="row"><label for="color_accent">Color de llamada a la accion</label></th>
                         <td>
                             <input name="color_accent" id="color_accent" type="text"
-                                   class="regular-text"
+                                   class="regular-text code"
                                    value="<?php echo esc_attr($active->colorAccent); ?>">
+                            <p class="description cloudari-color-current">
+                                <span>Color actual: <code><?php echo esc_html($active->colorAccent); ?></code></span>
+                                <span class="cloudari-color-chip" style="--cloudari-chip-color: <?php echo esc_attr(self::getCurrentPreviewColor($active->colorAccent)); ?>"></span>
+                            </p>
                         </td>
                     </tr>
                     <tr>
                         <th scope="row"><label for="color_bg">Fondo widgets</label></th>
                         <td>
                             <input name="color_bg" id="color_bg" type="text"
-                                   class="regular-text"
+                                   class="regular-text code"
                                    value="<?php echo esc_attr($active->colorBackground); ?>">
+                            <p class="description cloudari-color-current">
+                                <span>Color actual: <code><?php echo esc_html($active->colorBackground); ?></code></span>
+                                <span class="cloudari-color-chip" style="--cloudari-chip-color: <?php echo esc_attr(self::getCurrentPreviewColor($active->colorBackground)); ?>"></span>
+                            </p>
                         </td>
                     </tr>
                     <tr>
                         <th scope="row"><label for="color_text">Color texto</label></th>
                         <td>
                             <input name="color_text" id="color_text" type="text"
-                                   class="regular-text"
+                                   class="regular-text code"
                                    value="<?php echo esc_attr($active->colorText); ?>">
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="color_selected_day">Color fondo dia seleccionado</label></th>
-                        <td>
-                            <input name="color_selected_day" id="color_selected_day" type="text"
-                                   class="regular-text"
-                                   value="<?php echo esc_attr($active->colorSelectedDay); ?>">
+                            <p class="description cloudari-color-current">
+                                <span>Color actual: <code><?php echo esc_html($active->colorText); ?></code></span>
+                                <span class="cloudari-color-chip" style="--cloudari-chip-color: <?php echo esc_attr(self::getCurrentPreviewColor($active->colorText)); ?>"></span>
+                            </p>
                         </td>
                     </tr>
                 </table>
+
+                <h2 class="title">Colores por widget</h2>
+                <p class="description">Si dejas un campo vacio, el widget hereda la paleta global o el fallback indicado.</p>
+
+                <div class="cloudari-widget-sections">
+                    <?php foreach ($widgetSections as $widgetKey => $section) : ?>
+                        <section class="cloudari-widget-card">
+                            <h3><?php echo esc_html($section['title']); ?></h3>
+                            <p class="description"><?php echo esc_html($section['description']); ?></p>
+
+                            <table class="form-table" role="presentation">
+                                <?php foreach (($section['legacy_fields'] ?? []) as $field) : ?>
+                                    <?php $legacyPreview = self::getCurrentPreviewColor((string) ($field['current'] ?? '')); ?>
+                                    <tr>
+                                        <th scope="row">
+                                            <label for="<?php echo esc_attr($field['name']); ?>">
+                                                <?php echo esc_html($field['label']); ?>
+                                            </label>
+                                        </th>
+                                        <td>
+                                            <input name="<?php echo esc_attr($field['name']); ?>"
+                                                   id="<?php echo esc_attr($field['name']); ?>"
+                                                   type="text"
+                                                   class="regular-text code"
+                                                   value="<?php echo esc_attr($field['value']); ?>"
+                                                   placeholder="<?php echo esc_attr($field['placeholder']); ?>">
+                                            <?php if (!empty($field['description'])) : ?>
+                                                <p class="description"><?php echo esc_html($field['description']); ?></p>
+                                            <?php endif; ?>
+                                            <p class="description cloudari-color-current">
+                                                <span>Color actual: <code><?php echo esc_html((string) ($field['current'] ?? '')); ?></code></span>
+                                                <?php if ($legacyPreview !== '') : ?>
+                                                    <span class="cloudari-color-chip" style="--cloudari-chip-color: <?php echo esc_attr($legacyPreview); ?>"></span>
+                                                <?php endif; ?>
+                                            </p>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+
+                                <?php foreach ($section['fields'] as $fieldKey => $field) : ?>
+                                    <?php
+                                        $inputId = 'widget_colors_' . $widgetKey . '_' . $fieldKey;
+                                        $inputName = sprintf('widget_colors[%s][%s]', $widgetKey, $fieldKey);
+                                        $value = $widgetColors[$widgetKey][$fieldKey] ?? '';
+                                        $inherit = (string) ($field['inherit'] ?? '');
+                                        $current = (string) ($field['current'] ?? $inherit);
+                                        $preview = self::getCurrentPreviewColor($current);
+                                    ?>
+                                    <tr>
+                                        <th scope="row">
+                                            <label for="<?php echo esc_attr($inputId); ?>">
+                                                <?php echo esc_html($field['label']); ?>
+                                            </label>
+                                        </th>
+                                        <td>
+                                            <input name="<?php echo esc_attr($inputName); ?>"
+                                                   id="<?php echo esc_attr($inputId); ?>"
+                                                   type="text"
+                                                   class="regular-text code"
+                                                   value="<?php echo esc_attr($value); ?>"
+                                                   placeholder="<?php echo esc_attr($inherit); ?>">
+                                            <p class="description">
+                                                Vacio = hereda <?php echo esc_html($inherit); ?>
+                                            </p>
+                                            <p class="description cloudari-color-current">
+                                                <span>Color actual: <code><?php echo esc_html($current); ?></code></span>
+                                                <?php if ($preview !== '') : ?>
+                                                    <span class="cloudari-color-chip" style="--cloudari-chip-color: <?php echo esc_attr($preview); ?>"></span>
+                                                <?php endif; ?>
+                                            </p>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </table>
+                        </section>
+                    <?php endforeach; ?>
+                </div>
 
                 <p class="submit">
                     <button type="submit" name="cloudari_onebox_save" class="button button-primary">
@@ -457,6 +755,48 @@ final class SettingsPage
             }
             .cloudari-integration-table {
                 margin-top: 0;
+            }
+            .cloudari-widget-sections {
+                display: grid;
+                gap: 16px;
+                margin-top: 12px;
+            }
+            .cloudari-widget-card {
+                border: 1px solid #ccd0d4;
+                border-radius: 8px;
+                padding: 16px;
+                background: #fff;
+            }
+            .cloudari-widget-card h3 {
+                margin: 0 0 6px;
+            }
+            .cloudari-widget-card .form-table {
+                margin-top: 8px;
+            }
+            .cloudari-color-current {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                margin-top: 6px;
+            }
+            .cloudari-color-chip {
+                width: 16px;
+                height: 16px;
+                border-radius: 999px;
+                border: 1px solid #ccd0d4;
+                background:
+                    linear-gradient(45deg, #f1f1f1 25%, transparent 25%, transparent 75%, #f1f1f1 75%, #f1f1f1),
+                    linear-gradient(45deg, #f1f1f1 25%, transparent 25%, transparent 75%, #f1f1f1 75%, #f1f1f1);
+                background-position: 0 0, 4px 4px;
+                background-size: 8px 8px;
+                position: relative;
+                overflow: hidden;
+            }
+            .cloudari-color-chip::after {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background: var(--cloudari-chip-color, transparent);
             }
         </style>
         <?php

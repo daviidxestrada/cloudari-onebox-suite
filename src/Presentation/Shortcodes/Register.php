@@ -149,19 +149,25 @@ final class Register
             return '<!-- Cloudari Billboard Venues desactivado por flag -->';
         }
 
+        static $instance = 0;
+        $instance++;
+        $titleId = 'cloudari-billboard-venues-title-' . $instance;
+
         ob_start(); ?>
 
-        <section id="cloudari-billboard-venues" class="cloudari-billboard-venues" aria-labelledby="cloudari-billboard-venues-title">
-            <h2 id="cloudari-billboard-venues-title" class="sr-only">Cartelera por espacios</h2>
+        <section class="cloudari-billboard-venues" data-cloudari-billboard-venues aria-labelledby="<?php echo esc_attr($titleId); ?>">
+            <h2 id="<?php echo esc_attr($titleId); ?>" class="sr-only">Cartelera por espacios</h2>
 
             <header class="obx-head obxv-head">
-                <div class="obx-actions obxv-actions" role="search">
-                    <label class="sr-only" for="obxv-q">Buscar por espacio o evento</label>
-                    <input id="obxv-q" type="search" placeholder="Buscar por espacio o evento..." aria-label="Buscar por espacio o evento" />
+                <div class="obxv-tabs-wrap">
+                    <div class="obxv-tabs-inner" data-role="tabs-scroller">
+                        <div class="obxv-tabs" data-role="tabs" role="tablist" aria-label="Filtrar cartelera por espacio"></div>
+                    </div>
+                    <div class="obxv-tabs-separator" aria-hidden="true"></div>
                 </div>
             </header>
 
-            <div id="obxv-list" class="obxv-list" aria-live="polite"></div>
+            <div class="obxv-list" data-role="list" aria-live="polite"></div>
         </section>
 
         <?php

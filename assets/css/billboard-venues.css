@@ -1,14 +1,19 @@
 .cloudari-billboard-venues {
-  --brand: var(--cloudari-primary, #009ad8);
-  --cta: var(--cloudari-accent, #d14100);
-  --ink: #0b0f1a;
+  --brand: var(--cloudari-billboard-topbar, var(--cloudari-primary, #009ad8));
+  --cta: var(--cloudari-billboard-cta, var(--cloudari-accent, #d14100));
+  --ink: var(--cloudari-billboard-text, #0b0f1a);
   --muted: #475569;
   --line: #e5e7eb;
   --soft: #f3f4f6;
-  --white: #ffffff;
+  --white: var(--cloudari-billboard-card-bg, #ffffff);
   --shadow: 0 12px 32px rgba(2, 6, 23, 0.1);
   --gap: 16px;
   --radius: 14px;
+  --tab-text: var(--cloudari-venue-filter-text, var(--ink));
+  --tab-active-text: var(--cloudari-venue-filter-active-text, var(--cta));
+  --tab-active-bg: var(--cloudari-venue-filter-active-bg, transparent);
+  --tab-border: var(--cloudari-venue-filter-border, var(--cloudari-primary, #009ad8));
+  --tab-indicator: var(--cloudari-venue-filter-indicator, var(--cta));
 
   max-width: 1100px;
   margin: 0 auto;
@@ -32,62 +37,113 @@
 }
 
 .obxv-head {
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 }
 
-.obxv-actions {
-  grid-template-columns: minmax(0, 1fr);
+.obxv-tabs-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.obxv-tabs-inner {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  touch-action: pan-x;
+}
+
+.obxv-tabs-inner::-webkit-scrollbar {
+  display: none;
+}
+
+.obxv-tabs {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 24px;
+  min-width: max-content;
+  padding: 0 12px 10px 0;
+}
+
+.obxv-tabs-separator {
+  height: 1px;
+  width: 100%;
+  background: var(--tab-border);
+}
+
+.obxv-tab {
+  flex: 0 0 auto;
+  position: relative;
+  appearance: none;
+  border: 0;
+  border-radius: 12px 12px 0 0;
+  background: transparent;
+  color: var(--tab-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.2;
+  padding: 0 2px 14px;
+  margin: 0;
+  white-space: nowrap;
+  scroll-snap-align: start;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.obxv-tab::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 3px;
+  border-radius: 999px;
+  background: transparent;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+  opacity: 0;
+}
+
+.obxv-tab:hover,
+.obxv-tab:focus-visible {
+  color: var(--tab-active-text);
+  background: var(--tab-active-bg);
+  outline: none;
+}
+
+.obxv-tab[aria-selected="true"] {
+  color: var(--tab-active-text);
+  background: var(--tab-active-bg);
+}
+
+.obxv-tab[aria-selected="true"]::after {
+  background: var(--tab-indicator);
+  opacity: 1;
+}
+
+.obxv-tab--skeleton {
+  display: inline-block;
+  width: 132px;
+  min-width: 132px;
+  height: 22px;
+  border-radius: 999px 999px 0 0;
+  margin-bottom: 14px;
+}
+
+.obxv-tab__label {
+  display: inline-block;
 }
 
 .obxv-list {
-  display: grid;
-  gap: 28px;
+  display: block;
 }
 
-.obxv-venue {
+.obxv-panel {
   display: grid;
   gap: 14px;
-}
-
-.obxv-venue-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 12px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--line);
-}
-
-.obxv-venue-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.obxv-venue-label svg {
-  width: 16px;
-  height: 16px;
-  flex: 0 0 auto;
-  color: var(--muted);
-}
-
-.obxv-venue-title {
-  margin: 0;
-  color: #000000;
-  font-size: 1.08rem;
-  font-weight: 900;
-  line-height: 1.2;
-  text-transform: uppercase;
-  word-break: break-word;
-}
-
-.obxv-venue-meta {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.82rem;
-  line-height: 1.3;
 }
 
 .obxv-grid {
@@ -99,7 +155,7 @@
   align-items: flex-start;
   gap: 8px;
   padding: 0;
-  color: #1f2937;
+  color: var(--ink);
 }
 
 .obx-locationbar svg {
@@ -133,7 +189,31 @@
 }
 
 @media (max-width: 767.98px) {
-  .obxv-venue-head {
-    align-items: flex-start;
+  .cloudari-billboard-venues {
+    padding-inline: 12px;
+  }
+
+  .obxv-tabs {
+    gap: 18px;
+    padding-bottom: 8px;
+  }
+
+  .obxv-tabs-inner {
+    scroll-snap-type: x proximity;
+  }
+
+  .obxv-tab {
+    font-size: 0.95rem;
+    padding-bottom: 12px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023.98px) {
+  .obxv-tabs {
+    gap: 20px;
+  }
+
+  .obxv-tabs-inner {
+    scroll-snap-type: x proximity;
   }
 }
