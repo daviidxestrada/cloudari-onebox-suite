@@ -37,6 +37,11 @@
     return url;
   }
 
+  function getClockIconUrl(env) {
+    const raw = env.clockIcon ?? env.clock_icon ?? "";
+    return String(raw || "").trim();
+  }
+
   function pad2(value) {
     return String(value).padStart(2, "0");
   }
@@ -208,6 +213,28 @@
     eventoVenue.appendChild(label);
 
     return eventoVenue;
+  }
+
+  function createTimeRow(timeLabel, env) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "evento-titulo evento-time";
+
+    const iconUrl = getClockIconUrl(env);
+    if (iconUrl) {
+      const icon = document.createElement("img");
+      icon.className = "evento-time-icon";
+      icon.src = iconUrl;
+      icon.alt = "";
+      icon.setAttribute("aria-hidden", "true");
+      wrapper.appendChild(icon);
+    }
+
+    const text = document.createElement("span");
+    text.className = "evento-time-text";
+    text.textContent = timeLabel || "";
+    wrapper.appendChild(text);
+
+    return wrapper;
   }
 
   function initCalendar(root, env) {
@@ -411,10 +438,7 @@
             const eventoMeta = document.createElement("div");
             eventoMeta.className = "evento-meta";
 
-            const eventoHora = document.createElement("div");
-            eventoHora.className = "evento-titulo";
-            eventoHora.textContent = evento.hora;
-            eventoMeta.appendChild(eventoHora);
+            eventoMeta.appendChild(createTimeRow(evento.hora, env));
 
             eventoMeta.appendChild(createVenueRow(evento.venue));
             eventoInfo.appendChild(eventoMeta);

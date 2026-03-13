@@ -69,6 +69,11 @@ final class Enqueue
             'ajaxSesiones'     => $ajaxUrl,
             'urlOnebox'        => $apiCatalogUrl,
             'purchaseBase'     => $purchaseBase,
+            'clockIcon'        => add_query_arg(
+                'ver',
+                self::assetVersion('assets/images/clock-icon.svg'),
+                CLOUDARI_ONEBOX_URL . 'assets/images/clock-icon.svg'
+            ),
             'specialRedirects' => $overrideMaps['specialRedirects'] ?? [],
         ];
     }

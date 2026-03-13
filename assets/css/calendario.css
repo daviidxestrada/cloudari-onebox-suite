@@ -600,7 +600,7 @@
 
   display: flex;
 
-  align-items: stretch;
+  align-items: center;
 
   min-height: 85px;
 
@@ -622,7 +622,9 @@
 
   flex-direction: column;
 
-  justify-content: space-between;
+  justify-content: flex-start;
+
+  gap: 8px;
 
   min-width: 0;
 
@@ -665,6 +667,8 @@
   border-radius: 6px;
 
   aspect-ratio: 14 / 8;
+
+  align-self: center;
 
 }
 
@@ -716,15 +720,49 @@
 
 }
 
+.evento-time {
+
+  display: grid;
+
+  grid-template-columns: 13px minmax(0, 1fr);
+
+  align-items: start;
+
+  column-gap: 6px;
+
+}
+
+.evento-time-icon {
+
+  width: 13px;
+
+  height: 13px;
+
+  object-fit: contain;
+
+  opacity: 0.62;
+
+  margin-top: 2px;
+
+}
+
+.evento-time-text {
+
+  display: block;
+
+  line-height: 1.25;
+
+}
+
 
 
 .evento-accion {
 
   display: flex;
 
-  justify-content: flex-end;
+  justify-content: flex-start;
 
-  margin-top: auto;
+  margin-top: 0;
 
 }
 
