@@ -83,6 +83,8 @@ final class Plugin
 
          * - [cloudari_calendar]
 
+         * - [cloudari_calendar_venues]
+
          * - [cloudari_billboard]
 
          * - [cloudari_billboard_venues]

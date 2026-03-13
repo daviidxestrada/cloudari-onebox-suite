@@ -1,0 +1,44 @@
+.cloudari-calendar-venues-container .evento-info {
+  gap: 10px;
+}
+
+.cloudari-calendar-venues-container .evento-meta {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.cloudari-calendar-venues-container .evento-titulo {
+  margin-bottom: 0;
+  flex-grow: 0;
+}
+
+.cloudari-calendar-venues-container .evento-venue {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: #1f2937;
+}
+
+.cloudari-calendar-venues-container .evento-venue svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  color: #475569;
+  margin-top: 1px;
+}
+
+.cloudari-calendar-venues-container .evento-venue-text {
+  font-size: 13px;
+  line-height: 1.3;
+  white-space: normal;
+  word-break: break-word;
+}
+
+@media (max-width: 768px) {
+  .cloudari-calendar-venues-container .evento-venue-text {
+    font-size: 12px;
+  }
+}

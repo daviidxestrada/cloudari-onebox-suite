@@ -9,6 +9,7 @@ final class Register
     public static function register(): void
     {
         add_shortcode('cloudari_calendar', [static::class, 'calendar']);
+        add_shortcode('cloudari_calendar_venues', [static::class, 'calendarVenues']);
         add_shortcode('cloudari_billboard', [static::class, 'billboard']);
         add_shortcode('cloudari_billboard_venues', [static::class, 'billboardVenues']);
         add_shortcode('cloudari_billboard_spaces', [static::class, 'billboardVenues']);
@@ -51,6 +52,50 @@ final class Register
             </div>
 
             <div id="calendario"></div>
+        </div>
+
+        <?php
+        return ob_get_clean();
+    }
+
+    public static function calendarVenues($atts = [], $content = ''): string
+    {
+        Enqueue::calendarVenues();
+
+        if (!CLOUDARI_ONEBOX_ENABLE_OUTPUT) {
+            return '<!-- Cloudari Calendar Venues desactivado por flag -->';
+        }
+
+        ob_start(); ?>
+
+        <div class="calendario-container cloudari-calendar-venues-container" data-cloudari-calendar-venues>
+            <div class="header">
+
+                <button class="nav-buttons"
+                        data-role="prev-month"
+                        aria-label="Mes anterior"
+                        title="Mes anterior"
+                        style="background:transparent;border:none">
+                    <svg fill="currentColor" width="28" height="28" viewBox="0 0 306 306" aria-hidden="true">
+                        <polygon points="247.35,267.75 130.05,153 247.35,35.7 211.65,0 58.65,153 211.65,306"/>
+                    </svg>
+                </button>
+
+                <div class="mes-anio" data-role="month-label"></div>
+
+                <button class="nav-buttons"
+                        data-role="next-month"
+                        aria-label="Siguiente mes"
+                        title="Siguiente mes"
+                        style="background:transparent;border:none">
+                    <svg fill="currentColor" width="28" height="28" viewBox="0 0 306 306" aria-hidden="true">
+                        <polygon points="58.65,267.75 175.95,153 58.65,35.7 94.35,0 247.35,153 94.35,306"/>
+                    </svg>
+                </button>
+
+            </div>
+
+            <div class="cloudari-calendar-shell" data-role="calendar"></div>
         </div>
 
         <?php

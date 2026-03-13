@@ -24,12 +24,9 @@ final class Enqueue
         return CLOUDARI_ONEBOX_VER;
     }
 
-    public static function calendar(): void
+    private static function enqueueCalendarBaseStyle(): void
     {
         $profile = ProfileRepository::getActive();
-        $integration = $profile->getDefaultIntegration();
-        $purchaseBase = $integration ? $integration->purchaseBaseUrl : '';
-        $apiCatalogUrl = $integration ? $integration->apiCatalogUrl : '';
 
         wp_enqueue_style(
             'cloudari-calendar',
@@ -54,6 +51,31 @@ final class Enqueue
         );
 
         wp_add_inline_style('cloudari-calendar', $inlineCss);
+    }
+
+    private static function getCalendarPayload(): array
+    {
+        $profile = ProfileRepository::getActive();
+        $integration = $profile->getDefaultIntegration();
+        $purchaseBase = $integration ? $integration->purchaseBaseUrl : '';
+        $apiCatalogUrl = $integration ? $integration->apiCatalogUrl : '';
+        $sesiones = Sessions::getDefaultRangeSessions();
+        $ajaxUrl = add_query_arg('action', CalendarAjax::ACTION, admin_url('admin-ajax.php'));
+        $overrideMaps = EventOverridesRepository::getEnvMaps();
+
+        return [
+            'sesiones'         => $sesiones,
+            'nonce'            => wp_create_nonce('cloudari_calendar_nonce'),
+            'ajaxSesiones'     => $ajaxUrl,
+            'urlOnebox'        => $apiCatalogUrl,
+            'purchaseBase'     => $purchaseBase,
+            'specialRedirects' => $overrideMaps['specialRedirects'] ?? [],
+        ];
+    }
+
+    public static function calendar(): void
+    {
+        self::enqueueCalendarBaseStyle();
 
         wp_enqueue_script(
             'cloudari-calendar',
@@ -63,21 +85,36 @@ final class Enqueue
             true
         );
 
-        $sesiones = Sessions::getDefaultRangeSessions();
-        $ajaxUrl = add_query_arg('action', CalendarAjax::ACTION, admin_url('admin-ajax.php'));
-        $overrideMaps = EventOverridesRepository::getEnvMaps();
-
         wp_localize_script(
             'cloudari-calendar',
             'oneboxData',
-            [
-                'sesiones'         => $sesiones,
-                'nonce'            => wp_create_nonce('cloudari_calendar_nonce'),
-                'ajaxSesiones'     => $ajaxUrl,
-                'urlOnebox'        => $apiCatalogUrl,
-                'purchaseBase'     => $purchaseBase,
-                'specialRedirects' => $overrideMaps['specialRedirects'] ?? [],
-            ]
+            self::getCalendarPayload()
+        );
+    }
+
+    public static function calendarVenues(): void
+    {
+        self::enqueueCalendarBaseStyle();
+
+        wp_enqueue_style(
+            'cloudari-calendar-venues',
+            CLOUDARI_ONEBOX_URL . 'assets/css/calendario-venues.css',
+            ['cloudari-calendar'],
+            self::assetVersion('assets/css/calendario-venues.css')
+        );
+
+        wp_enqueue_script(
+            'cloudari-calendar-venues',
+            CLOUDARI_ONEBOX_URL . 'assets/js/calendario-venues.js',
+            ['jquery'],
+            self::assetVersion('assets/js/calendario-venues.js'),
+            true
+        );
+
+        wp_localize_script(
+            'cloudari-calendar-venues',
+            'cloudariCalendarVenuesData',
+            self::getCalendarPayload()
         );
     }
 
