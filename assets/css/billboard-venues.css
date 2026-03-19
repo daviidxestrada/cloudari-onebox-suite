@@ -157,12 +157,12 @@
 
 .obxv-tab:hover {
   color: var(--tab-active-text);
-  background: var(--tab-active-bg);
+  background: transparent;
 }
 
 .obxv-tab:focus-visible {
   color: var(--tab-active-text);
-  background: var(--tab-active-bg);
+  background: transparent;
   outline: 2px solid var(--focus);
   outline-offset: 2px;
   box-shadow: 0 0 0 1px var(--focus);
