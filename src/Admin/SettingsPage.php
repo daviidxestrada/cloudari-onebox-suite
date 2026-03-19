@@ -246,6 +246,21 @@ final class SettingsPage
                             ],
                         ],
                     ],
+                    'focus' => [
+                        'label' => 'Color focus de controles',
+                        'reset_value' => '',
+                        'resolve' => [
+                            [
+                                'type' => 'global',
+                                'key' => 'color_primary',
+                                'label' => self::GLOBAL_STYLE_LABELS['color_primary'],
+                            ],
+                            [
+                                'type' => 'literal',
+                                'value' => self::getDefaultStyleValue('color_primary'),
+                            ],
+                        ],
+                    ],
                 ],
             ],
             'venue_filters' => [

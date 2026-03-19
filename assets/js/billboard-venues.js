@@ -6,6 +6,7 @@
     IMG_PLACEHOLDER:
       "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==",
     DEFAULT_CATEGORY_KEY: "teatro",
+    CATEGORY_ORDER: ["teatro", "musica", "musical", "humor", "talk"],
     CATEGORY_MAP: {
       teatro: { label: "Teatro", className: "obx-cat--teatro" },
       musica: { label: "Musica", className: "obx-cat--musica" },
@@ -90,6 +91,14 @@
       .trim();
 
   const normalizeCode = (value) => String(value || "").toUpperCase().trim();
+  const toTitleCaseLabel = (value) => {
+    const text = String(value || "").trim();
+    if (!text) {
+      return "";
+    }
+
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  };
 
   const sameDay = (left, right) =>
     left &&
@@ -222,24 +231,72 @@
         CONFIG.CATEGORY_KEYWORDS[key].some((keyword) =>
           haystack.includes(normalizeText(keyword))
         )
-      ) || CONFIG.DEFAULT_CATEGORY_KEY
+      ) || ""
     );
   };
 
-  const getCategoryDescriptor = (eventItem) => {
+  const getManualCategory = (eventItem) => {
     const category = eventItem?.category || {};
-    const canonicalKey = detectCanonicalKey(eventItem);
-    const canonical = canonicalKey ? CONFIG.CATEGORY_MAP[canonicalKey] : null;
-
+    const key = String(
+      category?.slug || category?.custom?.code || ""
+    )
+      .trim()
+      .toLowerCase();
     const label = String(
-      canonical?.label ||
-        category?.name ||
+      category?.name ||
         category?.description ||
         category?.custom?.description ||
         category?.custom?.code ||
         category?.code ||
         ""
     ).trim();
+
+    return {
+      key,
+      label: label || toTitleCaseLabel(key),
+    };
+  };
+
+  const getCategoryDescriptor = (eventItem) => {
+    const category = eventItem?.category || {};
+    const canonicalKey = detectCanonicalKey(eventItem);
+    const canonical = canonicalKey ? CONFIG.CATEGORY_MAP[canonicalKey] : null;
+    const isManual =
+      Boolean(eventItem?.cloudari?.manual) ||
+      String(eventItem?.source || "").trim().toLowerCase() === "manual";
+
+    let key = "";
+    let label = "";
+    let className = "";
+
+    if (canonicalKey && canonical) {
+      key = canonicalKey;
+      label = canonical.label;
+      className = canonical.className;
+    } else if (isManual) {
+      const manualCategory = getManualCategory(eventItem);
+      if (manualCategory.key) {
+        key = manualCategory.key;
+        label = manualCategory.label || CONFIG.CATEGORY_MAP[CONFIG.DEFAULT_CATEGORY_KEY].label;
+      }
+    }
+
+    if (!key) {
+      key = CONFIG.DEFAULT_CATEGORY_KEY;
+      label = CONFIG.CATEGORY_MAP[CONFIG.DEFAULT_CATEGORY_KEY].label;
+      className = CONFIG.CATEGORY_MAP[CONFIG.DEFAULT_CATEGORY_KEY].className;
+    }
+
+    if (!label) {
+      label = String(
+        category?.name ||
+          category?.description ||
+          category?.custom?.description ||
+          category?.custom?.code ||
+          category?.code ||
+          CONFIG.CATEGORY_MAP[CONFIG.DEFAULT_CATEGORY_KEY].label
+      ).trim();
+    }
 
     const rawColor = String(
       eventItem?.cloudari?.category_color ||
@@ -255,8 +312,9 @@
         : "";
 
     return {
+      key,
       label,
-      className: canonical?.className || "",
+      className,
       style: color
         ? `style="background:${esc(color)};border-color:${esc(color)};color:${esc(
             pickTextColor(color)
@@ -277,6 +335,14 @@
   };
 
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+  const debounce = (fn, waitMs = 160) => {
+    let timeoutId = 0;
+
+    return (...args) => {
+      window.clearTimeout(timeoutId);
+      timeoutId = window.setTimeout(() => fn(...args), waitMs);
+    };
+  };
 
   const getMaxScrollLeft = ($scroller) =>
     Math.max(0, ($scroller?.scrollWidth || 0) - ($scroller?.clientWidth || 0));
@@ -386,17 +452,89 @@
     `;
   };
 
-  const buildVenuePanel = (venue, panelId, tabId) => {
+  const populateCategoryFilter = (state, venue) => {
+    if (!state.$category) {
+      return;
+    }
+
+    const selectedValue = String(state.$category.value || "all").trim();
+    const present = new Map();
     const events = Array.isArray(venue?.events) ? venue.events : [];
+
+    events.forEach((eventItem) => {
+      const category = getCategoryDescriptor(eventItem);
+      if (category.key && !present.has(category.key)) {
+        present.set(category.key, category.label || category.key);
+      }
+    });
+
+    state.$category.innerHTML =
+      '<option value="all">Todas las categorias</option>';
+
+    CONFIG.CATEGORY_ORDER.forEach((key) => {
+      if (!present.has(key)) {
+        return;
+      }
+
+      const option = document.createElement("option");
+      option.value = key;
+      option.textContent = CONFIG.CATEGORY_MAP[key].label;
+      state.$category.appendChild(option);
+      present.delete(key);
+    });
+
+    Array.from(present.entries())
+      .map(([key, label]) => ({ key, label: String(label || key) }))
+      .sort((left, right) =>
+        left.label.localeCompare(right.label, "es", { sensitivity: "base" })
+      )
+      .forEach(({ key, label }) => {
+        const option = document.createElement("option");
+        option.value = key;
+        option.textContent = label;
+        state.$category.appendChild(option);
+      });
+
+    state.$category.value =
+      selectedValue === "all" || present.has(selectedValue) || !!events.find(
+        (eventItem) => getCategoryDescriptor(eventItem).key === selectedValue
+      )
+        ? selectedValue
+        : "all";
+  };
+
+  const getFilteredEvents = (state, venue) => {
+    const events = Array.isArray(venue?.events) ? venue.events : [];
+    const query = normalizeText(state.$search?.value || "");
+    const selectedCategory = String(state.$category?.value || "all").trim();
+
+    return events.filter((eventItem) => {
+      const matchesQuery =
+        !query || normalizeText(eventItem?.title || "").includes(query);
+      const matchesCategory =
+        selectedCategory === "all" ||
+        getCategoryDescriptor(eventItem).key === selectedCategory;
+
+      return matchesQuery && matchesCategory;
+    });
+  };
+
+  const buildVenuePanel = (venue, panelId, tabId, filteredEvents = null) => {
+    const sourceEvents = Array.isArray(venue?.events) ? venue.events : [];
+    const events = Array.isArray(filteredEvents) ? filteredEvents : sourceEvents;
     const venueName = String(venue?.name || "Espacio").trim() || "Espacio";
 
     if (!events.length) {
+      const emptyMessage = sourceEvents.length
+        ? "No hay espectaculos que coincidan con los filtros."
+        : "No hay eventos proximos para este espacio.";
+
       return `
         <section class="obxv-panel" id="${esc(panelId)}" role="tabpanel" aria-labelledby="${esc(
           tabId
         )}">
           <h3 class="sr-only">${esc(venueName)}</h3>
-          <p class="obx-empty">No hay eventos proximos para este espacio.</p>
+          <p class="obx-empty">${esc(emptyMessage)}</p>
         </section>
       `;
     }
@@ -644,7 +782,13 @@
       state.panelId,
       state.widgetId
     );
-    state.$list.innerHTML = buildVenuePanel(venue, state.panelId, tabId);
+    populateCategoryFilter(state, venue);
+    state.$list.innerHTML = buildVenuePanel(
+      venue,
+      state.panelId,
+      tabId,
+      getFilteredEvents(state, venue)
+    );
     queueScrollerStateUpdate(state);
 
     if (focusActive) {
@@ -722,6 +866,16 @@
         }
       }
     });
+
+    const applyFilters = () => renderWidget(state, state.activeKey);
+    const applyFiltersDebounced = debounce(applyFilters, 160);
+
+    state.$search?.addEventListener("input", applyFiltersDebounced, {
+      passive: true,
+    });
+    state.$category?.addEventListener("change", applyFilters, {
+      passive: true,
+    });
   };
 
   const fetchVenues = async () => {
@@ -758,6 +912,8 @@
     const $tabs = root.querySelector('[data-role="tabs"]');
     const $tabsWrap = root.querySelector(".obxv-tabs-wrap");
     const $tabsScroller = root.querySelector('[data-role="tabs-scroller"]');
+    const $search = root.querySelector('[data-role="search"]');
+    const $category = root.querySelector('[data-role="category"]');
     const $list = root.querySelector('[data-role="list"]');
     if (!$tabs || !$tabsWrap || !$tabsScroller || !$list) {
       return;
@@ -777,6 +933,8 @@
       $tabs,
       $tabsWrap,
       $tabsScroller,
+      $search,
+      $category,
       $list,
       activeKey: getVenueKey(venues[0]),
       didDragScroller: false,

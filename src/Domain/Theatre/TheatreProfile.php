@@ -13,6 +13,7 @@ final class TheatreProfile
             'cta',
             'card_bg',
             'text',
+            'focus',
         ],
         'venue_filters' => [
             'active_bg',

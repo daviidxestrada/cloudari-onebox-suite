@@ -9,6 +9,7 @@
   --shadow: 0 12px 32px rgba(2, 6, 23, 0.1);
   --gap: 16px;
   --radius: 14px;
+  --focus: var(--cloudari-billboard-focus, var(--cloudari-primary, #009ad8));
 
   max-width: 1100px;
   margin: 0 auto;
@@ -53,6 +54,20 @@
   background: var(--white);
   color: var(--ink);
   min-width: 0;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, outline-color 0.18s ease;
+}
+
+.obx-actions input:focus,
+.obx-actions select:focus {
+  border-color: var(--focus);
+  box-shadow: 0 0 0 1px var(--focus);
+  outline: none;
+}
+
+.obx-actions input:focus-visible,
+.obx-actions select:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 
 @media (max-width: 480px) {
@@ -198,6 +213,16 @@
   background: #fff;
   color: var(--cta, #d14100) !important;
   border-color: var(--cta, #d14100);
+}
+
+.obx-pill--cta:focus {
+  outline: none;
+}
+
+.obx-pill--cta:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 1px var(--focus);
 }
 
 .obx-cat--musica {

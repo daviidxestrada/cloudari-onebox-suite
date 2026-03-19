@@ -152,6 +152,8 @@ final class Register
         static $instance = 0;
         $instance++;
         $titleId = 'cloudari-billboard-venues-title-' . $instance;
+        $searchId = 'cloudari-billboard-venues-search-' . $instance;
+        $categoryId = 'cloudari-billboard-venues-category-' . $instance;
 
         ob_start(); ?>
 
@@ -166,6 +168,18 @@ final class Register
                     <div class="obxv-tabs-separator" aria-hidden="true"></div>
                 </div>
             </header>
+
+            <div class="obxv-filters">
+                <div class="obx-actions obxv-actions" role="search">
+                    <label class="sr-only" for="<?php echo esc_attr($searchId); ?>">Buscar espectaculos</label>
+                    <input id="<?php echo esc_attr($searchId); ?>" data-role="search" type="search" placeholder="Buscar espectaculos..." aria-label="Buscar espectaculos" />
+
+                    <label class="sr-only" for="<?php echo esc_attr($categoryId); ?>">Filtrar por categoria</label>
+                    <select id="<?php echo esc_attr($categoryId); ?>" data-role="category" aria-label="Filtrar por categoria">
+                        <option value="all">Todas las categorias</option>
+                    </select>
+                </div>
+            </div>
 
             <div class="obxv-list" data-role="list" aria-live="polite"></div>
         </section>

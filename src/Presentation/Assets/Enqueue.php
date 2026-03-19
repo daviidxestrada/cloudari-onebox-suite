@@ -23,6 +23,7 @@ final class Enqueue
             'cta'     => '--cloudari-billboard-cta',
             'card_bg' => '--cloudari-billboard-card-bg',
             'text'    => '--cloudari-billboard-text',
+            'focus'   => '--cloudari-billboard-focus',
         ],
         'venue_filters' => [
             'active_bg'   => '--cloudari-venue-filter-active-bg',

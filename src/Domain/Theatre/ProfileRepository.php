@@ -125,6 +125,7 @@ final class ProfileRepository
                     'cta' => self::LEGACY_BILLBOARD_CTA,
                     'card_bg' => self::LEGACY_BILLBOARD_CARD_BG,
                     'text' => self::LEGACY_BILLBOARD_TEXT,
+                    'focus' => '',
                 ],
                 'venue_filters' => [
                     'active_bg' => 'transparent',

@@ -9,6 +9,7 @@
   --shadow: 0 12px 32px rgba(2, 6, 23, 0.1);
   --gap: 16px;
   --radius: 14px;
+  --focus: var(--cloudari-billboard-focus, var(--cloudari-primary, #009ad8));
   --tab-text: var(--cloudari-venue-filter-text, var(--cloudari-text, #0b0f1a));
   --tab-active-text: var(--cloudari-venue-filter-active-text, var(--cloudari-accent, #d14100));
   --tab-active-bg: var(--cloudari-venue-filter-active-bg, transparent);
@@ -154,11 +155,17 @@
   opacity: 0;
 }
 
-.obxv-tab:hover,
+.obxv-tab:hover {
+  color: var(--tab-active-text);
+  background: var(--tab-active-bg);
+}
+
 .obxv-tab:focus-visible {
   color: var(--tab-active-text);
   background: var(--tab-active-bg);
-  outline: none;
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 1px var(--focus);
 }
 
 .obxv-tab[aria-selected="true"] {
@@ -187,6 +194,11 @@
 
 .obxv-list {
   display: block;
+  margin-top: 12px;
+}
+
+.obxv-filters {
+  margin-top: 12px;
 }
 
 .obxv-panel {
@@ -272,9 +284,18 @@
   }
 }
 
+@media (min-width: 1024px) {
+  .cloudari-billboard-venues {
+    max-width: none;
+    margin: 0;
+    padding-top: 12px;
+    padding-bottom: 32px;
+  }
+}
+
 @media (max-width: 639.98px) {
   .obxv-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
