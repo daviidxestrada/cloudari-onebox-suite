@@ -234,7 +234,7 @@
 
 /* =========================
 
-   GRID ESCRITORIO (31 columnas)
+   GRID ESCRITORIO (columnas dinámicas por mes)
 
 ========================= */
 
@@ -246,7 +246,7 @@
 
      AHORA: minmax(0,1fr) para que las 31 columnas SIEMPRE quepan en el viewport */
 
-  grid-template-columns: repeat(31, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--cloudari-calendar-columns, 31), minmax(0, 1fr));
 
   gap: 5px;
 
@@ -262,7 +262,7 @@
 
   display: grid;
 
-  grid-template-columns: repeat(31, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--cloudari-calendar-columns, 31), minmax(0, 1fr));
 
   gap: 5px;
 

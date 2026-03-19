@@ -331,6 +331,10 @@
 
       const encabezadosDias = document.createElement("div");
       encabezadosDias.className = "encabezados-dias";
+      encabezadosDias.style.setProperty(
+        "--cloudari-calendar-columns",
+        String(esMovil() ? 7 : diasEnMes)
+      );
 
       if (!esMovil()) {
         for (let i = 0; i < diasEnMes; i++) {
@@ -353,6 +357,10 @@
 
       const listaDias = document.createElement("div");
       listaDias.className = "calendario";
+      listaDias.style.setProperty(
+        "--cloudari-calendar-columns",
+        String(esMovil() ? 7 : diasEnMes)
+      );
 
       if (esMovil()) {
         let primerDiaSemana = new Date(anioActual, mesActual, 1).getDay();

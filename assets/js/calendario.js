@@ -308,6 +308,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Encabezados
     const encabezadosDias = document.createElement('div');
     encabezadosDias.className = 'encabezados-dias';
+    encabezadosDias.style.setProperty('--cloudari-calendar-columns', String(esMovil() ? 7 : diasEnMes));
 
     if (!esMovil()) {
       // Desktop: encabezado por cada día del mes (para 31 columnas)
@@ -334,6 +335,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Lista de días
     const listaDias = document.createElement('div');
     listaDias.className = 'calendario';
+    listaDias.style.setProperty('--cloudari-calendar-columns', String(esMovil() ? 7 : diasEnMes));
 
     if (esMovil()) {
       // Semana empieza en lunes: rotación (getDay 0=Dom => 6)

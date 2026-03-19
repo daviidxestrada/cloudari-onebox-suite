@@ -2,6 +2,7 @@
   --brand: var(--cloudari-billboard-topbar, var(--cloudari-primary, #009ad8));
   --cta: var(--cloudari-billboard-cta, var(--cloudari-accent, #d14100));
   --ink: var(--cloudari-billboard-text, var(--cloudari-text, #0b0f1a));
+  --title-link-hover: var(--tab-active-text);
   --muted: #475569;
   --line: #e5e7eb;
   --soft: #f3f4f6;
@@ -345,6 +346,19 @@
 .cloudari-billboard-venues .obx-locationbar,
 .cloudari-billboard-venues .obx-locationbar__text {
   color: var(--ink) !important;
+}
+
+.cloudari-billboard-venues .obx-title-link,
+.cloudari-billboard-venues .obx-title-link:link,
+.cloudari-billboard-venues .obx-title-link:visited {
+  color: inherit !important;
+  text-decoration: none !important;
+}
+
+.cloudari-billboard-venues .obx-title-link:hover,
+.cloudari-billboard-venues .obx-title-link:focus-visible {
+  color: var(--title-link-hover) !important;
+  text-decoration: none !important;
 }
 
 .cloudari-billboard-venues .obx-datebar svg,

@@ -2,6 +2,7 @@
   --brand: var(--cloudari-billboard-topbar, var(--cloudari-primary, #009ad8));
   --cta: var(--cloudari-billboard-cta, var(--cloudari-accent, #d14100));
   --ink: var(--cloudari-billboard-text, var(--cloudari-text, #0b0f1a));
+  --title-link-hover: var(--cloudari-venue-filter-active-text, var(--cta, #d14100));
   --muted: #475569;
   --line: #e5e7eb;
   --soft: #f3f4f6;
@@ -161,6 +162,24 @@
   text-transform: uppercase;
   line-height: 1.2;
   word-break: break-word;
+}
+
+.obx-title-link,
+.obx-title-link:link,
+.obx-title-link:visited {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.18s ease;
+}
+
+.obx-title-link:hover,
+.obx-title-link:focus-visible {
+  color: var(--title-link-hover);
+  text-decoration: none;
+}
+
+.obx-title-link:focus {
+  outline: none;
 }
 
 .obx-datebar {
