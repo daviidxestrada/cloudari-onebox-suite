@@ -344,6 +344,15 @@
     };
   };
 
+  const openMediaUrl = (mediaEl) => {
+    const url = String(mediaEl?.dataset?.url || "").trim();
+    if (!url) {
+      return;
+    }
+
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
   const getMaxScrollLeft = ($scroller) =>
     Math.max(0, ($scroller?.scrollWidth || 0) - ($scroller?.clientWidth || 0));
 
@@ -411,7 +420,7 @@
 
     return `
       <article class="obx-card">
-        <div class="obx-media">
+        <div class="obx-media"${url ? ` data-url="${esc(url)}" role="link" tabindex="0" aria-label="${esc(`${getCtaLabel(eventItem)} para ${title}`)}"` : ""}>
           <img ${attrs} src="${esc(
             eventItem?.image || CONFIG.IMG_PLACEHOLDER
           )}" alt="${esc(title)} - cartel" referrerpolicy="no-referrer">
@@ -875,6 +884,30 @@
     });
     state.$category?.addEventListener("change", applyFilters, {
       passive: true,
+    });
+
+    state.$list.addEventListener("click", (event) => {
+      const mediaEl = event.target.closest(".obx-media[data-url]");
+      if (!mediaEl || !state.$list.contains(mediaEl)) {
+        return;
+      }
+
+      event.preventDefault();
+      openMediaUrl(mediaEl);
+    });
+
+    state.$list.addEventListener("keydown", (event) => {
+      const mediaEl = event.target.closest(".obx-media[data-url]");
+      if (!mediaEl || !state.$list.contains(mediaEl)) {
+        return;
+      }
+
+      if (event.key !== "Enter" && event.key !== " ") {
+        return;
+      }
+
+      event.preventDefault();
+      openMediaUrl(mediaEl);
     });
   };
 

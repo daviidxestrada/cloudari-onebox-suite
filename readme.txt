@@ -89,6 +89,7 @@ Si el `venue` manual esta vacio, la cartelera por espacios usa `venue_name` del 
 - `GET /wp-json/cloudari/v1/manual-events`
 
 Notas:
+- `ping` queda reservado para administradores autenticados.
 - `billboard-events` mantiene la salida de la cartelera clasica.
 - `billboard-venues` devuelve la cartelera agrupada por venue, con venues ordenados por proxima fecha y eventos ordenados por fecha ascendente.
 

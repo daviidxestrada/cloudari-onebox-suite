@@ -36,7 +36,7 @@ final class CalendarAjax
             if (!wp_verify_nonce($nonce, 'cloudari_calendar_nonce')) {
                 wp_send_json_error(
                     [
-                        'error' => 'Invalid nonce',
+                        'error' => 'Solicitud no autorizada',
                     ],
                     403
                 );
@@ -52,8 +52,6 @@ final class CalendarAjax
             wp_send_json_error(
                 [
                     'error'      => 'Fechas inválidas',
-                    'inicio_raw' => $inicio,
-                    'fin_raw'    => $fin,
                 ],
                 400
             );
@@ -88,7 +86,7 @@ final class CalendarAjax
 
             wp_send_json_error(
                 [
-                    'error' => 'Internal server error',
+                    'error' => 'No se pudo procesar la solicitud',
                 ],
                 500
             );

@@ -10,6 +10,8 @@
   --gap: 16px;
   --radius: 14px;
   --focus: var(--cloudari-billboard-focus, var(--cloudari-primary, #009ad8));
+  --focus-ring: color-mix(in srgb, var(--focus) 72%, white 28%);
+  --focus-glow: color-mix(in srgb, var(--focus) 38%, transparent);
   --tab-text: var(--cloudari-venue-filter-text, var(--cloudari-text, #0b0f1a));
   --tab-active-text: var(--cloudari-venue-filter-active-text, var(--cloudari-accent, #d14100));
   --tab-active-bg: var(--cloudari-venue-filter-active-bg, transparent);
@@ -171,9 +173,8 @@
 .obxv-tab:focus-visible {
   color: var(--tab-active-text);
   background: transparent;
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
-  box-shadow: 0 0 0 1px var(--focus);
+  outline: none;
+  box-shadow: 0 0 0 2px var(--focus-ring), 0 0 16px 2px var(--focus-glow);
 }
 
 .obxv-tab[aria-selected="true"] {
@@ -256,6 +257,140 @@
 .obxv-skeleton {
   display: grid;
   gap: 14px;
+}
+
+/* Blindaje de colores/fondos frente a Elementor y temas */
+.cloudari-billboard-venues {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: var(--ink) !important;
+}
+
+.cloudari-billboard-venues .obx-head,
+.cloudari-billboard-venues .obxv-list,
+.cloudari-billboard-venues .obxv-panel,
+.cloudari-billboard-venues .obx-body {
+  background: transparent !important;
+  color: inherit !important;
+}
+
+.cloudari-billboard-venues .obx-actions input,
+.cloudari-billboard-venues .obx-actions select {
+  background: var(--white) !important;
+  background-color: var(--white) !important;
+  background-image: none !important;
+  color: var(--ink) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: none !important;
+}
+
+.cloudari-billboard-venues .obx-actions input::placeholder {
+  color: #6b7280 !important;
+  opacity: 1;
+}
+
+.cloudari-billboard-venues .obx-actions input:focus,
+.cloudari-billboard-venues .obx-actions input:focus-visible,
+.cloudari-billboard-venues .obx-actions select:focus,
+.cloudari-billboard-venues .obx-actions select:focus-visible {
+  background: var(--white) !important;
+  background-color: var(--white) !important;
+  color: var(--ink) !important;
+  border-color: var(--focus) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px var(--focus-ring), 0 0 16px 2px var(--focus-glow) !important;
+}
+
+.cloudari-billboard-venues .obxv-tabs-separator {
+  background: var(--tab-border) !important;
+}
+
+.cloudari-billboard-venues .obxv-tab {
+  color: var(--tab-text) !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.cloudari-billboard-venues .obxv-tab:hover,
+.cloudari-billboard-venues .obxv-tab:focus-visible,
+.cloudari-billboard-venues .obxv-tab[aria-selected="true"] {
+  color: var(--tab-active-text) !important;
+}
+
+.cloudari-billboard-venues .obxv-tab[aria-selected="true"]::after {
+  background: var(--tab-indicator) !important;
+}
+
+.cloudari-billboard-venues .obx-card {
+  background: var(--white) !important;
+  background-color: var(--white) !important;
+  color: var(--ink) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
+}
+
+.cloudari-billboard-venues .obx-media {
+  background: var(--soft) !important;
+  background-color: var(--soft) !important;
+}
+
+.cloudari-billboard-venues .obx-topbar {
+  background: var(--brand) !important;
+  background-color: var(--brand) !important;
+}
+
+.cloudari-billboard-venues .obx-h3,
+.cloudari-billboard-venues .obx-datebar,
+.cloudari-billboard-venues .obx-datebar__text,
+.cloudari-billboard-venues .obx-locationbar,
+.cloudari-billboard-venues .obx-locationbar__text {
+  color: var(--ink) !important;
+}
+
+.cloudari-billboard-venues .obx-datebar svg,
+.cloudari-billboard-venues .obx-locationbar svg {
+  color: var(--muted) !important;
+}
+
+.cloudari-billboard-venues .obx-pill--cat {
+  color: #fff !important;
+}
+
+.cloudari-billboard-venues .obx-pill--cta,
+.cloudari-billboard-venues .obx-pill--cta:link,
+.cloudari-billboard-venues .obx-pill--cta:visited {
+  background: var(--cta) !important;
+  background-color: var(--cta) !important;
+  background-image: none !important;
+  border-color: var(--cta) !important;
+  color: #fff !important;
+  text-decoration: none !important;
+  box-shadow: none !important;
+}
+
+.cloudari-billboard-venues .obx-pill--cta:hover,
+.cloudari-billboard-venues .obx-pill--cta:focus-visible,
+.cloudari-billboard-venues .obx-pill--cta:active {
+  background: #fff !important;
+  background-color: #fff !important;
+  color: var(--cta) !important;
+  border-color: var(--cta) !important;
+  text-decoration: none !important;
+  box-shadow: none !important;
+}
+
+.cloudari-billboard-venues .obx-empty {
+  background: var(--soft) !important;
+  background-color: var(--soft) !important;
+  border-color: var(--line) !important;
+  color: var(--muted) !important;
+}
+
+.cloudari-billboard-venues .obx-msg {
+  background: #fff !important;
+  background-color: #fff !important;
+  border-color: var(--line) !important;
+  color: #8a1313 !important;
 }
 
 @media (max-width: 767.98px) {

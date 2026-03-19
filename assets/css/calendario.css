@@ -952,3 +952,176 @@
 
 }
 
+/* Blindaje de colores/fondos frente a Elementor y temas */
+.calendario-container {
+
+  background: var(--cloudari-bg) !important;
+
+  background-color: var(--cloudari-bg) !important;
+
+  color: var(--calendar-text) !important;
+
+}
+
+.calendario-container .header,
+
+.calendario-container #calendario,
+
+.calendario-container .cloudari-calendar-shell,
+
+.calendario-container .encabezados-dias,
+
+.calendario-container .calendario {
+
+  background: transparent !important;
+
+  background-color: transparent !important;
+
+  color: inherit !important;
+
+}
+
+.calendario-container .mes-anio,
+
+.calendario-container .dia-header,
+
+.calendario-container .numero-dia,
+
+.calendario-container .evento-lugar,
+
+.calendario-container .evento-titulo,
+
+.calendario-container .evento-time,
+
+.calendario-container .evento-time-text {
+
+  color: var(--calendar-text) !important;
+
+}
+
+.calendario-container .celda-dia {
+
+  background: transparent !important;
+
+  background-color: transparent !important;
+
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.04) inset !important;
+
+}
+
+.calendario-container .celda-dia:hover {
+
+  background: var(--hover-gray) !important;
+
+  background-color: var(--hover-gray) !important;
+
+}
+
+.calendario-container .celda-dia.dia-seleccionado {
+
+  background: var(--cloudari-selected-day, var(--cloudari-primary, #009AD8)) !important;
+
+  background-color: var(--cloudari-selected-day, var(--cloudari-primary, #009AD8)) !important;
+
+  color: var(--selected-fg) !important;
+
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.08) inset !important;
+
+}
+
+.calendario-container .celda-dia.dia-seleccionado .numero-dia {
+
+  color: var(--selected-fg) !important;
+
+}
+
+.calendario-container .celda-dia.vacia {
+
+  background: rgba(222, 222, 222, 0.45) !important;
+
+  background-color: rgba(222, 222, 222, 0.45) !important;
+
+}
+
+.calendario-container .celda-dia.dia-pasado,
+
+.calendario-container .celda-dia.dia-pasado .numero-dia {
+
+  color: #999 !important;
+
+}
+
+.calendario-container .indicador-evento {
+
+  background-color: var(--azul-principal) !important;
+
+}
+
+.calendario-container .dia-seleccionado .indicador-evento {
+
+  background-color: var(--selected-fg) !important;
+
+}
+
+.calendario-container .popup-eventos {
+
+  background: #fff !important;
+
+  background-color: #fff !important;
+
+  color: var(--calendar-text) !important;
+
+  box-shadow: 0 3px 15px rgba(0,0,0,0.2) !important;
+
+}
+
+.calendario-container .popup-eventos:after {
+
+  border-top-color: #fff !important;
+
+}
+
+.calendario-container .evento-fecha {
+
+  background: var(--azul-principal) !important;
+
+  background-color: var(--azul-principal) !important;
+
+  color: #fff !important;
+
+}
+
+.calendario-container .evento-item {
+
+  background: #fff !important;
+
+  background-color: #fff !important;
+
+  border-bottom: 1px solid #eee !important;
+
+}
+
+.calendario-container .evento-imagen {
+
+  background: transparent !important;
+
+  background-color: transparent !important;
+
+}
+
+.calendario-container .btn-tickets,
+
+.calendario-container .btn-tickets:focus,
+
+.calendario-container .btn-tickets:active,
+
+.calendario-container .btn-tickets:hover {
+
+  background-image: none !important;
+
+  text-decoration: none !important;
+
+  box-shadow: none !important;
+
+}
+

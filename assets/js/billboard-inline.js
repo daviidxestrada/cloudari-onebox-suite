@@ -573,7 +573,7 @@
     const card = document.createElement("article");
     card.className = "obx-card";
     card.innerHTML = `
-      <div class="obx-media">
+      <div class="obx-media"${e.url ? ` data-url="${esc(e.url)}" role="link" tabindex="0" aria-label="${esc((e.ctaLabel || "Entradas") + " para " + e.title)}"` : ""}>
         <img ${attrs} src="${esc(e.image)}" alt="${esc(
           e.title
         )} – cartel" referrerpolicy="no-referrer">
@@ -633,7 +633,7 @@
   function renderAuthError($grid) {
     $grid.innerHTML = `
       <div class="obx-msg" role="alert">
-        ⚠️ No autorizado: revisa las credenciales de OneBox en la página de ajustes del plugin.
+        No se pudo cargar la cartelera en este momento.
       </div>`;
   }
 
@@ -753,6 +753,47 @@
     };
   };
 
+  const openMediaUrl = (mediaEl) => {
+    const url = String(mediaEl?.dataset?.url || "").trim();
+    if (!url) {
+      return;
+    }
+
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  const bindMediaInteractions = ($container) => {
+    if (!$container || $container.dataset.obxMediaBound === "1") {
+      return;
+    }
+
+    $container.dataset.obxMediaBound = "1";
+
+    $container.addEventListener("click", (event) => {
+      const mediaEl = event.target.closest(".obx-media[data-url]");
+      if (!mediaEl || !$container.contains(mediaEl)) {
+        return;
+      }
+
+      event.preventDefault();
+      openMediaUrl(mediaEl);
+    });
+
+    $container.addEventListener("keydown", (event) => {
+      const mediaEl = event.target.closest(".obx-media[data-url]");
+      if (!mediaEl || !$container.contains(mediaEl)) {
+        return;
+      }
+
+      if (event.key !== "Enter" && event.key !== " ") {
+        return;
+      }
+
+      event.preventDefault();
+      openMediaUrl(mediaEl);
+    });
+  };
+
   /** =========================
    *  BOOT
    *  ========================= */
@@ -771,6 +812,7 @@
     const $cat  = document.getElementById("obx-cat");
     let currentCards = [];
     if (!$grid) return;
+    bindMediaInteractions($grid);
 
     const cachedRaw = Cache.read(CONFIG.CACHE_KEY, CONFIG.CACHE_TTL_MS);
     if (cachedRaw?.length) {
@@ -824,7 +866,7 @@
           } else if (hadHttpError) {
             renderEmpty(
               $grid,
-              "No se pudieron cargar eventos (error al consultar OneBox)."
+              "No se pudo cargar la cartelera en este momento."
             );
           } else {
             renderEmpty(

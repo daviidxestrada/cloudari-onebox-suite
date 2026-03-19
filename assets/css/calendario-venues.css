@@ -82,3 +82,17 @@
     font-size: 12px;
   }
 }
+
+/* Blindaje de colores especificos frente a Elementor y temas */
+.cloudari-calendar-venues-container .evento-meta,
+.cloudari-calendar-venues-container .evento-time,
+.cloudari-calendar-venues-container .evento-time-text,
+.cloudari-calendar-venues-container .evento-venue,
+.cloudari-calendar-venues-container .evento-venue-text {
+  color: #4b5563 !important;
+}
+
+.cloudari-calendar-venues-container .evento-venue svg {
+  color: #475569 !important;
+  fill: currentColor !important;
+}
