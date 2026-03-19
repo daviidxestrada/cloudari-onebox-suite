@@ -7,7 +7,7 @@
   display: grid;
   gap: 18px;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  background: var(--cloudari-countdown-bg, #fff);
+  background: var(--cloudari-countdown-bg, var(--cloudari-bg, #fff));
   border: 1px solid var(--cloudari-countdown-border, var(--e-global-color-8, #e6e6e6));
   border-radius: 16px;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
@@ -50,12 +50,12 @@
   padding: 0.4rem 0.6rem;
   border: 1px solid var(--cloudari-countdown-border, var(--e-global-color-8, #e6e6e6));
   border-radius: 10px;
-  background: var(--cloudari-countdown-bg, #fff);
+  background: var(--cloudari-countdown-bg, var(--cloudari-bg, #fff));
 }
 
 .cloudari-ce-countdown span {
   font-weight: 800;
-  color: var(--cloudari-countdown-number, currentColor);
+  color: var(--cloudari-countdown-number, var(--cloudari-text, currentColor));
   font-family: var(--e-global-typography-primary-font-family, Montserrat, system-ui, sans-serif);
 }
 

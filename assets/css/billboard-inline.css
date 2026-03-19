@@ -1,11 +1,11 @@
 #obx-cards {
   --brand: var(--cloudari-billboard-topbar, var(--cloudari-primary, #009ad8));
-  --cta: var(--cloudari-billboard-cta, #d14100);
-  --ink: var(--cloudari-billboard-text, #0b0f1a);
+  --cta: var(--cloudari-billboard-cta, var(--cloudari-accent, #d14100));
+  --ink: var(--cloudari-billboard-text, var(--cloudari-text, #0b0f1a));
   --muted: #475569;
   --line: #e5e7eb;
   --soft: #f3f4f6;
-  --white: var(--cloudari-billboard-card-bg, #ffffff);
+  --white: var(--cloudari-billboard-card-bg, var(--cloudari-bg, #ffffff));
   --shadow: 0 12px 32px rgba(2, 6, 23, 0.1);
   --gap: 16px;
   --radius: 14px;

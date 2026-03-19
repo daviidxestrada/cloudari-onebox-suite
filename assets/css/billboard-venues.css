@@ -1,19 +1,19 @@
 .cloudari-billboard-venues {
   --brand: var(--cloudari-billboard-topbar, var(--cloudari-primary, #009ad8));
   --cta: var(--cloudari-billboard-cta, var(--cloudari-accent, #d14100));
-  --ink: var(--cloudari-billboard-text, #0b0f1a);
+  --ink: var(--cloudari-billboard-text, var(--cloudari-text, #0b0f1a));
   --muted: #475569;
   --line: #e5e7eb;
   --soft: #f3f4f6;
-  --white: var(--cloudari-billboard-card-bg, #ffffff);
+  --white: var(--cloudari-billboard-card-bg, var(--cloudari-bg, #ffffff));
   --shadow: 0 12px 32px rgba(2, 6, 23, 0.1);
   --gap: 16px;
   --radius: 14px;
-  --tab-text: var(--cloudari-venue-filter-text, var(--ink));
-  --tab-active-text: var(--cloudari-venue-filter-active-text, var(--cta));
+  --tab-text: var(--cloudari-venue-filter-text, var(--cloudari-text, #0b0f1a));
+  --tab-active-text: var(--cloudari-venue-filter-active-text, var(--cloudari-accent, #d14100));
   --tab-active-bg: var(--cloudari-venue-filter-active-bg, transparent);
   --tab-border: var(--cloudari-venue-filter-border, var(--cloudari-primary, #009ad8));
-  --tab-indicator: var(--cloudari-venue-filter-indicator, var(--cta));
+  --tab-indicator: var(--cloudari-venue-filter-indicator, var(--cloudari-accent, #d14100));
 
   max-width: 1100px;
   margin: 0 auto;
@@ -40,20 +40,62 @@
   margin-bottom: 20px;
 }
 
+.obxv-head,
+.obxv-tabs-wrap,
+.obxv-tabs-inner,
+.obxv-list,
+.obxv-panel {
+  min-width: 0;
+}
+
 .obxv-tabs-wrap {
   position: relative;
   width: 100%;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.obxv-tabs-wrap::before,
+.obxv-tabs-wrap::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 1px;
+  width: 20px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  z-index: 1;
+}
+
+.obxv-tabs-wrap::before {
+  left: 0;
+  box-shadow: inset 12px 0 12px -12px rgba(11, 15, 26, 0.3);
+}
+
+.obxv-tabs-wrap::after {
+  right: 0;
+  box-shadow: inset -12px 0 12px -12px rgba(11, 15, 26, 0.3);
+}
+
+.obxv-tabs-wrap.is-scrollable:not(.is-at-start)::before,
+.obxv-tabs-wrap.is-scrollable:not(.is-at-end)::after {
+  opacity: 1;
 }
 
 .obxv-tabs-inner {
+  display: block;
+  max-width: 100%;
   width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
   padding: 0;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
+  overscroll-behavior-y: auto;
   scrollbar-width: none;
-  touch-action: pan-x;
+  scroll-behavior: smooth;
+  scroll-padding-inline: 12px;
 }
 
 .obxv-tabs-inner::-webkit-scrollbar {
@@ -61,11 +103,13 @@
 }
 
 .obxv-tabs {
-  display: inline-flex;
+  display: flex;
   align-items: stretch;
-  gap: 24px;
-  min-width: max-content;
-  padding: 0 12px 10px 0;
+  gap: clamp(14px, 2.6vw, 24px);
+  width: max-content;
+  min-width: 100%;
+  padding: 0 12px 10px;
+  box-sizing: border-box;
 }
 
 .obxv-tabs-separator {
@@ -76,6 +120,8 @@
 
 .obxv-tab {
   flex: 0 0 auto;
+  display: inline-flex;
+  align-items: flex-end;
   position: relative;
   appearance: none;
   border: 0;
@@ -87,6 +133,7 @@
   font-size: 1rem;
   font-weight: 800;
   line-height: 1.2;
+  min-height: 44px;
   padding: 0 2px 14px;
   margin: 0;
   white-space: nowrap;
@@ -135,6 +182,7 @@
 
 .obxv-tab__label {
   display: inline-block;
+  pointer-events: none;
 }
 
 .obxv-list {
@@ -193,13 +241,19 @@
     padding-inline: 12px;
   }
 
+  .obxv-head {
+    margin-inline: -12px;
+  }
+
   .obxv-tabs {
-    gap: 18px;
+    gap: 16px;
+    padding-inline: 16px;
     padding-bottom: 8px;
   }
 
   .obxv-tabs-inner {
     scroll-snap-type: x proximity;
+    scroll-padding-inline: 16px;
   }
 
   .obxv-tab {
@@ -215,5 +269,23 @@
 
   .obxv-tabs-inner {
     scroll-snap-type: x proximity;
+  }
+}
+
+@media (max-width: 639.98px) {
+  .obxv-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (pointer: fine) {
+  .obxv-tabs-inner {
+    cursor: grab;
+  }
+
+  .obxv-tabs-inner.is-dragging {
+    cursor: grabbing;
+    scroll-snap-type: none;
+    user-select: none;
   }
 }

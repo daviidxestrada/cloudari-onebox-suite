@@ -276,6 +276,11 @@
     return value || "Entradas";
   };
 
+  const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+  const getMaxScrollLeft = ($scroller) =>
+    Math.max(0, ($scroller?.scrollWidth || 0) - ($scroller?.clientWidth || 0));
+
   const renderSkeleton = ($tabs, $list) => {
     if ($tabs) {
       $tabs.innerHTML = `
@@ -434,6 +439,149 @@
       })
       .join("");
 
+  const updateScrollerState = (state) => {
+    if (!state.$tabsScroller || !state.$tabsWrap) {
+      return;
+    }
+
+    const maxScrollLeft = getMaxScrollLeft(state.$tabsScroller);
+    const scrollLeft = state.$tabsScroller.scrollLeft;
+
+    state.$tabsWrap.classList.toggle("is-scrollable", maxScrollLeft > 2);
+    state.$tabsWrap.classList.toggle("is-at-start", scrollLeft <= 2);
+    state.$tabsWrap.classList.toggle(
+      "is-at-end",
+      scrollLeft >= maxScrollLeft - 2
+    );
+  };
+
+  const queueScrollerStateUpdate = (state) => {
+    if (!state || state.scrollStateFrame) {
+      return;
+    }
+
+    state.scrollStateFrame = window.requestAnimationFrame(() => {
+      state.scrollStateFrame = 0;
+      updateScrollerState(state);
+    });
+  };
+
+  const bindScrollerState = (state) => {
+    if (!state.$tabsScroller || !state.$tabsWrap) {
+      return;
+    }
+
+    const refresh = () => queueScrollerStateUpdate(state);
+
+    state.$tabsScroller.addEventListener("scroll", refresh, { passive: true });
+    window.addEventListener("resize", refresh, { passive: true });
+
+    if (typeof ResizeObserver !== "undefined") {
+      const resizeObserver = new ResizeObserver(refresh);
+      resizeObserver.observe(state.$tabsScroller);
+      resizeObserver.observe(state.$tabs);
+      state.resizeObserver = resizeObserver;
+    }
+
+    refresh();
+  };
+
+  const bindScrollerDrag = (state) => {
+    if (!state.$tabsScroller) {
+      return;
+    }
+
+    let activePointerId = null;
+    let startX = 0;
+    let startScrollLeft = 0;
+    let movedEnoughToDrag = false;
+
+    const stopDragging = (event) => {
+      if (activePointerId === null) {
+        return;
+      }
+
+      if (
+        event &&
+        typeof event.pointerId === "number" &&
+        event.pointerId !== activePointerId
+      ) {
+        return;
+      }
+
+      if (state.$tabsScroller.hasPointerCapture?.(activePointerId)) {
+        state.$tabsScroller.releasePointerCapture(activePointerId);
+      }
+
+      activePointerId = null;
+      state.$tabsScroller.classList.remove("is-dragging");
+
+      window.setTimeout(() => {
+        state.didDragScroller = false;
+      }, 0);
+
+      queueScrollerStateUpdate(state);
+    };
+
+    state.$tabsScroller.addEventListener("pointerdown", (event) => {
+      if (event.pointerType !== "mouse" || event.button !== 0) {
+        return;
+      }
+
+      if (getMaxScrollLeft(state.$tabsScroller) <= 0) {
+        return;
+      }
+
+      activePointerId = event.pointerId;
+      startX = event.clientX;
+      startScrollLeft = state.$tabsScroller.scrollLeft;
+      movedEnoughToDrag = false;
+      state.didDragScroller = false;
+
+      state.$tabsScroller.classList.add("is-dragging");
+      state.$tabsScroller.setPointerCapture?.(activePointerId);
+    });
+
+    state.$tabsScroller.addEventListener("pointermove", (event) => {
+      if (activePointerId === null || event.pointerId !== activePointerId) {
+        return;
+      }
+
+      const delta = event.clientX - startX;
+
+      if (!movedEnoughToDrag && Math.abs(delta) > 4) {
+        movedEnoughToDrag = true;
+        state.didDragScroller = true;
+      }
+
+      if (!movedEnoughToDrag) {
+        return;
+      }
+
+      state.$tabsScroller.scrollLeft = startScrollLeft - delta;
+      event.preventDefault();
+      queueScrollerStateUpdate(state);
+    });
+
+    state.$tabsScroller.addEventListener("pointerup", stopDragging);
+    state.$tabsScroller.addEventListener("pointercancel", stopDragging);
+    state.$tabsScroller.addEventListener("lostpointercapture", stopDragging);
+
+    state.$tabs.addEventListener(
+      "click",
+      (event) => {
+        if (!state.didDragScroller) {
+          return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        state.didDragScroller = false;
+      },
+      true
+    );
+  };
+
   const scrollActiveTabIntoView = (state) => {
     if (
       typeof window === "undefined" ||
@@ -452,15 +600,22 @@
 
     const scrollerRect = state.$tabsScroller.getBoundingClientRect();
     const buttonRect = activeButton.getBoundingClientRect();
-    const nextLeft =
+    const maxScrollLeft = getMaxScrollLeft(state.$tabsScroller);
+    const centeredOffset = (scrollerRect.width - buttonRect.width) / 2;
+    const nextLeft = clamp(
       state.$tabsScroller.scrollLeft +
-      (buttonRect.left - scrollerRect.left) -
-      16;
+        (buttonRect.left - scrollerRect.left) -
+        centeredOffset,
+      0,
+      maxScrollLeft
+    );
 
     state.$tabsScroller.scrollTo({
-      left: Math.max(0, nextLeft),
+      left: nextLeft,
       behavior: "smooth",
     });
+
+    queueScrollerStateUpdate(state);
   };
 
   const renderWidget = (state, nextActiveKey, focusActive = false) => {
@@ -490,6 +645,7 @@
       state.widgetId
     );
     state.$list.innerHTML = buildVenuePanel(venue, state.panelId, tabId);
+    queueScrollerStateUpdate(state);
 
     if (focusActive) {
       const activeButton = state.$tabs.querySelector(
@@ -600,9 +756,10 @@
     }
 
     const $tabs = root.querySelector('[data-role="tabs"]');
+    const $tabsWrap = root.querySelector(".obxv-tabs-wrap");
     const $tabsScroller = root.querySelector('[data-role="tabs-scroller"]');
     const $list = root.querySelector('[data-role="list"]');
-    if (!$tabs || !$tabsScroller || !$list) {
+    if (!$tabs || !$tabsWrap || !$tabsScroller || !$list) {
       return;
     }
 
@@ -618,14 +775,18 @@
       root,
       venues,
       $tabs,
+      $tabsWrap,
       $tabsScroller,
       $list,
       activeKey: getVenueKey(venues[0]),
+      didDragScroller: false,
       widgetId: `cloudari-billboard-venues-${instanceCounter}`,
       panelId: `cloudari-billboard-venues-panel-${instanceCounter}`,
     };
 
     bindWidgetEvents(state);
+    bindScrollerState(state);
+    bindScrollerDrag(state);
     renderWidget(state, state.activeKey);
   };
 

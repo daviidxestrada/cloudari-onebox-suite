@@ -255,6 +255,10 @@ final class TheatreProfile
             return '';
         }
 
+        if (strcasecmp($value, 'transparent') === 0) {
+            return 'transparent';
+        }
+
         $sanitized = sanitize_hex_color($value);
 
         return is_string($sanitized) ? $sanitized : '';
