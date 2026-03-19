@@ -128,7 +128,6 @@ final class Enqueue
         $profile = ProfileRepository::getActive();
         $integration = $profile->getDefaultIntegration();
         $purchaseBase = $integration ? $integration->purchaseBaseUrl : '';
-        $apiCatalogUrl = $integration ? $integration->apiCatalogUrl : '';
         $sesiones = Sessions::getDefaultRangeSessions();
         $ajaxUrl = add_query_arg('action', CalendarAjax::ACTION, admin_url('admin-ajax.php'));
         $overrideMaps = EventOverridesRepository::getEnvMaps();
@@ -137,7 +136,6 @@ final class Enqueue
             'sesiones'         => $sesiones,
             'nonce'            => wp_create_nonce('cloudari_calendar_nonce'),
             'ajaxSesiones'     => $ajaxUrl,
-            'urlOnebox'        => $apiCatalogUrl,
             'purchaseBase'     => $purchaseBase,
             'clockIcon'        => add_query_arg(
                 'ver',

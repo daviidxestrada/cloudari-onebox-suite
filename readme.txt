@@ -3,11 +3,7 @@ Contributors: cloudari
 Tags: onebox, theatre, calendar, billboard, events
 Requires at least: 6.0
 Requires PHP: 8.0
-<<<<<<< HEAD
-Stable tag: 1.2.3
-=======
-Stable tag: 1.2.4
->>>>>>> develop
+Stable tag: 1.2.8
 
 Suite para integrar OneBox en WordPress: calendario, cartelera, cartelera por espacios, contador y eventos manuales, con multiples integraciones por teatro.
 
@@ -50,27 +46,29 @@ Opcionales (wp-config.php):
 - `define('CLOUDARI_ONEBOX_REQUIRE_AJAX_NONCE', false);` para desactivar nonce en AJAX si hay cache agresiva.
 
 == Shortcodes ==
-Calendario:
 `[cloudari_calendar]`
+- Muestra el calendario principal del plugin con sesiones de OneBox y eventos manuales.
+- Es la opcion recomendada si quieres la vista de calendario estandar.
+
 `[cloudari_calendar_venues]`
+- Muestra el mismo calendario, anadiendo el nombre del espacio o `venue` en el detalle de cada sesion.
+- Es util en instalaciones multiteatro o cuando una misma cartelera se reparte por varias salas.
 
-Cartelera:
 `[cloudari_billboard]`
+- Muestra la cartelera clasica del plugin con eventos de OneBox y eventos manuales.
+- Mantiene el formato base de listado de eventos sin agrupar por espacios.
 
-Cartelera por espacios:
 `[cloudari_billboard_venues]`
-Alias:
+- Muestra una cartelera agrupada por espacios o `venues`.
+- Ordena los espacios por su proxima funcion disponible y los eventos internos por fecha ascendente.
+
 `[cloudari_billboard_spaces]`
+- Alias de `[cloudari_billboard_venues]`.
+- Sirve para invocar la misma funcionalidad usando un nombre de shortcode alternativo.
 
-Notas de uso:
-- `[cloudari_calendar]` mantiene el comportamiento actual del calendario en produccion.
-- `[cloudari_calendar_venues]` es una variante adicional que muestra el espacio debajo de la hora en cada evento del popup.
-- `[cloudari_billboard]` sigue siendo la cartelera clasica y no cambia su contrato.
-- `[cloudari_billboard_venues]` es una vista adicional, pensada para instalaciones multiteatro o multiespacio.
-- La cartelera por espacios usa sesiones de OneBox como fuente principal para agrupar y ordenar por la proxima funcion disponible.
-
-Contador (por evento):
 `[cloudari_event_countdown event_id="123" extra_days="180" duration="90 min" age="12+"]`
+- Muestra un bloque de contador o ficha resumida para un evento concreto.
+- Permite indicar el `event_id` del evento y datos auxiliares como rango de busqueda (`extra_days`), duracion (`duration`) y clasificacion por edad (`age`).
 
 == Widgets (HTML) ==
 Los widgets HTML estan en la carpeta `widgets/`.
@@ -128,6 +126,11 @@ Custom post types / taxonomy:
 - Usar HTTPS y cache a nivel de servidor si aplica.
 
 == Changelog ==
+= 1.2.8 =
+* Preparacion de release: versionado y metadatos alineados para `v1.2.8`.
+* Fix del shortcode `[cloudari_event_countdown]` para reiniciar correctamente el contador cuando cambia la proxima sesion cacheada.
+* Limpieza de frontend para release, con debug de cartelera desactivado en produccion.
+
 = 1.2.4 =
 * Nueva cartelera opcional por espacios con shortcodes `[cloudari_billboard_venues]` y `[cloudari_billboard_spaces]`.
 * Nuevo endpoint interno `GET /wp-json/cloudari/v1/billboard-venues`.
@@ -145,6 +148,9 @@ Custom post types / taxonomy:
 * Release inicial con multi-integracion, eventos manuales y overrides.
 
 == Upgrade Notice ==
+= 1.2.8 =
+Actualizacion de release con fix del countdown cacheado y limpieza del frontend para produccion.
+
 = 1.2.4 =
 Nueva cartelera opcional por espacios, soporte de venue manual y documentacion de release alineada.
 

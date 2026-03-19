@@ -333,10 +333,6 @@ final class Sessions
         }
 
         $session['cloudari']['integration'] = $integration->slug;
-        $session['cloudari']['integration_label'] = $integration->label;
-        if ($integration->purchaseBaseUrl !== '') {
-            $session['cloudari']['purchase_base'] = $integration->purchaseBaseUrl;
-        }
 
         return $session;
     }

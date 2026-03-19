@@ -143,7 +143,6 @@ final class VenueBillboard
                     'category'          => $resolved['category'],
                     'source'            => $resolved['source'],
                     'integration'       => $resolved['integration'] !== '' ? $resolved['integration'] : null,
-                    'integration_label' => $resolved['integration_label'] !== '' ? $resolved['integration_label'] : null,
                     'venue'             => [
                         'id'   => $resolved['venue']['id'],
                         'name' => $resolved['venue']['name'],
@@ -228,7 +227,6 @@ final class VenueBillboard
             'event_id'          => $eventId,
             'source'            => !empty($cloudari['manual']) ? 'manual' : 'onebox',
             'integration'       => $integration,
-            'integration_label' => (string) ($cloudari['integration_label'] ?? ($eventMeta['cloudari']['integration_label'] ?? '')),
             'title'             => self::resolveTitle($session, $eventMeta),
             'image'             => self::resolveImage($session, $eventMeta),
             'url'               => self::resolveUrl($session, $eventMeta),

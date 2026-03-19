@@ -813,13 +813,11 @@
 
     try {
       const venues = await fetchVenues();
-      window.__CLOUDARI_VENUE_BILLBOARD__ = venues;
 
       roots.forEach((root) => {
         initWidget(root, venues);
       });
     } catch (error) {
-      console.error("Cloudari venue billboard error:", error);
 
       roots.forEach((root) => {
         const $tabs = root.querySelector('[data-role="tabs"]');

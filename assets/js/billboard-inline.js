@@ -92,39 +92,6 @@
     return (map && typeof map === "object") ? map : {};
   }
 
-  /** =========================
-   *  DEBUG ENV UNA SOLA VEZ (FIABLE)
-   *  ========================= */
-  (function debugEnvOnce() {
-    if (typeof window === "undefined") return;
-
-    window.addEventListener(
-      "load",
-      () => {
-        const env  = getEnv();
-        const base = getPurchaseBase();
-
-        // Lo dejamos accesible por si quieres mirarlo en consola
-        window.__CLOUDARI_ONEBOX_ENV__ = env;
-
-        console.log("[Cloudari Billboard] ENV final:", env);
-        console.log("[Cloudari Billboard] billboardEndpoint:", getBillboardEndpoint());
-        console.log(
-          "[Cloudari Billboard] purchaseBase inyectado:",
-          (env.purchaseBase || env.purchase_base || env.purchasebase || "(vacío)"),
-          "| BASE normalizada usada:",
-          base || "(ninguna: falta configurarla en el perfil)"
-        );
-        if (env.categoryOverrides || env.category_overrides) {
-          console.log(
-            "[Cloudari Billboard] categoryOverrides detectados:",
-            env.categoryOverrides || env.category_overrides
-          );
-        }
-      },
-      { once: true }
-    );
-  })();
 
   /** =========================
    *  UTILS
@@ -229,10 +196,6 @@
 
     const base = getPurchaseBase();
     if (!base) {
-      console.warn(
-        "[Cloudari Billboard] No hay purchaseBase configurada en el perfil. No se puede construir URL de compra para",
-        eventId
-      );
       return "#";
     }
     return base + String(eventId);
@@ -442,11 +405,9 @@
         if (err && err.name === "AbortError") {
           const e = new Error("timeout");
           e.status = 408;
-          console.error("Timeout cargando eventos OneBox (REST Cloudari):", endpoint);
           throw e;
         }
 
-        console.error("Error cargando eventos OneBox (REST Cloudari):", err);
         throw err;
       } finally {
         clearTimeout(t);
@@ -466,7 +427,6 @@
         const data = await r.json();
         return Array.isArray(data) ? data : [];
       } catch (err) {
-        console.error("Error cargando eventos manuales:", err);
         return [];
       }
     },
@@ -583,7 +543,6 @@
         ctaLabel,
       };
     } catch (e) {
-      console.error("Error normalizando evento a tarjeta:", e, ev);
       return null;
     }
   }
@@ -810,20 +769,19 @@
     const $grid = document.getElementById("obx-grid");
     const $q    = document.getElementById("obx-q");
     const $cat  = document.getElementById("obx-cat");
+    let currentCards = [];
     if (!$grid) return;
 
     const cachedRaw = Cache.read(CONFIG.CACHE_KEY, CONFIG.CACHE_TTL_MS);
     if (cachedRaw?.length) {
-      const cards = normalizeAndSort(cachedRaw);
-      window.__OBX_CARDS__ = cards;
-      populateCategoryFilter($cat, cards);
-      applyFilters($grid, cards, $q, $cat);
+      currentCards = normalizeAndSort(cachedRaw);
+      populateCategoryFilter($cat, currentCards);
+      applyFilters($grid, currentCards, $q, $cat);
     } else {
       renderSkeleton($grid);
     }
 
-    const onFilter = () =>
-      applyFilters($grid, window.__OBX_CARDS__ || [], $q, $cat);
+    const onFilter = () => applyFilters($grid, currentCards, $q, $cat);
     const debouncedFilter = debounce(onFilter, 160);
     $q?.addEventListener("input", debouncedFilter, { passive: true });
     $cat?.addEventListener("change", onFilter, { passive: true });
@@ -857,10 +815,9 @@
       const combined = [].concat(oneboxRaw || [], manualesRaw || []);
       Cache.write(CONFIG.CACHE_KEY, combined);
 
-      const cards = normalizeAndSort(combined);
-      window.__OBX_CARDS__ = cards;
+      currentCards = normalizeAndSort(combined);
 
-      if (cards.length === 0) {
+      if (currentCards.length === 0) {
         if (!cachedRaw?.length) {
           if (hadAuthError) {
             renderAuthError($grid);
@@ -875,24 +832,13 @@
               "No hay eventos disponibles en este momento."
             );
           }
-        } else {
-          console.warn(
-            "Cloudari OneBox: error de recarga, usando solo eventos en caché."
-          );
         }
         return;
       }
 
-      populateCategoryFilter($cat, cards);
-      applyFilters($grid, cards, $q, $cat);
-
-      if (hadAuthError && manualesRaw.length) {
-        console.warn(
-          "Cloudari OneBox: solo se han podido cargar eventos manuales (error de autenticación en OneBox)."
-        );
-      }
+      populateCategoryFilter($cat, currentCards);
+      applyFilters($grid, currentCards, $q, $cat);
     } catch (err) {
-      console.error("Error cargando cartelera:", err);
       if (!cachedRaw?.length) {
         if (err?.message === "auth") {
           renderAuthError($grid);

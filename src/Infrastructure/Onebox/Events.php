@@ -126,10 +126,6 @@ final class Events
         }
 
         $event['cloudari']['integration'] = $integration->slug;
-        $event['cloudari']['integration_label'] = $integration->label;
-        if ($integration->purchaseBaseUrl !== '') {
-            $event['cloudari']['purchase_base'] = $integration->purchaseBaseUrl;
-        }
 
         return $event;
     }

@@ -465,7 +465,6 @@
 
               const redirectUrl = typeof evento.url === "string" ? evento.url.trim() : "";
               if (!redirectUrl) {
-                console.warn("No hay URL disponible para el evento", evento.id);
                 return;
               }
 
@@ -537,7 +536,6 @@
           eventosPrecargados[cacheKey] = data || [];
         })
         .catch(function (error) {
-          console.error("Error al precargar calendario con venues:", error);
         });
     }
 
@@ -589,7 +587,6 @@
           precargarDatosAdyacentes(mes, anio);
         })
         .catch(function (error) {
-          console.error("Error al obtener sesiones del calendario con venues:", error);
         });
     }
 
@@ -698,7 +695,6 @@
 
     const env = getEnv();
     if (!env.sesiones) {
-      console.error("No se encontraron datos de sesiones para cloudari_calendar_venues");
       return;
     }
 

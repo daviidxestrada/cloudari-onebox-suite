@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
   if (typeof oneboxData === 'undefined' || !oneboxData.sesiones) {
-    console.error("No se encontraron datos de sesiones");
     return;
   }
 
@@ -445,7 +444,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const redirectUrl = (typeof evento.url === 'string') ? evento.url.trim() : '';
 
             if (!redirectUrl) {
-              console.warn('No hay URL disponible (manual/special/purchaseBase) para el evento', evento.id);
               return;
             }
 
@@ -508,7 +506,7 @@ document.addEventListener('DOMContentLoaded', function () {
         eventosPrecargados[cacheKey] = sesiones;
         // si quieres, aquí podrías re-renderizar si el mes está visible
       })
-      .catch(err => console.error("Error al precargar desde WordPress:", err));
+      .catch(err => {});
   }
 
   function precargarDatosAdyacentes(mesActual, anioActual) {
@@ -550,7 +548,7 @@ document.addEventListener('DOMContentLoaded', function () {
         renderizarCalendario();
         precargarDatosAdyacentes(mes, anio);
       })
-      .catch(error => console.error("Error al obtener sesiones:", error));
+      .catch(error => {});
   }
 
   function obtenerRangoFechas(mes, anio) {

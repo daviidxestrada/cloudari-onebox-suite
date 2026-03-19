@@ -110,9 +110,19 @@
     return res.json();
   }
 
+  function stopCountdown(root) {
+    const timerId = root.__cloudariCountdownTimer;
+    if (timerId) {
+      clearInterval(timerId);
+      root.__cloudariCountdownTimer = null;
+    }
+  }
+
   function startCountdown(root, target) {
     const cd = root.querySelector(".cloudari-ce-countdown");
     if (!cd) return;
+
+    stopCountdown(root);
 
     const dEl = cd.querySelector("[data-role='d']");
     const hEl = cd.querySelector("[data-role='h']");
@@ -137,7 +147,8 @@
 
     tick();
     cd.classList.add("cloudari-ce-ready");
-    setInterval(tick, 1000);
+    cd.style.visibility = "visible";
+    root.__cloudariCountdownTimer = setInterval(tick, 1000);
   }
 
   function paintPoster(root, bundle, eventId) {
@@ -175,6 +186,7 @@
   function hideCountdown(root) {
     const cd = root.querySelector(".cloudari-ce-countdown");
     if (!cd) return;
+    stopCountdown(root);
     cd.classList.remove("cloudari-ce-ready");
     cd.style.visibility = "hidden";
   }
@@ -240,7 +252,7 @@
         paintPoster(root, bundle, eventId);
         if (!cached || +bundle.date !== +cached.date) {
           setNext(root, bundle.date);
-          if (!cached) startCountdown(root, bundle.date);
+          startCountdown(root, bundle.date);
           writeCache(eventId, bundle);
         }
       } else if (!cached) {
@@ -251,7 +263,6 @@
         if (img) img.style.display = "none";
       }
     } catch (e) {
-      console.error("Cloudari countdown error:", e);
       if (!cached) {
         const el = root.querySelector("[data-role='next-date']");
         if (el) el.textContent = "—";
