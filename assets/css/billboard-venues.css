@@ -142,6 +142,14 @@
   transition: color 0.2s ease, background-color 0.2s ease;
 }
 
+.cloudari-billboard-venues .obxv-tab:not([aria-selected="true"]),
+.cloudari-billboard-venues .obxv-tab:not([aria-selected="true"]):hover,
+.cloudari-billboard-venues .obxv-tab:not([aria-selected="true"]):focus-visible {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
 .obxv-tab::after {
   content: "";
   position: absolute;
@@ -170,7 +178,9 @@
 
 .obxv-tab[aria-selected="true"] {
   color: var(--tab-active-text);
-  background: var(--tab-active-bg);
+  background: var(--tab-active-bg) !important;
+  background-color: var(--tab-active-bg) !important;
+  background-image: none !important;
 }
 
 .obxv-tab[aria-selected="true"]::after {
