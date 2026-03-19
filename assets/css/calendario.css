@@ -50,7 +50,9 @@
 
 
 
-  --azul-principal: var(--cloudari-primary);
+  --azul-principal: var(--cloudari-calendar-nav, var(--cloudari-primary));
+
+  --calendar-text: var(--cloudari-calendar-text, var(--cloudari-text));
 
 
 
@@ -106,7 +108,7 @@
 
   background-color: var(--cloudari-bg);
 
-  color: var(--cloudari-text);
+  color: var(--calendar-text);
 
 }
 
@@ -142,7 +144,7 @@
 
   font-weight: 700;
 
-  color: var(--cloudari-text);
+  color: var(--calendar-text);
 
 }
 
@@ -278,7 +280,7 @@
 
   font-weight: 700;
 
-  color: var(--cloudari-text);
+  color: var(--calendar-text);
 
   font-size: 12px;
 
@@ -342,7 +344,7 @@
 
   margin: 0 0 15px 0;
 
-  color: var(--cloudari-text);
+  color: var(--calendar-text);
 
 }
 
@@ -600,7 +602,7 @@
 
   display: flex;
 
-  align-items: stretch;
+  align-items: center;
 
   min-height: 85px;
 
@@ -622,7 +624,9 @@
 
   flex-direction: column;
 
-  justify-content: space-between;
+  justify-content: flex-start;
+
+  gap: 8px;
 
   min-width: 0;
 
@@ -666,6 +670,8 @@
 
   aspect-ratio: 14 / 8;
 
+  align-self: center;
+
 }
 
 
@@ -694,7 +700,7 @@
 
   font-size: 14px;
 
-  color: #333;
+  color: var(--calendar-text);
 
   margin-bottom: 4px;
 
@@ -710,9 +716,43 @@
 
   margin-bottom: 8px;
 
-  color: #666;
+  color: var(--calendar-text);
 
   flex-grow: 1;
+
+}
+
+.evento-time {
+
+  display: grid;
+
+  grid-template-columns: 13px minmax(0, 1fr);
+
+  align-items: start;
+
+  column-gap: 6px;
+
+}
+
+.evento-time-icon {
+
+  width: 13px;
+
+  height: 13px;
+
+  object-fit: contain;
+
+  opacity: 0.62;
+
+  margin-top: 2px;
+
+}
+
+.evento-time-text {
+
+  display: block;
+
+  line-height: 1.25;
 
 }
 
@@ -722,9 +762,9 @@
 
   display: flex;
 
-  justify-content: flex-end;
+  justify-content: flex-start;
 
-  margin-top: auto;
+  margin-top: 0;
 
 }
 

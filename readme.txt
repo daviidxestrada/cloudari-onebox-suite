@@ -14,6 +14,7 @@ Suite para integrar OneBox en WordPress: calendario, cartelera, cartelera por es
 == Description ==
 Cloudari OneBox Suite conecta OneBox con WordPress y pinta:
 - Calendario con sesiones de OneBox + eventos manuales.
+- Calendario opcional con venues visibles por sesion.
 - Cartelera con eventos de OneBox + manuales.
 - Cartelera opcional agrupada por espacios / venues.
 - Contador de proximas sesiones por evento.
@@ -51,6 +52,7 @@ Opcionales (wp-config.php):
 == Shortcodes ==
 Calendario:
 `[cloudari_calendar]`
+`[cloudari_calendar_venues]`
 
 Cartelera:
 `[cloudari_billboard]`
@@ -61,6 +63,8 @@ Alias:
 `[cloudari_billboard_spaces]`
 
 Notas de uso:
+- `[cloudari_calendar]` mantiene el comportamiento actual del calendario en produccion.
+- `[cloudari_calendar_venues]` es una variante adicional que muestra el espacio debajo de la hora en cada evento del popup.
 - `[cloudari_billboard]` sigue siendo la cartelera clasica y no cambia su contrato.
 - `[cloudari_billboard_venues]` es una vista adicional, pensada para instalaciones multiteatro o multiespacio.
 - La cartelera por espacios usa sesiones de OneBox como fuente principal para agrupar y ordenar por la proxima funcion disponible.

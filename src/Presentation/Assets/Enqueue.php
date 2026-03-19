@@ -13,6 +13,33 @@ if (!defined('ABSPATH')) {
 
 final class Enqueue
 {
+    private const WIDGET_CSS_VARS = [
+        'calendar' => [
+            'nav'  => '--cloudari-calendar-nav',
+            'text' => '--cloudari-calendar-text',
+        ],
+        'billboard' => [
+            'topbar'  => '--cloudari-billboard-topbar',
+            'cta'     => '--cloudari-billboard-cta',
+            'card_bg' => '--cloudari-billboard-card-bg',
+            'text'    => '--cloudari-billboard-text',
+        ],
+        'venue_filters' => [
+            'active_bg'   => '--cloudari-venue-filter-active-bg',
+            'active_text' => '--cloudari-venue-filter-active-text',
+            'text'        => '--cloudari-venue-filter-text',
+            'border'      => '--cloudari-venue-filter-border',
+            'indicator'   => '--cloudari-venue-filter-indicator',
+        ],
+        'countdown' => [
+            'panel_bg'       => '--cloudari-countdown-bg',
+            'title'          => '--cloudari-countdown-title',
+            'border'         => '--cloudari-countdown-border',
+            'number'         => '--cloudari-countdown-number',
+            'poster_caption' => '--cloudari-countdown-poster-caption',
+        ],
+    ];
+
     private static function assetVersion(string $relativePath): string
     {
         $file = CLOUDARI_ONEBOX_DIR . ltrim($relativePath, '/');
@@ -24,13 +51,68 @@ final class Enqueue
         return CLOUDARI_ONEBOX_VER;
     }
 
-    public static function calendar(): void
+    private static function buildCssVariables(array $variables): string
+    {
+        $chunks = [];
+
+        foreach ($variables as $name => $value) {
+            $name = trim((string) $name);
+            $value = trim((string) $value);
+
+            if ($name === '' || $value === '') {
+                continue;
+            }
+
+            $chunks[] = sprintf('%s:%s;', esc_html($name), esc_html($value));
+        }
+
+        return ':root{' . implode('', $chunks) . '}';
+    }
+
+    private static function getBaseThemeVariables(): array
     {
         $profile = ProfileRepository::getActive();
-        $integration = $profile->getDefaultIntegration();
-        $purchaseBase = $integration ? $integration->purchaseBaseUrl : '';
-        $apiCatalogUrl = $integration ? $integration->apiCatalogUrl : '';
 
+        return [
+            '--cloudari-primary' => $profile->colorPrimary,
+            '--cloudari-accent' => $profile->colorAccent,
+            '--cloudari-bg' => $profile->colorBackground,
+            '--cloudari-text' => $profile->colorText,
+            '--cloudari-selected-day' => $profile->colorSelectedDay,
+        ];
+    }
+
+    private static function getWidgetOverrideVariables(): array
+    {
+        $profile = ProfileRepository::getActive();
+        $variables = [];
+
+        foreach (self::WIDGET_CSS_VARS as $widget => $tokens) {
+            foreach ($tokens as $token => $cssVar) {
+                $value = $profile->getWidgetColor($widget, $token);
+                if ($value === '') {
+                    continue;
+                }
+
+                $variables[$cssVar] = $value;
+            }
+        }
+
+        return $variables;
+    }
+
+    private static function getThemeCss(): string
+    {
+        return self::buildCssVariables(
+            array_merge(
+                self::getBaseThemeVariables(),
+                self::getWidgetOverrideVariables()
+            )
+        );
+    }
+
+    private static function enqueueCalendarBaseStyle(): void
+    {
         wp_enqueue_style(
             'cloudari-calendar',
             CLOUDARI_ONEBOX_URL . 'assets/css/calendario.css',
@@ -38,22 +120,37 @@ final class Enqueue
             self::assetVersion('assets/css/calendario.css')
         );
 
-        $inlineCss = sprintf(
-            ':root{' .
-                '--cloudari-primary:%1$s;' .
-                '--cloudari-accent:%2$s;' .
-                '--cloudari-bg:%3$s;' .
-                '--cloudari-text:%4$s;' .
-                '--cloudari-selected-day:%5$s;' .
-            '}',
-            esc_html($profile->colorPrimary),
-            esc_html($profile->colorAccent),
-            esc_html($profile->colorBackground),
-            esc_html($profile->colorText),
-            esc_html($profile->colorSelectedDay)
-        );
+        wp_add_inline_style('cloudari-calendar', self::getThemeCss());
+    }
 
-        wp_add_inline_style('cloudari-calendar', $inlineCss);
+    private static function getCalendarPayload(): array
+    {
+        $profile = ProfileRepository::getActive();
+        $integration = $profile->getDefaultIntegration();
+        $purchaseBase = $integration ? $integration->purchaseBaseUrl : '';
+        $apiCatalogUrl = $integration ? $integration->apiCatalogUrl : '';
+        $sesiones = Sessions::getDefaultRangeSessions();
+        $ajaxUrl = add_query_arg('action', CalendarAjax::ACTION, admin_url('admin-ajax.php'));
+        $overrideMaps = EventOverridesRepository::getEnvMaps();
+
+        return [
+            'sesiones'         => $sesiones,
+            'nonce'            => wp_create_nonce('cloudari_calendar_nonce'),
+            'ajaxSesiones'     => $ajaxUrl,
+            'urlOnebox'        => $apiCatalogUrl,
+            'purchaseBase'     => $purchaseBase,
+            'clockIcon'        => add_query_arg(
+                'ver',
+                self::assetVersion('assets/images/clock-icon.svg'),
+                CLOUDARI_ONEBOX_URL . 'assets/images/clock-icon.svg'
+            ),
+            'specialRedirects' => $overrideMaps['specialRedirects'] ?? [],
+        ];
+    }
+
+    public static function calendar(): void
+    {
+        self::enqueueCalendarBaseStyle();
 
         wp_enqueue_script(
             'cloudari-calendar',
@@ -63,21 +160,36 @@ final class Enqueue
             true
         );
 
-        $sesiones = Sessions::getDefaultRangeSessions();
-        $ajaxUrl = add_query_arg('action', CalendarAjax::ACTION, admin_url('admin-ajax.php'));
-        $overrideMaps = EventOverridesRepository::getEnvMaps();
-
         wp_localize_script(
             'cloudari-calendar',
             'oneboxData',
-            [
-                'sesiones'         => $sesiones,
-                'nonce'            => wp_create_nonce('cloudari_calendar_nonce'),
-                'ajaxSesiones'     => $ajaxUrl,
-                'urlOnebox'        => $apiCatalogUrl,
-                'purchaseBase'     => $purchaseBase,
-                'specialRedirects' => $overrideMaps['specialRedirects'] ?? [],
-            ]
+            self::getCalendarPayload()
+        );
+    }
+
+    public static function calendarVenues(): void
+    {
+        self::enqueueCalendarBaseStyle();
+
+        wp_enqueue_style(
+            'cloudari-calendar-venues',
+            CLOUDARI_ONEBOX_URL . 'assets/css/calendario-venues.css',
+            ['cloudari-calendar'],
+            self::assetVersion('assets/css/calendario-venues.css')
+        );
+
+        wp_enqueue_script(
+            'cloudari-calendar-venues',
+            CLOUDARI_ONEBOX_URL . 'assets/js/calendario-venues.js',
+            ['jquery'],
+            self::assetVersion('assets/js/calendario-venues.js'),
+            true
+        );
+
+        wp_localize_script(
+            'cloudari-calendar-venues',
+            'cloudariCalendarVenuesData',
+            self::getCalendarPayload()
         );
     }
 
@@ -90,16 +202,7 @@ final class Enqueue
         wp_register_style('cloudari-billboard-inline', false);
         wp_enqueue_style('cloudari-billboard-inline');
 
-        $inlineCss = sprintf(
-            ':root{' .
-                '--cloudari-primary:%1$s;' .
-                '--cloudari-accent:%2$s;' .
-            '}',
-            esc_html($profile->colorPrimary),
-            esc_html($profile->colorAccent)
-        );
-
-        wp_add_inline_style('cloudari-billboard-inline', $inlineCss);
+        wp_add_inline_style('cloudari-billboard-inline', self::getThemeCss());
 
         wp_enqueue_style(
             'cloudari-billboard-css',
@@ -142,26 +245,12 @@ final class Enqueue
 
     public static function billboardVenues(): void
     {
-        $profile = ProfileRepository::getActive();
         $overrideMaps = EventOverridesRepository::getEnvMaps();
 
         wp_register_style('cloudari-billboard-venues-inline', false);
         wp_enqueue_style('cloudari-billboard-venues-inline');
 
-        $inlineCss = sprintf(
-            ':root{' .
-                '--cloudari-primary:%1$s;' .
-                '--cloudari-accent:%2$s;' .
-                '--cloudari-bg:%3$s;' .
-                '--cloudari-text:%4$s;' .
-            '}',
-            esc_html($profile->colorPrimary),
-            esc_html($profile->colorAccent),
-            esc_html($profile->colorBackground),
-            esc_html($profile->colorText)
-        );
-
-        wp_add_inline_style('cloudari-billboard-venues-inline', $inlineCss);
+        wp_add_inline_style('cloudari-billboard-venues-inline', self::getThemeCss());
 
         wp_enqueue_style(
             'cloudari-billboard-css',
@@ -219,6 +308,8 @@ final class Enqueue
             [],
             self::assetVersion('assets/css/countdown.css')
         );
+
+        wp_add_inline_style('cloudari-countdown', self::getThemeCss());
 
         wp_enqueue_script(
             'cloudari-countdown',

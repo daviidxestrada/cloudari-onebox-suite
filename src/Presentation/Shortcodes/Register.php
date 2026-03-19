@@ -9,6 +9,7 @@ final class Register
     public static function register(): void
     {
         add_shortcode('cloudari_calendar', [static::class, 'calendar']);
+        add_shortcode('cloudari_calendar_venues', [static::class, 'calendarVenues']);
         add_shortcode('cloudari_billboard', [static::class, 'billboard']);
         add_shortcode('cloudari_billboard_venues', [static::class, 'billboardVenues']);
         add_shortcode('cloudari_billboard_spaces', [static::class, 'billboardVenues']);
@@ -51,6 +52,50 @@ final class Register
             </div>
 
             <div id="calendario"></div>
+        </div>
+
+        <?php
+        return ob_get_clean();
+    }
+
+    public static function calendarVenues($atts = [], $content = ''): string
+    {
+        Enqueue::calendarVenues();
+
+        if (!CLOUDARI_ONEBOX_ENABLE_OUTPUT) {
+            return '<!-- Cloudari Calendar Venues desactivado por flag -->';
+        }
+
+        ob_start(); ?>
+
+        <div class="calendario-container cloudari-calendar-venues-container" data-cloudari-calendar-venues>
+            <div class="header">
+
+                <button class="nav-buttons"
+                        data-role="prev-month"
+                        aria-label="Mes anterior"
+                        title="Mes anterior"
+                        style="background:transparent;border:none">
+                    <svg fill="currentColor" width="28" height="28" viewBox="0 0 306 306" aria-hidden="true">
+                        <polygon points="247.35,267.75 130.05,153 247.35,35.7 211.65,0 58.65,153 211.65,306"/>
+                    </svg>
+                </button>
+
+                <div class="mes-anio" data-role="month-label"></div>
+
+                <button class="nav-buttons"
+                        data-role="next-month"
+                        aria-label="Siguiente mes"
+                        title="Siguiente mes"
+                        style="background:transparent;border:none">
+                    <svg fill="currentColor" width="28" height="28" viewBox="0 0 306 306" aria-hidden="true">
+                        <polygon points="58.65,267.75 175.95,153 58.65,35.7 94.35,0 247.35,153 94.35,306"/>
+                    </svg>
+                </button>
+
+            </div>
+
+            <div class="cloudari-calendar-shell" data-role="calendar"></div>
         </div>
 
         <?php
@@ -104,19 +149,25 @@ final class Register
             return '<!-- Cloudari Billboard Venues desactivado por flag -->';
         }
 
+        static $instance = 0;
+        $instance++;
+        $titleId = 'cloudari-billboard-venues-title-' . $instance;
+
         ob_start(); ?>
 
-        <section id="cloudari-billboard-venues" class="cloudari-billboard-venues" aria-labelledby="cloudari-billboard-venues-title">
-            <h2 id="cloudari-billboard-venues-title" class="sr-only">Cartelera por espacios</h2>
+        <section class="cloudari-billboard-venues" data-cloudari-billboard-venues aria-labelledby="<?php echo esc_attr($titleId); ?>">
+            <h2 id="<?php echo esc_attr($titleId); ?>" class="sr-only">Cartelera por espacios</h2>
 
             <header class="obx-head obxv-head">
-                <div class="obx-actions obxv-actions" role="search">
-                    <label class="sr-only" for="obxv-q">Buscar por espacio o evento</label>
-                    <input id="obxv-q" type="search" placeholder="Buscar por espacio o evento..." aria-label="Buscar por espacio o evento" />
+                <div class="obxv-tabs-wrap">
+                    <div class="obxv-tabs-inner" data-role="tabs-scroller">
+                        <div class="obxv-tabs" data-role="tabs" role="tablist" aria-label="Filtrar cartelera por espacio"></div>
+                    </div>
+                    <div class="obxv-tabs-separator" aria-hidden="true"></div>
                 </div>
             </header>
 
-            <div id="obxv-list" class="obxv-list" aria-live="polite"></div>
+            <div class="obxv-list" data-role="list" aria-live="polite"></div>
         </section>
 
         <?php

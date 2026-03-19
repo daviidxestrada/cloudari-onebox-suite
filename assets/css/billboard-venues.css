@@ -1,14 +1,19 @@
 .cloudari-billboard-venues {
-  --brand: var(--cloudari-primary, #009ad8);
-  --cta: var(--cloudari-accent, #d14100);
-  --ink: #0b0f1a;
+  --brand: var(--cloudari-billboard-topbar, var(--cloudari-primary, #009ad8));
+  --cta: var(--cloudari-billboard-cta, var(--cloudari-accent, #d14100));
+  --ink: var(--cloudari-billboard-text, var(--cloudari-text, #0b0f1a));
   --muted: #475569;
   --line: #e5e7eb;
   --soft: #f3f4f6;
-  --white: #ffffff;
+  --white: var(--cloudari-billboard-card-bg, var(--cloudari-bg, #ffffff));
   --shadow: 0 12px 32px rgba(2, 6, 23, 0.1);
   --gap: 16px;
   --radius: 14px;
+  --tab-text: var(--cloudari-venue-filter-text, var(--cloudari-text, #0b0f1a));
+  --tab-active-text: var(--cloudari-venue-filter-active-text, var(--cloudari-accent, #d14100));
+  --tab-active-bg: var(--cloudari-venue-filter-active-bg, transparent);
+  --tab-border: var(--cloudari-venue-filter-border, var(--cloudari-primary, #009ad8));
+  --tab-indicator: var(--cloudari-venue-filter-indicator, var(--cloudari-accent, #d14100));
 
   max-width: 1100px;
   margin: 0 auto;
@@ -32,62 +37,161 @@
 }
 
 .obxv-head {
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 }
 
-.obxv-actions {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-.obxv-list {
-  display: grid;
-  gap: 28px;
-}
-
-.obxv-venue {
-  display: grid;
-  gap: 14px;
-}
-
-.obxv-venue-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 12px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--line);
-}
-
-.obxv-venue-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+.obxv-head,
+.obxv-tabs-wrap,
+.obxv-tabs-inner,
+.obxv-list,
+.obxv-panel {
   min-width: 0;
 }
 
-.obxv-venue-label svg {
-  width: 16px;
-  height: 16px;
+.obxv-tabs-wrap {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.obxv-tabs-wrap::before,
+.obxv-tabs-wrap::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 1px;
+  width: 20px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  z-index: 1;
+}
+
+.obxv-tabs-wrap::before {
+  left: 0;
+  box-shadow: inset 12px 0 12px -12px rgba(11, 15, 26, 0.3);
+}
+
+.obxv-tabs-wrap::after {
+  right: 0;
+  box-shadow: inset -12px 0 12px -12px rgba(11, 15, 26, 0.3);
+}
+
+.obxv-tabs-wrap.is-scrollable:not(.is-at-start)::before,
+.obxv-tabs-wrap.is-scrollable:not(.is-at-end)::after {
+  opacity: 1;
+}
+
+.obxv-tabs-inner {
+  display: block;
+  max-width: 100%;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: auto;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+  scroll-padding-inline: 12px;
+}
+
+.obxv-tabs-inner::-webkit-scrollbar {
+  display: none;
+}
+
+.obxv-tabs {
+  display: flex;
+  align-items: stretch;
+  gap: clamp(14px, 2.6vw, 24px);
+  width: max-content;
+  min-width: 100%;
+  padding: 0 12px 10px;
+  box-sizing: border-box;
+}
+
+.obxv-tabs-separator {
+  height: 1px;
+  width: 100%;
+  background: var(--tab-border);
+}
+
+.obxv-tab {
   flex: 0 0 auto;
-  color: var(--muted);
-}
-
-.obxv-venue-title {
-  margin: 0;
-  color: #000000;
-  font-size: 1.08rem;
-  font-weight: 900;
+  display: inline-flex;
+  align-items: flex-end;
+  position: relative;
+  appearance: none;
+  border: 0;
+  border-radius: 12px 12px 0 0;
+  background: transparent;
+  color: var(--tab-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 800;
   line-height: 1.2;
-  text-transform: uppercase;
-  word-break: break-word;
+  min-height: 44px;
+  padding: 0 2px 14px;
+  margin: 0;
+  white-space: nowrap;
+  scroll-snap-align: start;
+  transition: color 0.2s ease, background-color 0.2s ease;
 }
 
-.obxv-venue-meta {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.82rem;
-  line-height: 1.3;
+.obxv-tab::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 3px;
+  border-radius: 999px;
+  background: transparent;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+  opacity: 0;
+}
+
+.obxv-tab:hover,
+.obxv-tab:focus-visible {
+  color: var(--tab-active-text);
+  background: var(--tab-active-bg);
+  outline: none;
+}
+
+.obxv-tab[aria-selected="true"] {
+  color: var(--tab-active-text);
+  background: var(--tab-active-bg);
+}
+
+.obxv-tab[aria-selected="true"]::after {
+  background: var(--tab-indicator);
+  opacity: 1;
+}
+
+.obxv-tab--skeleton {
+  display: inline-block;
+  width: 132px;
+  min-width: 132px;
+  height: 22px;
+  border-radius: 999px 999px 0 0;
+  margin-bottom: 14px;
+}
+
+.obxv-tab__label {
+  display: inline-block;
+  pointer-events: none;
+}
+
+.obxv-list {
+  display: block;
+}
+
+.obxv-panel {
+  display: grid;
+  gap: 14px;
 }
 
 .obxv-grid {
@@ -99,7 +203,7 @@
   align-items: flex-start;
   gap: 8px;
   padding: 0;
-  color: #1f2937;
+  color: var(--ink);
 }
 
 .obx-locationbar svg {
@@ -133,7 +237,55 @@
 }
 
 @media (max-width: 767.98px) {
-  .obxv-venue-head {
-    align-items: flex-start;
+  .cloudari-billboard-venues {
+    padding-inline: 12px;
+  }
+
+  .obxv-head {
+    margin-inline: -12px;
+  }
+
+  .obxv-tabs {
+    gap: 16px;
+    padding-inline: 16px;
+    padding-bottom: 8px;
+  }
+
+  .obxv-tabs-inner {
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: 16px;
+  }
+
+  .obxv-tab {
+    font-size: 0.95rem;
+    padding-bottom: 12px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023.98px) {
+  .obxv-tabs {
+    gap: 20px;
+  }
+
+  .obxv-tabs-inner {
+    scroll-snap-type: x proximity;
+  }
+}
+
+@media (max-width: 639.98px) {
+  .obxv-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (pointer: fine) {
+  .obxv-tabs-inner {
+    cursor: grab;
+  }
+
+  .obxv-tabs-inner.is-dragging {
+    cursor: grabbing;
+    scroll-snap-type: none;
+    user-select: none;
   }
 }

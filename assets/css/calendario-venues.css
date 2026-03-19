@@ -1,0 +1,84 @@
+.cloudari-calendar-venues-container .evento-contenido {
+  align-items: center;
+  min-height: auto;
+  padding-block: 12px;
+}
+
+.cloudari-calendar-venues-container .evento-imagen {
+  width: 118px;
+  min-width: 118px;
+  height: 78px;
+}
+
+.cloudari-calendar-venues-container .evento-imagen img {
+  padding: 0;
+  border-radius: 10px;
+}
+
+.cloudari-calendar-venues-container .evento-info {
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: 8px;
+  padding-block: 0;
+}
+
+.cloudari-calendar-venues-container .evento-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  width: 100%;
+}
+
+.cloudari-calendar-venues-container .evento-lugar {
+  margin-bottom: 0;
+  line-height: 1.2;
+}
+
+.cloudari-calendar-venues-container .evento-time {
+  margin-bottom: 0;
+  color: #4b5563;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.cloudari-calendar-venues-container .evento-venue {
+  display: grid;
+  grid-template-columns: 13px minmax(0, 1fr);
+  align-items: start;
+  column-gap: 6px;
+  color: #4b5563;
+  width: 100%;
+}
+
+.cloudari-calendar-venues-container .evento-venue svg {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
+  color: #475569;
+  margin-top: 2px;
+}
+
+.cloudari-calendar-venues-container .evento-venue-text {
+  font-size: 13px;
+  line-height: 1.25;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.cloudari-calendar-venues-container .evento-accion {
+  justify-content: flex-start;
+  margin-top: 0;
+}
+
+@media (max-width: 768px) {
+  .cloudari-calendar-venues-container .evento-imagen {
+    width: 88px;
+    min-width: 88px;
+    height: 64px;
+  }
+
+  .cloudari-calendar-venues-container .evento-venue-text {
+    font-size: 12px;
+  }
+}

@@ -8,6 +8,22 @@ use Cloudari\Onebox\Infrastructure\Onebox\Auth;
 
 final class SettingsPage
 {
+    private const DEFAULT_STYLE_VALUES = [
+        'color_primary' => '#009AD8',
+        'color_accent' => '#D14100',
+        'color_bg' => '#FFFFFF',
+        'color_text' => '#000000',
+        'color_selected_day' => '#009AD8',
+    ];
+
+    private const GLOBAL_STYLE_LABELS = [
+        'color_primary' => 'Color principal global',
+        'color_accent' => 'Color de llamada a la accion global',
+        'color_bg' => 'Fondo global',
+        'color_text' => 'Color de texto global',
+        'color_selected_day' => 'Color de dia seleccionado',
+    ];
+
     public static function register(): void
     {
         add_menu_page(
@@ -36,6 +52,509 @@ final class SettingsPage
             CLOUDARI_ONEBOX_VER,
             true
         );
+
+        wp_localize_script(
+            'cloudari-onebox-admin-settings',
+            'cloudariOneboxAdminStyleConfig',
+            self::getAdminStyleScriptConfig()
+        );
+    }
+
+    private static function sanitizeWidgetColors($raw): array
+    {
+        $normalized = [];
+
+        if (!is_array($raw)) {
+            return $normalized;
+        }
+
+        foreach ($raw as $widget => $tokens) {
+            $widgetKey = sanitize_key((string) $widget);
+            if ($widgetKey === '' || !is_array($tokens)) {
+                continue;
+            }
+
+            foreach ($tokens as $token => $value) {
+                $tokenKey = sanitize_key((string) $token);
+                if ($tokenKey === '') {
+                    continue;
+                }
+
+                $rawValue = is_string($value) ? trim($value) : '';
+                if (strcasecmp($rawValue, 'transparent') === 0) {
+                    $normalized[$widgetKey][$tokenKey] = 'transparent';
+                    continue;
+                }
+
+                $sanitized = sanitize_hex_color($rawValue);
+                $normalized[$widgetKey][$tokenKey] = is_string($sanitized) ? $sanitized : '';
+            }
+        }
+
+        return $normalized;
+    }
+
+    private static function getDefaultStyleValue(string $key): string
+    {
+        return self::DEFAULT_STYLE_VALUES[$key] ?? '';
+    }
+
+    private static function getGlobalStyleValue(TheatreProfile $profile, string $key): string
+    {
+        return match ($key) {
+            'color_primary' => $profile->colorPrimary !== ''
+                ? $profile->colorPrimary
+                : self::getDefaultStyleValue('color_primary'),
+            'color_accent' => $profile->colorAccent !== ''
+                ? $profile->colorAccent
+                : self::getDefaultStyleValue('color_accent'),
+            'color_bg' => $profile->colorBackground !== ''
+                ? $profile->colorBackground
+                : self::getDefaultStyleValue('color_bg'),
+            'color_text' => $profile->colorText !== ''
+                ? $profile->colorText
+                : self::getDefaultStyleValue('color_text'),
+            'color_selected_day' => $profile->colorSelectedDay !== ''
+                ? $profile->colorSelectedDay
+                : (
+                    $profile->colorPrimary !== ''
+                        ? $profile->colorPrimary
+                        : self::getDefaultStyleValue('color_selected_day')
+                ),
+            default => '',
+        };
+    }
+
+    private static function getWidgetStyleDefinitions(): array
+    {
+        return [
+            'calendar' => [
+                'title' => 'Calendario',
+                'description' => 'Ajustes especificos del calendario. El dia seleccionado sigue teniendo su propio color base.',
+                'legacy_fields' => [
+                    'color_selected_day' => [
+                        'label' => 'Color de dia seleccionado',
+                        'description' => 'Color base del dia activo en el calendario.',
+                        'reset_value' => '',
+                        'resolve' => [
+                            [
+                                'type' => 'global',
+                                'key' => 'color_primary',
+                                'label' => self::GLOBAL_STYLE_LABELS['color_primary'],
+                            ],
+                            [
+                                'type' => 'literal',
+                                'value' => self::getDefaultStyleValue('color_primary'),
+                            ],
+                        ],
+                    ],
+                ],
+                'fields' => [
+                    'nav' => [
+                        'label' => 'Color de flecha',
+                        'reset_value' => '',
+                        'resolve' => [
+                            [
+                                'type' => 'global',
+                                'key' => 'color_primary',
+                                'label' => self::GLOBAL_STYLE_LABELS['color_primary'],
+                            ],
+                            [
+                                'type' => 'literal',
+                                'value' => self::getDefaultStyleValue('color_primary'),
+                            ],
+                        ],
+                    ],
+                    'text' => [
+                        'label' => 'Color de texto',
+                        'reset_value' => '',
+                        'resolve' => [
+                            [
+                                'type' => 'global',
+                                'key' => 'color_text',
+                                'label' => self::GLOBAL_STYLE_LABELS['color_text'],
+                            ],
+                            [
+                                'type' => 'literal',
+                                'value' => self::getDefaultStyleValue('color_text'),
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            'billboard' => [
+                'title' => 'Cartelera',
+                'description' => 'Overrides para las cards y el CTA de la cartelera.',
+                'fields' => [
+                    'topbar' => [
+                        'label' => 'Color barra superior',
+                        'reset_value' => '',
+                        'resolve' => [
+                            [
+                                'type' => 'global',
+                                'key' => 'color_primary',
+                                'label' => self::GLOBAL_STYLE_LABELS['color_primary'],
+                            ],
+                            [
+                                'type' => 'literal',
+                                'value' => self::getDefaultStyleValue('color_primary'),
+                            ],
+                        ],
+                    ],
+                    'cta' => [
+                        'label' => 'Color boton CTA',
+                        'reset_value' => '',
+                        'resolve' => [
+                            [
+                                'type' => 'global',
+                                'key' => 'color_accent',
+                                'label' => self::GLOBAL_STYLE_LABELS['color_accent'],
+                            ],
+                            [
+                                'type' => 'literal',
+                                'value' => self::getDefaultStyleValue('color_accent'),
+                            ],
+                        ],
+                    ],
+                    'card_bg' => [
+                        'label' => 'Color fondo tarjeta',
+                        'reset_value' => '',
+                        'resolve' => [
+                            [
+                                'type' => 'global',
+                                'key' => 'color_bg',
+                                'label' => self::GLOBAL_STYLE_LABELS['color_bg'],
+                            ],
+                            [
+                                'type' => 'literal',
+                                'value' => self::getDefaultStyleValue('color_bg'),
+                            ],
+                        ],
+                    ],
+                    'text' => [
+                        'label' => 'Color texto tarjeta',
+                        'reset_value' => '',
+                        'resolve' => [
+                            [
+                                'type' => 'global',
+                                'key' => 'color_text',
+                                'label' => self::GLOBAL_STYLE_LABELS['color_text'],
+                            ],
+                            [
+                                'type' => 'literal',
+                                'value' => self::getDefaultStyleValue('color_text'),
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            'venue_filters' => [
+                'title' => 'Sistema de filtros por espacios',
+                'description' => 'Colores de las tabs/filtros que cambian de espacio en la cartelera por venues.',
+                'fields' => [
+                    'active_bg' => [
+                        'label' => 'Color fondo tab activa',
+                        'reset_value' => '',
+                        'resolve' => [
+                            [
+                                'type' => 'literal',
+                                'value' => 'Transparente',
+                            ],
+                        ],
+                    ],
+                    'active_text' => [
+                        'label' => 'Color texto tab activa',
+                        'reset_value' => '',
+                        'resolve' => [
+                            [
+                                'type' => 'global',
+                                'key' => 'color_accent',
+                                'label' => self::GLOBAL_STYLE_LABELS['color_accent'],
+                            ],
+                            [
+                                'type' => 'literal',
+                                'value' => self::getDefaultStyleValue('color_accent'),
+                            ],
+                        ],
+                    ],
+                    'text' => [
+                        'label' => 'Color texto tabs inactivas',
+                        'reset_value' => '',
+                        'resolve' => [
+                            [
+                                'type' => 'global',
+                                'key' => 'color_text',
+                                'label' => self::GLOBAL_STYLE_LABELS['color_text'],
+                            ],
+                            [
+                                'type' => 'literal',
+                                'value' => self::getDefaultStyleValue('color_text'),
+                            ],
+                        ],
+                    ],
+                    'border' => [
+                        'label' => 'Color linea base',
+                        'reset_value' => '',
+                        'resolve' => [
+                            [
+                                'type' => 'global',
+                                'key' => 'color_primary',
+                                'label' => self::GLOBAL_STYLE_LABELS['color_primary'],
+                            ],
+                            [
+                                'type' => 'literal',
+                                'value' => self::getDefaultStyleValue('color_primary'),
+                            ],
+                        ],
+                    ],
+                    'indicator' => [
+                        'label' => 'Color indicador activo',
+                        'reset_value' => '',
+                        'resolve' => [
+                            [
+                                'type' => 'global',
+                                'key' => 'color_accent',
+                                'label' => self::GLOBAL_STYLE_LABELS['color_accent'],
+                            ],
+                            [
+                                'type' => 'literal',
+                                'value' => self::getDefaultStyleValue('color_accent'),
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            'countdown' => [
+                'title' => 'Contador',
+                'description' => 'Colores de fondo, titulos y cajas del widget countdown.',
+                'fields' => [
+                    'panel_bg' => [
+                        'label' => 'Color fondo panel',
+                        'reset_value' => '',
+                        'resolve' => [
+                            [
+                                'type' => 'global',
+                                'key' => 'color_bg',
+                                'label' => self::GLOBAL_STYLE_LABELS['color_bg'],
+                            ],
+                            [
+                                'type' => 'literal',
+                                'value' => self::getDefaultStyleValue('color_bg'),
+                            ],
+                        ],
+                    ],
+                    'title' => [
+                        'label' => 'Color titulo',
+                        'reset_value' => '',
+                        'resolve' => [
+                            [
+                                'type' => 'theme',
+                                'value' => 'Elementor Accent o #004743',
+                            ],
+                        ],
+                    ],
+                    'border' => [
+                        'label' => 'Color borde',
+                        'reset_value' => '',
+                        'resolve' => [
+                            [
+                                'type' => 'theme',
+                                'value' => 'Elementor Border o #E6E6E6',
+                            ],
+                        ],
+                    ],
+                    'number' => [
+                        'label' => 'Color numeros',
+                        'reset_value' => '',
+                        'resolve' => [
+                            [
+                                'type' => 'global',
+                                'key' => 'color_text',
+                                'label' => self::GLOBAL_STYLE_LABELS['color_text'],
+                            ],
+                            [
+                                'type' => 'literal',
+                                'value' => self::getDefaultStyleValue('color_text'),
+                            ],
+                        ],
+                    ],
+                    'poster_caption' => [
+                        'label' => 'Color texto poster',
+                        'reset_value' => '',
+                        'resolve' => [
+                            [
+                                'type' => 'literal',
+                                'value' => '#FFFFFF',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    private static function resolveStyleStepValue(TheatreProfile $profile, array $step): string
+    {
+        $type = $step['type'] ?? '';
+
+        if ($type === 'global') {
+            return self::getGlobalStyleValue($profile, (string) ($step['key'] ?? ''));
+        }
+
+        return trim((string) ($step['value'] ?? ''));
+    }
+
+    private static function resolveStyleSteps(TheatreProfile $profile, array $steps): string
+    {
+        foreach ($steps as $step) {
+            $value = self::resolveStyleStepValue($profile, is_array($step) ? $step : []);
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return '';
+    }
+
+    private static function describeStyleSteps(TheatreProfile $profile, array $steps): string
+    {
+        if (empty($steps) || !is_array($steps[0])) {
+            return '';
+        }
+
+        $first = $steps[0];
+        $type = $first['type'] ?? '';
+        $value = self::resolveStyleStepValue($profile, $first);
+
+        if ($type === 'global') {
+            $label = trim((string) ($first['label'] ?? ''));
+            if ($label === '') {
+                $label = trim((string) ($first['key'] ?? ''));
+            }
+
+            if ($label === '') {
+                return $value;
+            }
+
+            return $value !== '' ? sprintf('%s (%s)', $label, $value) : $label;
+        }
+
+        return $value;
+    }
+
+    private static function getAdminStyleScriptConfig(): array
+    {
+        $definitions = self::getWidgetStyleDefinitions();
+        $config = [
+            'globalFields' => [],
+            'sections' => [],
+        ];
+
+        foreach (self::DEFAULT_STYLE_VALUES as $key => $defaultValue) {
+            $config['globalFields'][$key] = [
+                'inputId' => $key,
+                'default' => $defaultValue,
+            ];
+        }
+
+        $config['globalFields']['color_selected_day']['resolve'] = [
+            [
+                'type' => 'global',
+                'key' => 'color_primary',
+                'label' => self::GLOBAL_STYLE_LABELS['color_primary'],
+            ],
+            [
+                'type' => 'literal',
+                'value' => self::getDefaultStyleValue('color_primary'),
+            ],
+        ];
+
+        foreach ($definitions as $widgetKey => $section) {
+            $config['sections'][$widgetKey] = [
+                'legacyFields' => [],
+                'fields' => [],
+            ];
+
+            foreach (($section['legacy_fields'] ?? []) as $fieldName => $field) {
+                $config['sections'][$widgetKey]['legacyFields'][$fieldName] = [
+                    'inputId' => $fieldName,
+                    'resetValue' => (string) ($field['reset_value'] ?? ''),
+                    'resolve' => $field['resolve'] ?? [],
+                ];
+            }
+
+            foreach (($section['fields'] ?? []) as $fieldKey => $field) {
+                $config['sections'][$widgetKey]['fields'][$fieldKey] = [
+                    'inputId' => 'widget_colors_' . $widgetKey . '_' . $fieldKey,
+                    'resetValue' => (string) ($field['reset_value'] ?? ''),
+                    'resolve' => $field['resolve'] ?? [],
+                ];
+            }
+        }
+
+        return $config;
+    }
+
+    private static function getCurrentPreviewColor(string $value): string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return '';
+        }
+
+        if (preg_match('/#[0-9A-Fa-f]{3,6}\b/', $value, $matches) === 1) {
+            return strtoupper($matches[0]);
+        }
+
+        if (stripos($value, 'transpar') !== false) {
+            return 'transparent';
+        }
+
+        return '';
+    }
+
+    private static function getWidgetColorSections(TheatreProfile $profile): array
+    {
+        $sections = [];
+        $definitions = self::getWidgetStyleDefinitions();
+
+        foreach ($definitions as $widgetKey => $section) {
+            $legacyFields = [];
+            foreach (($section['legacy_fields'] ?? []) as $fieldName => $field) {
+                $legacyFields[] = [
+                    'name' => $fieldName,
+                    'label' => $field['label'],
+                    'value' => self::getGlobalStyleValue($profile, $fieldName),
+                    'current' => self::getGlobalStyleValue($profile, $fieldName),
+                    'inherit' => self::describeStyleSteps($profile, $field['resolve'] ?? []),
+                    'description' => $field['description'] ?? '',
+                    'placeholder' => self::resolveStyleSteps($profile, $field['resolve'] ?? []),
+                ];
+            }
+
+            $fields = [];
+            foreach (($section['fields'] ?? []) as $fieldKey => $field) {
+                $current = $profile->getWidgetColor($widgetKey, $fieldKey);
+                if ($current === '') {
+                    $current = self::resolveStyleSteps($profile, $field['resolve'] ?? []);
+                }
+
+                $fields[$fieldKey] = [
+                    'label' => $field['label'],
+                    'inherit' => self::describeStyleSteps($profile, $field['resolve'] ?? []),
+                    'current' => $current,
+                ];
+            }
+
+            $sections[$widgetKey] = [
+                'title' => $section['title'],
+                'description' => $section['description'],
+                'legacy_fields' => $legacyFields,
+                'fields' => $fields,
+            ];
+        }
+
+        return $sections;
     }
 
     public static function render(): void
@@ -61,6 +580,7 @@ final class SettingsPage
             $colorSelectedDay = sanitize_hex_color(
                 $_POST['color_selected_day'] ?? ($colorPrimary ?: '#009AD8')
             );
+            $widgetColors = self::sanitizeWidgetColors($_POST['widget_colors'] ?? []);
 
             $rawIntegrations = $_POST['integrations'] ?? [];
             $integrations = [];
@@ -154,10 +674,12 @@ final class SettingsPage
                 $colorText ?: '#000000',
                 $colorSelectedDay ?: ($colorPrimary ?: '#009AD8'),
                 $integrations,
-                $defaultIntegration
+                $defaultIntegration,
+                $widgetColors
             );
 
             ProfileRepository::save($profile);
+            $active = $profile;
 
             Auth::resetTokens();
             \Cloudari\Onebox\Rest\Routes::clearBillboardCache();
@@ -170,6 +692,8 @@ final class SettingsPage
         if ($defaultIntegration === '' || !isset($integrations[$defaultIntegration])) {
             $defaultIntegration = (string) array_key_first($integrations);
         }
+        $widgetColors = $active->getWidgetColors();
+        $widgetSections = self::getWidgetColorSections($active);
         ?>
         <div class="wrap">
             <h1>Cloudari OneBox - Perfil MAIN</h1>
@@ -301,49 +825,184 @@ final class SettingsPage
                     <button type="button" class="button" id="cloudari-add-integration">Anadir integracion</button>
                 </p>
 
-                <h2 class="title">Paleta de colores</h2>
+                <div class="cloudari-section-header">
+                    <div>
+                        <h2 class="title">Paleta global</h2>
+                        <p class="description">Estos colores actuan como base compartida para todos los widgets. Debajo puedes sobrescribirlos por widget.</p>
+                    </div>
+                    <div class="cloudari-section-actions">
+                        <button type="button" class="button button-secondary" data-reset-style="all-styles">
+                            Restablecer estilos
+                        </button>
+                    </div>
+                </div>
                 <table class="form-table" role="presentation">
                     <tr>
                         <th scope="row"><label for="color_primary">Color principal</label></th>
                         <td>
                             <input name="color_primary" id="color_primary" type="text"
-                                   class="regular-text"
+                                   class="regular-text code"
+                                   data-cloudari-style-input
+                                   data-style-scope="global"
+                                   data-style-key="color_primary"
                                    value="<?php echo esc_attr($active->colorPrimary); ?>">
+                            <p class="description cloudari-color-current">
+                                <span>Color actual: <code data-cloudari-style-current-code><?php echo esc_html($active->colorPrimary); ?></code></span>
+                                <span class="cloudari-color-chip" data-cloudari-style-chip style="--cloudari-chip-color: <?php echo esc_attr(self::getCurrentPreviewColor($active->colorPrimary)); ?>"></span>
+                            </p>
                         </td>
                     </tr>
                     <tr>
                         <th scope="row"><label for="color_accent">Color de llamada a la accion</label></th>
                         <td>
                             <input name="color_accent" id="color_accent" type="text"
-                                   class="regular-text"
+                                   class="regular-text code"
+                                   data-cloudari-style-input
+                                   data-style-scope="global"
+                                   data-style-key="color_accent"
                                    value="<?php echo esc_attr($active->colorAccent); ?>">
+                            <p class="description cloudari-color-current">
+                                <span>Color actual: <code data-cloudari-style-current-code><?php echo esc_html($active->colorAccent); ?></code></span>
+                                <span class="cloudari-color-chip" data-cloudari-style-chip style="--cloudari-chip-color: <?php echo esc_attr(self::getCurrentPreviewColor($active->colorAccent)); ?>"></span>
+                            </p>
                         </td>
                     </tr>
                     <tr>
                         <th scope="row"><label for="color_bg">Fondo widgets</label></th>
                         <td>
                             <input name="color_bg" id="color_bg" type="text"
-                                   class="regular-text"
+                                   class="regular-text code"
+                                   data-cloudari-style-input
+                                   data-style-scope="global"
+                                   data-style-key="color_bg"
                                    value="<?php echo esc_attr($active->colorBackground); ?>">
+                            <p class="description cloudari-color-current">
+                                <span>Color actual: <code data-cloudari-style-current-code><?php echo esc_html($active->colorBackground); ?></code></span>
+                                <span class="cloudari-color-chip" data-cloudari-style-chip style="--cloudari-chip-color: <?php echo esc_attr(self::getCurrentPreviewColor($active->colorBackground)); ?>"></span>
+                            </p>
                         </td>
                     </tr>
                     <tr>
                         <th scope="row"><label for="color_text">Color texto</label></th>
                         <td>
                             <input name="color_text" id="color_text" type="text"
-                                   class="regular-text"
+                                   class="regular-text code"
+                                   data-cloudari-style-input
+                                   data-style-scope="global"
+                                   data-style-key="color_text"
                                    value="<?php echo esc_attr($active->colorText); ?>">
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="color_selected_day">Color fondo dia seleccionado</label></th>
-                        <td>
-                            <input name="color_selected_day" id="color_selected_day" type="text"
-                                   class="regular-text"
-                                   value="<?php echo esc_attr($active->colorSelectedDay); ?>">
+                            <p class="description cloudari-color-current">
+                                <span>Color actual: <code data-cloudari-style-current-code><?php echo esc_html($active->colorText); ?></code></span>
+                                <span class="cloudari-color-chip" data-cloudari-style-chip style="--cloudari-chip-color: <?php echo esc_attr(self::getCurrentPreviewColor($active->colorText)); ?>"></span>
+                            </p>
                         </td>
                     </tr>
                 </table>
+
+                <div class="cloudari-section-header">
+                    <div>
+                        <h2 class="title">Colores por widget</h2>
+                        <p class="description">Si dejas un campo vacio, el widget hereda la paleta global o el fallback indicado.</p>
+                    </div>
+                    <div class="cloudari-section-actions">
+                        <button type="button" class="button button-secondary" data-reset-style="widget-sections">
+                            Restablecer todas las secciones
+                        </button>
+                    </div>
+                </div>
+
+                <div class="cloudari-widget-sections">
+                    <?php foreach ($widgetSections as $widgetKey => $section) : ?>
+                        <section class="cloudari-widget-card">
+                            <div class="cloudari-widget-card-header">
+                                <div>
+                                    <h3><?php echo esc_html($section['title']); ?></h3>
+                                    <p class="description"><?php echo esc_html($section['description']); ?></p>
+                                </div>
+                                <button
+                                    type="button"
+                                    class="button button-secondary"
+                                    data-reset-style="widget-section"
+                                    data-reset-section="<?php echo esc_attr($widgetKey); ?>"
+                                >
+                                    Restablecer esta seccion
+                                </button>
+                            </div>
+
+                            <table class="form-table" role="presentation">
+                                <?php foreach (($section['legacy_fields'] ?? []) as $field) : ?>
+                                    <?php $legacyPreview = self::getCurrentPreviewColor((string) ($field['current'] ?? '')); ?>
+                                    <tr>
+                                        <th scope="row">
+                                            <label for="<?php echo esc_attr($field['name']); ?>">
+                                                <?php echo esc_html($field['label']); ?>
+                                            </label>
+                                        </th>
+                                        <td>
+                                            <input name="<?php echo esc_attr($field['name']); ?>"
+                                                   id="<?php echo esc_attr($field['name']); ?>"
+                                                   type="text"
+                                                   class="regular-text code"
+                                                   data-cloudari-style-input
+                                                   data-style-scope="legacy"
+                                                   data-style-section="<?php echo esc_attr($widgetKey); ?>"
+                                                   data-style-key="<?php echo esc_attr($field['name']); ?>"
+                                                   value="<?php echo esc_attr($field['value']); ?>"
+                                                   placeholder="<?php echo esc_attr($field['placeholder']); ?>">
+                                            <?php if (!empty($field['description'])) : ?>
+                                                <p class="description"><?php echo esc_html($field['description']); ?></p>
+                                            <?php endif; ?>
+                                            <p class="description" data-cloudari-style-inherit>
+                                                Vacio = hereda <?php echo esc_html((string) ($field['inherit'] ?? '')); ?>
+                                            </p>
+                                            <p class="description cloudari-color-current">
+                                                <span>Color actual: <code data-cloudari-style-current-code><?php echo esc_html((string) ($field['current'] ?? '')); ?></code></span>
+                                                <span class="cloudari-color-chip" data-cloudari-style-chip<?php echo $legacyPreview === '' ? ' hidden' : ''; ?> style="--cloudari-chip-color: <?php echo esc_attr($legacyPreview); ?>"></span>
+                                            </p>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+
+                                <?php foreach ($section['fields'] as $fieldKey => $field) : ?>
+                                    <?php
+                                        $inputId = 'widget_colors_' . $widgetKey . '_' . $fieldKey;
+                                        $inputName = sprintf('widget_colors[%s][%s]', $widgetKey, $fieldKey);
+                                        $value = $widgetColors[$widgetKey][$fieldKey] ?? '';
+                                        $inherit = (string) ($field['inherit'] ?? '');
+                                        $current = (string) ($field['current'] ?? $inherit);
+                                        $preview = self::getCurrentPreviewColor($current);
+                                    ?>
+                                    <tr>
+                                        <th scope="row">
+                                            <label for="<?php echo esc_attr($inputId); ?>">
+                                                <?php echo esc_html($field['label']); ?>
+                                            </label>
+                                        </th>
+                                        <td>
+                                            <input name="<?php echo esc_attr($inputName); ?>"
+                                                   id="<?php echo esc_attr($inputId); ?>"
+                                                   type="text"
+                                                   class="regular-text code"
+                                                   data-cloudari-style-input
+                                                   data-style-scope="widget"
+                                                   data-style-section="<?php echo esc_attr($widgetKey); ?>"
+                                                   data-style-key="<?php echo esc_attr($fieldKey); ?>"
+                                                   value="<?php echo esc_attr($value); ?>"
+                                                   placeholder="<?php echo esc_attr($inherit); ?>">
+                                            <p class="description" data-cloudari-style-inherit>
+                                                Vacio = hereda <?php echo esc_html($inherit); ?>
+                                            </p>
+                                            <p class="description cloudari-color-current">
+                                                <span>Color actual: <code data-cloudari-style-current-code><?php echo esc_html($current); ?></code></span>
+                                                <span class="cloudari-color-chip" data-cloudari-style-chip<?php echo $preview === '' ? ' hidden' : ''; ?> style="--cloudari-chip-color: <?php echo esc_attr($preview); ?>"></span>
+                                            </p>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </table>
+                        </section>
+                    <?php endforeach; ?>
+                </div>
 
                 <p class="submit">
                     <button type="submit" name="cloudari_onebox_save" class="button button-primary">
@@ -457,6 +1116,65 @@ final class SettingsPage
             }
             .cloudari-integration-table {
                 margin-top: 0;
+            }
+            .cloudari-section-header,
+            .cloudari-widget-card-header {
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                gap: 12px;
+                flex-wrap: wrap;
+            }
+            .cloudari-section-header .title,
+            .cloudari-widget-card-header h3 {
+                margin-bottom: 4px;
+            }
+            .cloudari-section-actions {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .cloudari-widget-sections {
+                display: grid;
+                gap: 16px;
+                margin-top: 12px;
+            }
+            .cloudari-widget-card {
+                border: 1px solid #ccd0d4;
+                border-radius: 8px;
+                padding: 16px;
+                background: #fff;
+            }
+            .cloudari-widget-card h3 {
+                margin: 0 0 6px;
+            }
+            .cloudari-widget-card .form-table {
+                margin-top: 8px;
+            }
+            .cloudari-color-current {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                margin-top: 6px;
+            }
+            .cloudari-color-chip {
+                width: 16px;
+                height: 16px;
+                border-radius: 999px;
+                border: 1px solid #ccd0d4;
+                background:
+                    linear-gradient(45deg, #f1f1f1 25%, transparent 25%, transparent 75%, #f1f1f1 75%, #f1f1f1),
+                    linear-gradient(45deg, #f1f1f1 25%, transparent 25%, transparent 75%, #f1f1f1 75%, #f1f1f1);
+                background-position: 0 0, 4px 4px;
+                background-size: 8px 8px;
+                position: relative;
+                overflow: hidden;
+            }
+            .cloudari-color-chip::after {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background: var(--cloudari-chip-color, transparent);
             }
         </style>
         <?php

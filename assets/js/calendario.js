@@ -39,6 +39,11 @@ document.addEventListener('DOMContentLoaded', function () {
     return map[eventId] ? map[eventId] : url;
   }
 
+  function getClockIconUrl() {
+    const env = getEnv();
+    const raw = env.clockIcon ?? env.clock_icon ?? '';
+    return String(raw || '').trim();
+  }
 
   function buildAjaxUrl(inicio, fin) {
     const base = String(oneboxData.ajaxSesiones || '');
@@ -213,6 +218,28 @@ document.addEventListener('DOMContentLoaded', function () {
   function capitalizarPrimeraLetra(cadena) {
     if (!cadena || !cadena.length) return cadena;
     return cadena.charAt(0).toUpperCase() + cadena.slice(1).toLowerCase();
+  }
+
+  function createTimeRow(timeLabel) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'evento-titulo evento-time';
+
+    const iconUrl = getClockIconUrl();
+    if (iconUrl) {
+      const icon = document.createElement('img');
+      icon.className = 'evento-time-icon';
+      icon.src = iconUrl;
+      icon.alt = '';
+      icon.setAttribute('aria-hidden', 'true');
+      wrapper.appendChild(icon);
+    }
+
+    const text = document.createElement('span');
+    text.className = 'evento-time-text';
+    text.textContent = timeLabel || '';
+    wrapper.appendChild(text);
+
+    return wrapper;
   }
 
   // Fechas pasadas
@@ -391,10 +418,7 @@ document.addEventListener('DOMContentLoaded', function () {
           eventoLugar.textContent = evento.titulo;
           eventoInfo.appendChild(eventoLugar);
 
-          const eventoTitulo = document.createElement('div');
-          eventoTitulo.className = 'evento-titulo';
-          eventoTitulo.textContent = evento.hora;
-          eventoInfo.appendChild(eventoTitulo);
+          eventoInfo.appendChild(createTimeRow(evento.hora));
 
           const eventoAccion = document.createElement('div');
           eventoAccion.className = 'evento-accion';
