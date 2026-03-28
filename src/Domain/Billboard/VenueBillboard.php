@@ -2,6 +2,7 @@
 namespace Cloudari\Onebox\Domain\Billboard;
 
 use Cloudari\Onebox\Domain\Theatre\ProfileRepository;
+use Cloudari\Onebox\Domain\Theatre\TheatreProfile;
 use Cloudari\Onebox\Infrastructure\Onebox\Events;
 use Cloudari\Onebox\Infrastructure\Onebox\Sessions;
 
@@ -108,6 +109,7 @@ final class VenueBillboard
                         'sources'      => [],
                         'integrations' => [],
                         'venue_ids'    => [],
+                        'source_venues'=> [],
                     ],
                     '_events'        => [],
                 ];
@@ -124,6 +126,36 @@ final class VenueBillboard
             if ($resolved['venue']['id'] !== null && $resolved['venue']['id'] !== '') {
                 $venueId = (string) $resolved['venue']['id'];
                 $venues[$venueKey]['source_context']['venue_ids'][$venueId] = $venueId;
+            }
+
+            if (!empty($resolved['venue']['source_key'])) {
+                $sourceKey = (string) $resolved['venue']['source_key'];
+
+                if (!isset($venues[$venueKey]['source_context']['source_venues'][$sourceKey])) {
+                    $venues[$venueKey]['source_context']['source_venues'][$sourceKey] = [
+                        'source_key'      => $sourceKey,
+                        'source'          => $resolved['source'],
+                        'integration'     => $resolved['integration'],
+                        'raw_id'          => $resolved['venue']['raw_id'],
+                        'raw_name'        => $resolved['venue']['raw_name'],
+                        'raw_slug'        => $resolved['venue']['raw_slug'],
+                        'canonical_name'  => $resolved['venue']['name'],
+                        'canonical_slug'  => $resolved['venue']['slug'],
+                        'next_start'      => $resolved['start'],
+                        'sessions_count'  => 0,
+                    ];
+                }
+
+                $venues[$venueKey]['source_context']['source_venues'][$sourceKey]['sessions_count']++;
+
+                if (
+                    self::compareDateStrings(
+                        $resolved['start'],
+                        (string) ($venues[$venueKey]['source_context']['source_venues'][$sourceKey]['next_start'] ?? '')
+                    ) < 0
+                ) {
+                    $venues[$venueKey]['source_context']['source_venues'][$sourceKey]['next_start'] = $resolved['start'];
+                }
             }
 
             $eventKey = self::buildAggregateEventKey(
@@ -176,6 +208,7 @@ final class VenueBillboard
                 'sources'      => array_values($venue['source_context']['sources']),
                 'integrations' => array_values($venue['source_context']['integrations']),
                 'venue_ids'    => array_values($venue['source_context']['venue_ids']),
+                'source_venues'=> array_values($venue['source_context']['source_venues']),
             ];
 
             unset($venue['_events']);
@@ -230,11 +263,12 @@ final class VenueBillboard
 
         $end = (string) ($session['date']['end'] ?? $start);
 
-        $venue = self::resolveVenue($session, $eventMeta);
+        $source = !empty($cloudari['manual']) ? 'manual' : 'onebox';
+        $venue = self::resolveVenue($session, $eventMeta, $source, $integration);
 
         return [
             'event_id'          => $eventId,
-            'source'            => !empty($cloudari['manual']) ? 'manual' : 'onebox',
+            'source'            => $source,
             'integration'       => $integration,
             'title'             => self::resolveTitle($session, $eventMeta),
             'image'             => self::resolveImage($session, $eventMeta),
@@ -271,7 +305,12 @@ final class VenueBillboard
         return $cloudari;
     }
 
-    private static function resolveVenue(array $session, ?array $eventMeta): array
+    private static function resolveVenue(
+        array $session,
+        ?array $eventMeta,
+        string $source,
+        string $integration
+    ): array
     {
         $profile = ProfileRepository::getActive();
 
@@ -289,24 +328,41 @@ final class VenueBillboard
             $venueData = $eventVenue;
         }
 
-        $venueName = trim((string) ($venueData['name'] ?? ''));
-        if ($venueName === '') {
-            $venueName = trim((string) $profile->venueName);
+        $rawVenueId = self::normalizeVenueId($venueData['id'] ?? null);
+        $rawVenueName = trim((string) ($venueData['name'] ?? ''));
+        if ($rawVenueName === '') {
+            $rawVenueName = trim((string) $profile->venueName);
         }
-        if ($venueName === '') {
-            $venueName = 'Espacio';
+        if ($rawVenueName === '') {
+            $rawVenueName = 'Espacio';
         }
 
-        $slug = sanitize_title($venueName);
+        $rawVenueSlug = sanitize_title($rawVenueName);
+        $sourceKey = self::buildVenueSourceKey($source, $integration, $rawVenueId, $rawVenueName);
+        $mapping = self::resolveVenueSourceMapping($profile, $sourceKey);
+
+        $venueName = trim((string) ($mapping['canonical_name'] ?? ''));
+        if ($venueName === '') {
+            $venueName = $rawVenueName;
+        }
+
+        $slug = sanitize_title((string) ($mapping['canonical_slug'] ?? ''));
+        if ($slug === '') {
+            $slug = sanitize_title($venueName);
+        }
         $groupKey = $slug !== ''
             ? $slug
             : 'venue-' . substr(md5(strtolower($venueName)), 0, 12);
 
         return [
-            'id'        => self::normalizeVenueId($venueData['id'] ?? null),
-            'name'      => $venueName,
-            'slug'      => $slug,
-            'group_key' => $groupKey,
+            'id'         => $rawVenueId,
+            'name'       => $venueName,
+            'slug'       => $slug,
+            'group_key'  => $groupKey,
+            'raw_id'     => $rawVenueId,
+            'raw_name'   => $rawVenueName,
+            'raw_slug'   => $rawVenueSlug,
+            'source_key' => $sourceKey,
         ];
     }
 
@@ -455,6 +511,43 @@ final class VenueBillboard
         }
 
         return null;
+    }
+
+    private static function buildVenueSourceKey(
+        string $source,
+        string $integration,
+        $rawVenueId,
+        string $rawVenueName
+    ): string {
+        $parts = [
+            sanitize_key($source !== '' ? $source : 'venue'),
+            sanitize_key($integration !== '' ? $integration : ($source !== '' ? $source : 'default')),
+        ];
+
+        $normalizedId = sanitize_key((string) $rawVenueId);
+        if ($normalizedId !== '') {
+            $parts[] = 'id-' . $normalizedId;
+        } else {
+            $normalizedName = sanitize_key(sanitize_title($rawVenueName));
+            if ($normalizedName === '') {
+                $normalizedName = 'venue-' . substr(md5(strtolower($rawVenueName)), 0, 12);
+            }
+
+            $parts[] = 'name-' . $normalizedName;
+        }
+
+        return implode('__', $parts);
+    }
+
+    private static function resolveVenueSourceMapping(TheatreProfile $profile, string $sourceKey): array
+    {
+        if ($sourceKey === '' || empty($profile->venueSourceMappings[$sourceKey])) {
+            return [];
+        }
+
+        $mapping = $profile->venueSourceMappings[$sourceKey];
+
+        return is_array($mapping) ? $mapping : [];
     }
 
     private static function buildVenueOrderMap(array $venueDisplayOrder): array

@@ -3,7 +3,7 @@ Contributors: cloudari
 Tags: onebox, theatre, calendar, billboard, events
 Requires at least: 6.0
 Requires PHP: 8.0
-Stable tag: 1.3.4
+Stable tag: 1.3.5
 
 Suite para integrar OneBox en WordPress: calendario, cartelera, cartelera por espacios, contador y eventos manuales, con multiples integraciones por teatro.
 
@@ -61,7 +61,7 @@ Opcionales (wp-config.php):
 
 `[cloudari_billboard_venues]`
 - Muestra una cartelera agrupada por espacios o `venues`.
-- Permite priorizar manualmente los espacios desde el Perfil MAIN y mantiene fallback por proxima funcion disponible.
+- Permite priorizar manualmente los espacios desde el Perfil MAIN, unificar espacios equivalentes entre canales y mantiene fallback por proxima funcion disponible.
 
 `[cloudari_billboard_spaces]`
 - Alias de `[cloudari_billboard_venues]`.
@@ -128,6 +128,11 @@ Custom post types / taxonomy:
 - Usar HTTPS y cache a nivel de servidor si aplica.
 
 == Changelog ==
+= 1.3.5 =
+* Nueva unificacion manual de espacios entre canales desde el Perfil MAIN para evitar venues duplicados en carteleras multicanal.
+* La unificacion tambien soporta eventos manuales sin romper el fallback actual cuando no hay reglas configuradas.
+* Metadatos de release alineados para despliegue a produccion.
+
 = 1.3.4 =
 * Nueva prioridad manual de espacios en la cartelera por venues desde el Perfil MAIN con orden drag and drop.
 * Hardening de release: los logs internos del plugin solo se activan con `CLOUDARI_ONEBOX_DEBUG_LOG`.
@@ -155,6 +160,9 @@ Custom post types / taxonomy:
 * Release inicial con multi-integracion, eventos manuales y overrides.
 
 == Upgrade Notice ==
+= 1.3.5 =
+Nueva unificacion manual de espacios entre canales para carteleras multicanal sin romper eventos manuales.
+
 = 1.3.4 =
 Nueva prioridad manual de espacios y endurecimiento de logs para release de produccion.
 

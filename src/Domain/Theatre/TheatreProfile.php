@@ -52,6 +52,9 @@ final class TheatreProfile
     /** @var string[] */
     public array $venueDisplayOrder = [];
 
+    /** @var array<string, array{canonical_name: string, canonical_slug: string}> */
+    public array $venueSourceMappings = [];
+
     public function __construct(
         string $slug,
         string $label,
@@ -64,7 +67,8 @@ final class TheatreProfile
         array $integrations,
         string $defaultIntegrationSlug,
         array $widgetColors = [],
-        array $venueDisplayOrder = []
+        array $venueDisplayOrder = [],
+        array $venueSourceMappings = []
     ) {
         $this->slug              = $slug;
         $this->label             = $label;
@@ -82,6 +86,7 @@ final class TheatreProfile
         );
         $this->widgetColors = self::normalizeWidgetColors($widgetColors);
         $this->venueDisplayOrder = self::normalizeVenueDisplayOrder($venueDisplayOrder);
+        $this->venueSourceMappings = self::normalizeVenueSourceMappings($venueSourceMappings);
     }
 
     public static function fromArray(array $data): self
@@ -134,6 +139,9 @@ final class TheatreProfile
                 : [],
             isset($data['venue_display_order']) && is_array($data['venue_display_order'])
                 ? $data['venue_display_order']
+                : [],
+            isset($data['venue_source_mappings']) && is_array($data['venue_source_mappings'])
+                ? $data['venue_source_mappings']
                 : []
         );
     }
@@ -160,6 +168,7 @@ final class TheatreProfile
             'integrations'         => $integrations,
             'widget_colors'        => $this->widgetColors,
             'venue_display_order'  => $this->venueDisplayOrder,
+            'venue_source_mappings'=> $this->venueSourceMappings,
         ];
     }
 
@@ -269,6 +278,48 @@ final class TheatreProfile
             }
 
             $normalized[] = $key;
+        }
+
+        return $normalized;
+    }
+
+    private static function normalizeVenueSourceMappings(array $venueSourceMappings): array
+    {
+        $normalized = [];
+
+        foreach ($venueSourceMappings as $sourceKey => $mapping) {
+            $key = sanitize_key((string) $sourceKey);
+            if ($key === '') {
+                continue;
+            }
+
+            if (is_string($mapping)) {
+                $mapping = [
+                    'canonical_name' => $mapping,
+                ];
+            }
+
+            if (!is_array($mapping)) {
+                continue;
+            }
+
+            $canonicalName = sanitize_text_field((string) ($mapping['canonical_name'] ?? ''));
+            if ($canonicalName === '') {
+                continue;
+            }
+
+            $canonicalSlug = sanitize_title((string) ($mapping['canonical_slug'] ?? ''));
+            if ($canonicalSlug === '') {
+                $canonicalSlug = sanitize_title($canonicalName);
+            }
+            if ($canonicalSlug === '') {
+                $canonicalSlug = 'venue-' . substr(md5(strtolower($canonicalName)), 0, 12);
+            }
+
+            $normalized[$key] = [
+                'canonical_name' => $canonicalName,
+                'canonical_slug' => $canonicalSlug,
+            ];
         }
 
         return $normalized;

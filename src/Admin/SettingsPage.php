@@ -128,6 +128,83 @@ final class SettingsPage
         return $merged;
     }
 
+    private static function sanitizeVenueSourceMappings($raw): array
+    {
+        $normalized = [];
+
+        if (!is_array($raw)) {
+            return $normalized;
+        }
+
+        foreach ($raw as $sourceKey => $row) {
+            $key = sanitize_key((string) $sourceKey);
+            if ($key === '') {
+                continue;
+            }
+
+            $canonicalName = '';
+            if (is_array($row)) {
+                $canonicalName = sanitize_text_field(
+                    is_string($row['canonical_name'] ?? null)
+                        ? wp_unslash($row['canonical_name'])
+                        : ''
+                );
+            } elseif (is_string($row)) {
+                $canonicalName = sanitize_text_field(wp_unslash($row));
+            }
+
+            if ($canonicalName === '') {
+                $normalized[$key] = [];
+                continue;
+            }
+
+            $canonicalSlug = sanitize_title($canonicalName);
+            if ($canonicalSlug === '') {
+                $canonicalSlug = 'venue-' . substr(md5(strtolower($canonicalName)), 0, 12);
+            }
+
+            $normalized[$key] = [
+                'canonical_name' => $canonicalName,
+                'canonical_slug' => $canonicalSlug,
+            ];
+        }
+
+        return $normalized;
+    }
+
+    private static function mergeVenueSourceMappings($postedMappings, array $existingMappings): array
+    {
+        $merged = [];
+
+        foreach (self::sanitizeVenueSourceMappings($existingMappings) as $sourceKey => $mapping) {
+            if (!empty($mapping)) {
+                $merged[$sourceKey] = $mapping;
+            }
+        }
+
+        if (!is_array($postedMappings)) {
+            return $merged;
+        }
+
+        $sanitizedPosted = self::sanitizeVenueSourceMappings($postedMappings);
+
+        foreach ($postedMappings as $sourceKey => $unused) {
+            $key = sanitize_key((string) $sourceKey);
+            if ($key === '') {
+                continue;
+            }
+
+            if (empty($sanitizedPosted[$key])) {
+                unset($merged[$key]);
+                continue;
+            }
+
+            $merged[$key] = $sanitizedPosted[$key];
+        }
+
+        return $merged;
+    }
+
     private static function getVenueOrderKey(array $venue): string
     {
         $candidates = [
@@ -165,6 +242,37 @@ final class SettingsPage
                 'Proxima fecha: %s',
                 wp_date('d/m/Y H:i', $timestamp, wp_timezone())
             );
+        }
+
+        return implode(' | ', $parts);
+    }
+
+    private static function formatVenueSourceMappingMeta(array $sourceVenue, string $integrationLabel): string
+    {
+        $parts = [];
+        $source = sanitize_key((string) ($sourceVenue['source'] ?? ''));
+
+        $parts[] = $source === 'manual'
+            ? 'Fuente: Eventos manuales'
+            : 'Fuente: ' . $integrationLabel;
+
+        $rawId = trim((string) ($sourceVenue['raw_id'] ?? ''));
+        if ($rawId !== '') {
+            $parts[] = 'ID venue: ' . $rawId;
+        }
+
+        $sessionsCount = isset($sourceVenue['sessions_count']) ? (int) $sourceVenue['sessions_count'] : 0;
+        if ($sessionsCount > 0) {
+            $parts[] = sprintf(
+                _n('%d sesion detectada', '%d sesiones detectadas', $sessionsCount, 'cloudari-onebox'),
+                $sessionsCount
+            );
+        }
+
+        $nextStart = trim((string) ($sourceVenue['next_start'] ?? ''));
+        $timestamp = $nextStart !== '' ? strtotime($nextStart) : false;
+        if ($timestamp !== false) {
+            $parts[] = 'Proxima fecha: ' . wp_date('d/m/Y H:i', $timestamp, wp_timezone());
         }
 
         return implode(' | ', $parts);
@@ -217,6 +325,118 @@ final class SettingsPage
         }
 
         return $orderedRows;
+    }
+
+    private static function getVenueSourceMappingRows(TheatreProfile $profile): array
+    {
+        $rows = [];
+
+        try {
+            $payload = VenueBillboard::get();
+            $venues = isset($payload['data']) && is_array($payload['data'])
+                ? $payload['data']
+                : [];
+        } catch (\Throwable $e) {
+            $venues = [];
+        }
+
+        foreach ($venues as $venue) {
+            if (!is_array($venue)) {
+                continue;
+            }
+
+            $sourceContext = isset($venue['source_context']) && is_array($venue['source_context'])
+                ? $venue['source_context']
+                : [];
+
+            $sourceVenues = isset($sourceContext['source_venues']) && is_array($sourceContext['source_venues'])
+                ? $sourceContext['source_venues']
+                : [];
+
+            foreach ($sourceVenues as $sourceVenue) {
+                if (!is_array($sourceVenue)) {
+                    continue;
+                }
+
+                $sourceKey = sanitize_key((string) ($sourceVenue['source_key'] ?? ''));
+                if ($sourceKey === '' || isset($rows[$sourceKey])) {
+                    continue;
+                }
+
+                $integration = sanitize_key((string) ($sourceVenue['integration'] ?? ''));
+                $source = sanitize_key((string) ($sourceVenue['source'] ?? ''));
+                $integrationLabel = $source === 'manual'
+                    ? 'Eventos manuales'
+                    : (
+                        ($profile->getIntegration($integration)?->label)
+                            ?: ($integration !== '' ? $integration : 'OneBox')
+                    );
+
+                $rawName = trim((string) ($sourceVenue['raw_name'] ?? ''));
+                $mapping = isset($profile->venueSourceMappings[$sourceKey]) && is_array($profile->venueSourceMappings[$sourceKey])
+                    ? $profile->venueSourceMappings[$sourceKey]
+                    : [];
+                $mappingValue = trim((string) ($mapping['canonical_name'] ?? ''));
+                $currentCanonical = $mappingValue !== '' ? $mappingValue : ($rawName !== '' ? $rawName : $sourceKey);
+
+                $rows[$sourceKey] = [
+                    'source_key'            => $sourceKey,
+                    'source'                => $source,
+                    'integration'           => $integration,
+                    'integration_label'     => $integrationLabel,
+                    'raw_name'              => $rawName !== '' ? $rawName : $sourceKey,
+                    'raw_id'                => trim((string) ($sourceVenue['raw_id'] ?? '')),
+                    'mapping_value'         => $mappingValue,
+                    'current_canonical'     => $currentCanonical,
+                    'meta'                  => self::formatVenueSourceMappingMeta($sourceVenue, $integrationLabel),
+                    'is_missing'            => false,
+                ];
+            }
+        }
+
+        foreach ($profile->venueSourceMappings as $sourceKey => $mapping) {
+            $key = sanitize_key((string) $sourceKey);
+            if ($key === '' || isset($rows[$key])) {
+                continue;
+            }
+
+            $canonicalName = is_array($mapping)
+                ? trim((string) ($mapping['canonical_name'] ?? ''))
+                : '';
+
+            $rows[$key] = [
+                'source_key'            => $key,
+                'source'                => '',
+                'integration'           => '',
+                'integration_label'     => 'Origen guardado',
+                'raw_name'              => $key,
+                'raw_id'                => '',
+                'mapping_value'         => $canonicalName,
+                'current_canonical'     => $canonicalName !== '' ? $canonicalName : $key,
+                'meta'                  => 'No detectado actualmente. Si vacias el campo y guardas, eliminas la regla.',
+                'is_missing'            => true,
+            ];
+        }
+
+        uasort(
+            $rows,
+            static function (array $left, array $right): int {
+                $labelCmp = strcasecmp(
+                    (string) ($left['integration_label'] ?? ''),
+                    (string) ($right['integration_label'] ?? '')
+                );
+                if ($labelCmp !== 0) {
+                    return $labelCmp;
+                }
+
+                return strcasecmp(
+                    (string) ($left['raw_name'] ?? ''),
+                    (string) ($right['raw_name'] ?? '')
+                );
+            }
+        );
+
+        return array_values($rows);
     }
 
     private static function getDefaultStyleValue(string $key): string
@@ -726,6 +946,10 @@ final class SettingsPage
             $venueDisplayOrder = $venueDisplayOrderEnabled
                 ? self::mergeVenueDisplayOrder($postedVenueDisplayOrder, $active->venueDisplayOrder)
                 : [];
+            $venueSourceMappings = self::mergeVenueSourceMappings(
+                $_POST['venue_source_mappings'] ?? [],
+                $active->venueSourceMappings
+            );
 
             $rawIntegrations = $_POST['integrations'] ?? [];
             $integrations = [];
@@ -821,7 +1045,8 @@ final class SettingsPage
                 $integrations,
                 $defaultIntegration,
                 $widgetColors,
-                $venueDisplayOrder
+                $venueDisplayOrder,
+                $venueSourceMappings
             );
 
             ProfileRepository::save($profile);
@@ -841,6 +1066,7 @@ final class SettingsPage
         $widgetColors = $active->getWidgetColors();
         $widgetSections = self::getWidgetColorSections($active);
         $venuePriorityRows = self::getVenuePriorityRows($active);
+        $venueSourceMappingRows = self::getVenueSourceMappingRows($active);
         $hasManualVenueDisplayOrder = !empty($active->venueDisplayOrder);
         ?>
         <div class="wrap">
@@ -942,6 +1168,76 @@ final class SettingsPage
                             <?php else : ?>
                                 <p class="description">
                                     No he encontrado espacios visibles en la cartelera actual. En cuanto haya venues disponibles, podras ordenarlos desde aqui.
+                                </p>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                </table>
+
+                <h2 class="title">Unificacion de espacios entre canales</h2>
+                <table class="form-table" role="presentation">
+                    <tr>
+                        <th scope="row">Equivalencias</th>
+                        <td>
+                            <p class="description">
+                                Usa esta tabla para decirle al plugin que dos venues de canales distintos pertenecen al mismo espacio fisico.
+                            </p>
+                            <p class="description">
+                                Para fusionarlos, escribe exactamente el mismo nombre canonico en ambas filas. Si dejas el campo vacio, se mantiene el nombre detectado actualmente.
+                            </p>
+                            <p class="description">
+                                Esto tambien respeta los eventos manuales: puedes dejarlos tal cual o asignarlos al mismo nombre canonico si quieres que entren en la misma seccion.
+                            </p>
+
+                            <?php if (!empty($venueSourceMappingRows)) : ?>
+                                <table class="widefat striped cloudari-venue-mappings-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Origen detectado</th>
+                                            <th>Fuente</th>
+                                            <th>Nombre canonico</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($venueSourceMappingRows as $row) : ?>
+                                            <tr<?php echo !empty($row['is_missing']) ? ' class="is-missing-source"' : ''; ?>>
+                                                <td>
+                                                    <strong><?php echo esc_html($row['raw_name']); ?></strong>
+                                                    <?php if (!empty($row['raw_id'])) : ?>
+                                                        <div><code><?php echo esc_html($row['raw_id']); ?></code></div>
+                                                    <?php endif; ?>
+                                                    <p class="description"><?php echo esc_html((string) ($row['meta'] ?? '')); ?></p>
+                                                </td>
+                                                <td>
+                                                    <strong><?php echo esc_html((string) ($row['integration_label'] ?? '')); ?></strong>
+                                                    <?php if (!empty($row['source']) && $row['source'] === 'manual') : ?>
+                                                        <p class="description">Origen manual</p>
+                                                    <?php elseif (!empty($row['integration'])) : ?>
+                                                        <p class="description"><code><?php echo esc_html((string) $row['integration']); ?></code></p>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td>
+                                                    <input
+                                                        type="text"
+                                                        class="regular-text"
+                                                        name="venue_source_mappings[<?php echo esc_attr((string) $row['source_key']); ?>][canonical_name]"
+                                                        value="<?php echo esc_attr((string) ($row['mapping_value'] ?? '')); ?>"
+                                                        placeholder="<?php echo esc_attr((string) ($row['raw_name'] ?? '')); ?>"
+                                                    >
+                                                    <p class="description">
+                                                        Actual en cartelera: <strong><?php echo esc_html((string) ($row['current_canonical'] ?? '')); ?></strong>
+                                                    </p>
+                                                    <p class="description">
+                                                        Vacio = se agrupa como <strong><?php echo esc_html((string) ($row['raw_name'] ?? '')); ?></strong>
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            <?php else : ?>
+                                <p class="description">
+                                    No hay venues detectados todavia para construir equivalencias. Cuando el plugin reciba espacios desde OneBox o eventos manuales, apareceran aqui.
                                 </p>
                             <?php endif; ?>
                         </td>
@@ -1431,6 +1727,20 @@ final class SettingsPage
             }
             .cloudari-sortable-venues__hint {
                 margin-top: 8px;
+            }
+            .cloudari-venue-mappings-table {
+                margin-top: 12px;
+                max-width: 980px;
+            }
+            .cloudari-venue-mappings-table td {
+                vertical-align: top;
+            }
+            .cloudari-venue-mappings-table .regular-text {
+                width: 100%;
+                max-width: 360px;
+            }
+            .cloudari-venue-mappings-table tr.is-missing-source {
+                background: #fffbe6;
             }
             .cloudari-color-current {
                 display: inline-flex;
