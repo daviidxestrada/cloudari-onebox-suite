@@ -3,7 +3,7 @@ Contributors: cloudari
 Tags: onebox, theatre, calendar, billboard, events
 Requires at least: 6.0
 Requires PHP: 8.0
-Stable tag: 1.3.3
+Stable tag: 1.3.4
 
 Suite para integrar OneBox en WordPress: calendario, cartelera, cartelera por espacios, contador y eventos manuales, con multiples integraciones por teatro.
 
@@ -44,6 +44,7 @@ Notas:
 Opcionales (wp-config.php):
 - `define('CLOUDARI_ONEBOX_PUBLIC_REST', false);` para restringir REST a admins.
 - `define('CLOUDARI_ONEBOX_REQUIRE_AJAX_NONCE', false);` para desactivar nonce en AJAX si hay cache agresiva.
+- `define('CLOUDARI_ONEBOX_DEBUG_LOG', true);` para activar logs internos del plugin de forma explicita.
 
 == Shortcodes ==
 `[cloudari_calendar]`
@@ -60,7 +61,7 @@ Opcionales (wp-config.php):
 
 `[cloudari_billboard_venues]`
 - Muestra una cartelera agrupada por espacios o `venues`.
-- Ordena los espacios por su proxima funcion disponible y los eventos internos por fecha ascendente.
+- Permite priorizar manualmente los espacios desde el Perfil MAIN y mantiene fallback por proxima funcion disponible.
 
 `[cloudari_billboard_spaces]`
 - Alias de `[cloudari_billboard_venues]`.
@@ -91,7 +92,7 @@ Si el `venue` manual esta vacio, la cartelera por espacios usa `venue_name` del 
 Notas:
 - `ping` queda reservado para administradores autenticados.
 - `billboard-events` mantiene la salida de la cartelera clasica.
-- `billboard-venues` devuelve la cartelera agrupada por venue, con venues ordenados por proxima fecha y eventos ordenados por fecha ascendente.
+- `billboard-venues` devuelve la cartelera agrupada por venue, con prioridad manual configurable desde el Perfil MAIN y fallback por proxima fecha.
 
 == Data storage ==
 Options:
@@ -127,6 +128,11 @@ Custom post types / taxonomy:
 - Usar HTTPS y cache a nivel de servidor si aplica.
 
 == Changelog ==
+= 1.3.4 =
+* Nueva prioridad manual de espacios en la cartelera por venues desde el Perfil MAIN con orden drag and drop.
+* Hardening de release: los logs internos del plugin solo se activan con `CLOUDARI_ONEBOX_DEBUG_LOG`.
+* Metadatos de version y documentacion alineados para despliegue a produccion.
+
 = 1.2.8 =
 * Preparacion de release: versionado y metadatos alineados para `v1.2.8`.
 * Fix del shortcode `[cloudari_event_countdown]` para reiniciar correctamente el contador cuando cambia la proxima sesion cacheada.
@@ -149,6 +155,9 @@ Custom post types / taxonomy:
 * Release inicial con multi-integracion, eventos manuales y overrides.
 
 == Upgrade Notice ==
+= 1.3.4 =
+Nueva prioridad manual de espacios y endurecimiento de logs para release de produccion.
+
 = 1.2.8 =
 Actualizacion de release con fix del countdown cacheado y limpieza del frontend para produccion.
 

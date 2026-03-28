@@ -4,6 +4,7 @@ namespace Cloudari\Onebox\Infrastructure\Onebox;
 use Cloudari\Onebox\Domain\ManualEvents\Repository as ManualRepository;
 use Cloudari\Onebox\Domain\Theatre\OneboxIntegration;
 use Cloudari\Onebox\Domain\Theatre\ProfileRepository;
+use Cloudari\Onebox\Support\Logger;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -28,9 +29,7 @@ final class Sessions
                 $fin->format('Y-m-d')
             );
         } catch (\Throwable $e) {
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('[Cloudari OneBox] getDefaultRangeSessions error: ' . $e->getMessage());
-            }
+            Logger::error('[Cloudari OneBox] getDefaultRangeSessions error: ' . $e->getMessage());
 
             return [
                 'data'     => [],
@@ -66,9 +65,7 @@ final class Sessions
                 $all = array_merge($all, $manualSessions);
             }
         } catch (\Throwable $e) {
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('[Cloudari OneBox] getUpcomingSessions manual merge error: ' . $e->getMessage());
-            }
+            Logger::error('[Cloudari OneBox] getUpcomingSessions manual merge error: ' . $e->getMessage());
         }
 
         $all = self::sortSessionsByStart($all);
@@ -145,16 +142,14 @@ final class Sessions
                 $all = array_merge($all, $manualSessions);
             }
         } catch (\Throwable $e) {
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log(
-                    sprintf(
-                        '[Cloudari OneBox] getRangeSessions manual merge error (%s -> %s): %s',
-                        $inicio,
-                        $fin,
-                        $e->getMessage()
-                    )
-                );
-            }
+            Logger::error(
+                sprintf(
+                    '[Cloudari OneBox] getRangeSessions manual merge error (%s -> %s): %s',
+                    $inicio,
+                    $fin,
+                    $e->getMessage()
+                )
+            );
         }
 
         $all = self::sortSessionsByStart($all);
@@ -195,9 +190,7 @@ final class Sessions
 
             $token = Auth::getJwt($integration);
             if (!$token) {
-                if (defined('WP_DEBUG') && WP_DEBUG) {
-                    error_log('[Cloudari OneBox] fetchOneboxSessions: no JWT token for ' . $integration->slug);
-                }
+                Logger::error('[Cloudari OneBox] fetchOneboxSessions: no JWT token for ' . $integration->slug);
                 continue;
             }
 
@@ -224,12 +217,10 @@ final class Sessions
                     );
 
                     if (is_wp_error($resp)) {
-                        if (defined('WP_DEBUG') && WP_DEBUG) {
-                            error_log(
-                                '[Cloudari OneBox] fetchOneboxSessions wp_remote_get error: ' .
-                                $resp->get_error_message()
-                            );
-                        }
+                        Logger::error(
+                            '[Cloudari OneBox] fetchOneboxSessions wp_remote_get error: ' .
+                            $resp->get_error_message()
+                        );
                         break;
                     }
 
@@ -269,17 +260,15 @@ final class Sessions
                     }
                 }
             } catch (\Throwable $e) {
-                if (defined('WP_DEBUG') && WP_DEBUG) {
-                    error_log(
-                        sprintf(
-                            '[Cloudari OneBox] fetchOneboxSessions exception [%s]: %s @ %s:%d',
-                            $integration->slug,
-                            $e->getMessage(),
-                            $e->getFile(),
-                            $e->getLine()
-                        )
-                    );
-                }
+                Logger::error(
+                    sprintf(
+                        '[Cloudari OneBox] fetchOneboxSessions exception [%s]: %s @ %s:%d',
+                        $integration->slug,
+                        $e->getMessage(),
+                        $e->getFile(),
+                        $e->getLine()
+                    )
+                );
             }
         }
 

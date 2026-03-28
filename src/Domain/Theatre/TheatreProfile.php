@@ -49,6 +49,9 @@ final class TheatreProfile
     /** @var array<string, array<string, string>> */
     public array $widgetColors = [];
 
+    /** @var string[] */
+    public array $venueDisplayOrder = [];
+
     public function __construct(
         string $slug,
         string $label,
@@ -60,7 +63,8 @@ final class TheatreProfile
         string $colorSelectedDay,
         array $integrations,
         string $defaultIntegrationSlug,
-        array $widgetColors = []
+        array $widgetColors = [],
+        array $venueDisplayOrder = []
     ) {
         $this->slug              = $slug;
         $this->label             = $label;
@@ -77,6 +81,7 @@ final class TheatreProfile
             $this->integrations
         );
         $this->widgetColors = self::normalizeWidgetColors($widgetColors);
+        $this->venueDisplayOrder = self::normalizeVenueDisplayOrder($venueDisplayOrder);
     }
 
     public static function fromArray(array $data): self
@@ -126,6 +131,9 @@ final class TheatreProfile
             (string)($data['default_integration'] ?? ''),
             isset($data['widget_colors']) && is_array($data['widget_colors'])
                 ? $data['widget_colors']
+                : [],
+            isset($data['venue_display_order']) && is_array($data['venue_display_order'])
+                ? $data['venue_display_order']
                 : []
         );
     }
@@ -151,6 +159,7 @@ final class TheatreProfile
             'default_integration'  => $this->defaultIntegrationSlug,
             'integrations'         => $integrations,
             'widget_colors'        => $this->widgetColors,
+            'venue_display_order'  => $this->venueDisplayOrder,
         ];
     }
 
@@ -244,6 +253,22 @@ final class TheatreProfile
                 $value = self::sanitizeColorValue($rawWidget[$token] ?? '');
                 $normalized[$widget][$token] = $value;
             }
+        }
+
+        return $normalized;
+    }
+
+    private static function normalizeVenueDisplayOrder(array $venueDisplayOrder): array
+    {
+        $normalized = [];
+
+        foreach ($venueDisplayOrder as $value) {
+            $key = sanitize_key((string) $value);
+            if ($key === '' || in_array($key, $normalized, true)) {
+                continue;
+            }
+
+            $normalized[] = $key;
         }
 
         return $normalized;

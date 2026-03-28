@@ -3,6 +3,7 @@ namespace Cloudari\Onebox\Infrastructure\Onebox;
 
 use Cloudari\Onebox\Domain\Theatre\OneboxIntegration;
 use Cloudari\Onebox\Domain\Theatre\ProfileRepository;
+use Cloudari\Onebox\Support\Logger;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -30,9 +31,7 @@ final class Events
 
             $jwt = Auth::getJwt($integration);
             if (empty($jwt)) {
-                if (defined('WP_DEBUG') && WP_DEBUG) {
-                    error_log('[Cloudari OneBox] getUpcomingEvents: no JWT token for ' . $integration->slug);
-                }
+                Logger::error('[Cloudari OneBox] getUpcomingEvents: no JWT token for ' . $integration->slug);
                 continue;
             }
 
@@ -64,12 +63,10 @@ final class Events
                 );
 
                 if (is_wp_error($resp)) {
-                    if (defined('WP_DEBUG') && WP_DEBUG) {
-                        error_log(
-                            '[Cloudari OneBox] getUpcomingEvents wp_remote_get error: ' .
-                            $resp->get_error_message()
-                        );
-                    }
+                    Logger::error(
+                        '[Cloudari OneBox] getUpcomingEvents wp_remote_get error: ' .
+                        $resp->get_error_message()
+                    );
                     break;
                 }
 

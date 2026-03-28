@@ -1,6 +1,7 @@
 <?php
 namespace Cloudari\Onebox\Admin;
 
+use Cloudari\Onebox\Domain\Billboard\VenueBillboard;
 use Cloudari\Onebox\Domain\Theatre\ProfileRepository;
 use Cloudari\Onebox\Domain\Theatre\TheatreProfile;
 use Cloudari\Onebox\Domain\Theatre\OneboxIntegration;
@@ -92,6 +93,130 @@ final class SettingsPage
         }
 
         return $normalized;
+    }
+
+    private static function sanitizeVenueDisplayOrder($raw): array
+    {
+        $normalized = [];
+
+        if (!is_array($raw)) {
+            return $normalized;
+        }
+
+        foreach ($raw as $value) {
+            $key = sanitize_key((string) $value);
+            if ($key === '' || in_array($key, $normalized, true)) {
+                continue;
+            }
+
+            $normalized[] = $key;
+        }
+
+        return $normalized;
+    }
+
+    private static function mergeVenueDisplayOrder(array $postedOrder, array $existingOrder): array
+    {
+        $merged = self::sanitizeVenueDisplayOrder($postedOrder);
+
+        foreach (self::sanitizeVenueDisplayOrder($existingOrder) as $existingKey) {
+            if (!in_array($existingKey, $merged, true)) {
+                $merged[] = $existingKey;
+            }
+        }
+
+        return $merged;
+    }
+
+    private static function getVenueOrderKey(array $venue): string
+    {
+        $candidates = [
+            $venue['id'] ?? '',
+            $venue['slug'] ?? '',
+            $venue['name'] ?? '',
+        ];
+
+        foreach ($candidates as $candidate) {
+            $key = sanitize_key((string) $candidate);
+            if ($key !== '') {
+                return $key;
+            }
+        }
+
+        return '';
+    }
+
+    private static function formatVenuePriorityMeta(array $venue): string
+    {
+        $parts = [];
+        $eventCount = isset($venue['event_count']) ? (int) $venue['event_count'] : 0;
+
+        if ($eventCount > 0) {
+            $parts[] = sprintf(
+                _n('%d evento visible', '%d eventos visibles', $eventCount, 'cloudari-onebox'),
+                $eventCount
+            );
+        }
+
+        $nextStart = trim((string) ($venue['next_start'] ?? ''));
+        $timestamp = $nextStart !== '' ? strtotime($nextStart) : false;
+        if ($timestamp !== false) {
+            $parts[] = sprintf(
+                'Proxima fecha: %s',
+                wp_date('d/m/Y H:i', $timestamp, wp_timezone())
+            );
+        }
+
+        return implode(' | ', $parts);
+    }
+
+    private static function getVenuePriorityRows(TheatreProfile $profile): array
+    {
+        $rows = [];
+
+        try {
+            $payload = VenueBillboard::get();
+            $venues = isset($payload['data']) && is_array($payload['data'])
+                ? $payload['data']
+                : [];
+        } catch (\Throwable $e) {
+            $venues = [];
+        }
+
+        foreach ($venues as $venue) {
+            if (!is_array($venue)) {
+                continue;
+            }
+
+            $key = self::getVenueOrderKey($venue);
+            if ($key === '' || isset($rows[$key])) {
+                continue;
+            }
+
+            $name = trim((string) ($venue['name'] ?? ''));
+            $rows[$key] = [
+                'key'  => $key,
+                'name' => $name !== '' ? $name : $key,
+                'meta' => self::formatVenuePriorityMeta($venue),
+            ];
+        }
+
+        $orderedRows = [];
+
+        foreach ($profile->venueDisplayOrder as $key) {
+            if (!isset($rows[$key])) {
+                continue;
+            }
+
+            $orderedRows[] = $rows[$key];
+            unset($rows[$key]);
+        }
+
+        foreach ($rows as $row) {
+            $orderedRows[] = $row;
+        }
+
+        return $orderedRows;
     }
 
     private static function getDefaultStyleValue(string $key): string
@@ -596,6 +721,11 @@ final class SettingsPage
                 $_POST['color_selected_day'] ?? ($colorPrimary ?: '#009AD8')
             );
             $widgetColors = self::sanitizeWidgetColors($_POST['widget_colors'] ?? []);
+            $venueDisplayOrderEnabled = !empty($_POST['enable_venue_display_order']);
+            $postedVenueDisplayOrder = self::sanitizeVenueDisplayOrder($_POST['venue_display_order'] ?? []);
+            $venueDisplayOrder = $venueDisplayOrderEnabled
+                ? self::mergeVenueDisplayOrder($postedVenueDisplayOrder, $active->venueDisplayOrder)
+                : [];
 
             $rawIntegrations = $_POST['integrations'] ?? [];
             $integrations = [];
@@ -690,7 +820,8 @@ final class SettingsPage
                 $colorSelectedDay ?: ($colorPrimary ?: '#009AD8'),
                 $integrations,
                 $defaultIntegration,
-                $widgetColors
+                $widgetColors,
+                $venueDisplayOrder
             );
 
             ProfileRepository::save($profile);
@@ -709,6 +840,8 @@ final class SettingsPage
         }
         $widgetColors = $active->getWidgetColors();
         $widgetSections = self::getWidgetColorSections($active);
+        $venuePriorityRows = self::getVenuePriorityRows($active);
+        $hasManualVenueDisplayOrder = !empty($active->venueDisplayOrder);
         ?>
         <div class="wrap">
             <h1>Cloudari OneBox - Perfil MAIN</h1>
@@ -735,6 +868,82 @@ final class SettingsPage
                                    class="regular-text"
                                    value="<?php echo esc_attr($active->venueName); ?>">
                             <p class="description">Se usa como texto por defecto en eventos manuales.</p>
+                        </td>
+                    </tr>
+                </table>
+
+                <h2 class="title">Prioridad de espacios en cartelera por venues</h2>
+                <table class="form-table" role="presentation">
+                    <tr>
+                        <th scope="row">Orden de espacios</th>
+                        <td>
+                            <label for="enable_venue_display_order">
+                                <input
+                                    type="checkbox"
+                                    name="enable_venue_display_order"
+                                    id="enable_venue_display_order"
+                                    value="1"
+                                    <?php checked($hasManualVenueDisplayOrder); ?>
+                                >
+                                Activar prioridad manual para los espacios
+                            </label>
+                            <p class="description">
+                                El primer espacio de esta lista se pintara por defecto al cargar la cartelera por venues y el sistema de filtros seguira este mismo orden.
+                            </p>
+                            <p class="description">
+                                Si esta opcion esta desactivada, se mantiene el comportamiento actual: orden automatico por proxima fecha.
+                            </p>
+
+                            <?php if (!empty($venuePriorityRows)) : ?>
+                                <div
+                                    class="cloudari-sortable-venues-wrap"
+                                    data-cloudari-sortable-venue-wrap
+                                    data-enabled="<?php echo $hasManualVenueDisplayOrder ? '1' : '0'; ?>"
+                                >
+                                    <ol
+                                        class="cloudari-sortable-venues"
+                                        data-cloudari-sortable-venue-list
+                                        aria-label="Prioridad de espacios"
+                                    >
+                                        <?php foreach ($venuePriorityRows as $row) : ?>
+                                            <li
+                                                class="cloudari-sortable-venue"
+                                                data-cloudari-sortable-venue-item
+                                                data-venue-key="<?php echo esc_attr($row['key']); ?>"
+                                                draggable="<?php echo $hasManualVenueDisplayOrder ? 'true' : 'false'; ?>"
+                                            >
+                                                <span class="cloudari-sortable-venue__index" data-cloudari-sortable-venue-index></span>
+                                                <button
+                                                    type="button"
+                                                    class="button-link cloudari-sortable-venue__handle"
+                                                    data-cloudari-sortable-venue-handle
+                                                    aria-label="<?php echo esc_attr(sprintf('Arrastrar %s', $row['name'])); ?>"
+                                                >
+                                                    Arrastrar
+                                                </button>
+                                                <div class="cloudari-sortable-venue__content">
+                                                    <strong><?php echo esc_html($row['name']); ?></strong>
+                                                    <?php if ($row['meta'] !== '') : ?>
+                                                        <span class="cloudari-sortable-venue__meta"><?php echo esc_html($row['meta']); ?></span>
+                                                    <?php endif; ?>
+                                                </div>
+                                                <input
+                                                    type="hidden"
+                                                    name="venue_display_order[]"
+                                                    value="<?php echo esc_attr($row['key']); ?>"
+                                                >
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ol>
+                                    <p class="description cloudari-sortable-venues__hint" data-cloudari-sortable-venue-hint>
+                                        Arrastra y suelta para cambiar el orden.
+                                    </p>
+                                </div>
+                            <?php else : ?>
+                                <p class="description">
+                                    No he encontrado espacios visibles en la cartelera actual. En cuanto haya venues disponibles, podras ordenarlos desde aqui.
+                                </p>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 </table>
@@ -1164,6 +1373,63 @@ final class SettingsPage
                 margin: 0 0 6px;
             }
             .cloudari-widget-card .form-table {
+                margin-top: 8px;
+            }
+            .cloudari-sortable-venues-wrap {
+                margin-top: 12px;
+                max-width: 760px;
+            }
+            .cloudari-sortable-venues {
+                margin: 0;
+                padding: 0;
+                list-style: none;
+                display: grid;
+                gap: 10px;
+            }
+            .cloudari-sortable-venue {
+                display: grid;
+                grid-template-columns: auto auto minmax(0, 1fr);
+                align-items: center;
+                gap: 12px;
+                padding: 12px 14px;
+                border: 1px solid #ccd0d4;
+                border-radius: 8px;
+                background: #fff;
+                cursor: grab;
+            }
+            .cloudari-sortable-venue.is-dragging {
+                opacity: 0.55;
+                cursor: grabbing;
+            }
+            .cloudari-sortable-venues-wrap.is-disabled .cloudari-sortable-venue {
+                opacity: 0.68;
+                cursor: default;
+            }
+            .cloudari-sortable-venue__index {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 28px;
+                height: 28px;
+                border-radius: 999px;
+                background: #f0f0f1;
+                color: #1d2327;
+                font-weight: 600;
+                font-variant-numeric: tabular-nums;
+            }
+            .cloudari-sortable-venue__handle {
+                color: #2271b1;
+                text-decoration: none;
+            }
+            .cloudari-sortable-venue__content {
+                min-width: 0;
+                display: grid;
+                gap: 4px;
+            }
+            .cloudari-sortable-venue__meta {
+                color: #50575e;
+            }
+            .cloudari-sortable-venues__hint {
                 margin-top: 8px;
             }
             .cloudari-color-current {

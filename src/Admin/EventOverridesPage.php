@@ -3,6 +3,7 @@
 namespace Cloudari\Onebox\Admin;
 
 use Cloudari\Onebox\Domain\Events\EventOverridesRepository;
+use Cloudari\Onebox\Support\Logger;
 use WP_REST_Request;
 
 if (!defined('ABSPATH')) {
@@ -542,9 +543,7 @@ final class EventOverridesPage
 
             return $events;
         } catch (\Throwable $e) {
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('[Cloudari OneBox] getCurrentBillboardEvents error: ' . $e->getMessage());
-            }
+            Logger::error('[Cloudari OneBox] getCurrentBillboardEvents error: ' . $e->getMessage());
             return [];
         }
     }

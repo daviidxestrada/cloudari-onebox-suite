@@ -2,6 +2,7 @@
 namespace Cloudari\Onebox\Presentation\Ajax;
 
 use Cloudari\Onebox\Infrastructure\Onebox\Sessions;
+use Cloudari\Onebox\Support\Logger;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -22,11 +23,10 @@ final class CalendarAjax
     }
 
     /**
-     * Handler principal: devuelve siempre JSON (200/4xx/5xx) y NUNCA peta en blanco.
+     * Handler principal: devuelve siempre JSON (200/4xx/5xx) y nunca peta en blanco.
      */
     public static function handle(): void
     {
-        // Aseguramos cabeceras de JSON
         nocache_headers();
         header('Content-Type: application/json; charset=' . get_option('blog_charset'));
 
@@ -44,23 +44,19 @@ final class CalendarAjax
         }
 
         $inicio = isset($_GET['inicio']) ? sanitize_text_field(wp_unslash($_GET['inicio'])) : '';
-        $fin    = isset($_GET['fin'])    ? sanitize_text_field(wp_unslash($_GET['fin']))    : '';
+        $fin    = isset($_GET['fin']) ? sanitize_text_field(wp_unslash($_GET['fin'])) : '';
 
-        // Validación básica de fechas
         $pattern = '/^\d{4}-\d{2}-\d{2}$/';
         if (!preg_match($pattern, $inicio) || !preg_match($pattern, $fin)) {
             wp_send_json_error(
                 [
-                    'error'      => 'Fechas inválidas',
+                    'error' => 'Fechas invalidas',
                 ],
                 400
             );
         }
 
         try {
-            // Llamamos a la capa de infraestructura (OneBox + caché)
-            // Esta función debe devolver el mismo formato que usas en PHP:
-            // [ 'data' => [...], 'metadata' => [...] ]
             $sesiones = Sessions::getRangeSessions($inicio, $fin);
 
             if (!is_array($sesiones)) {
@@ -68,21 +64,17 @@ final class CalendarAjax
             }
 
             wp_send_json($sesiones);
-
         } catch (\Throwable $e) {
-            // Log en debug para poder ver qué pasa si revienta
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log(
-                    sprintf(
-                        '[Cloudari OneBox] Error en cloudari_get_sessions (%s → %s): %s @ %s:%d',
-                        $inicio,
-                        $fin,
-                        $e->getMessage(),
-                        $e->getFile(),
-                        $e->getLine()
-                    )
-                );
-            }
+            Logger::error(
+                sprintf(
+                    '[Cloudari OneBox] Error en cloudari_get_sessions (%s -> %s): %s @ %s:%d',
+                    $inicio,
+                    $fin,
+                    $e->getMessage(),
+                    $e->getFile(),
+                    $e->getLine()
+                )
+            );
 
             wp_send_json_error(
                 [

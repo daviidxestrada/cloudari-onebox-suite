@@ -2,6 +2,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const container = document.getElementById('cloudari-integrations');
   const template = document.getElementById('cloudari-integration-template');
   const addBtn = document.getElementById('cloudari-add-integration');
+  const venueOrderToggle = document.getElementById('enable_venue_display_order');
+  const venueOrderWrap = document.querySelector('[data-cloudari-sortable-venue-wrap]');
+  const venueOrderList = document.querySelector('[data-cloudari-sortable-venue-list]');
   const styleConfig = window.cloudariOneboxAdminStyleConfig || {
     globalFields: {},
     sections: {},
@@ -255,6 +258,137 @@ document.addEventListener('DOMContentLoaded', () => {
     Object.keys(styleConfig.sections || {}).forEach(resetWidgetSection);
   }
 
+  function getVenueOrderItems() {
+    return venueOrderList
+      ? Array.from(venueOrderList.querySelectorAll('[data-cloudari-sortable-venue-item]'))
+      : [];
+  }
+
+  function updateVenueOrderIndices() {
+    getVenueOrderItems().forEach((item, index) => {
+      const indexEl = item.querySelector('[data-cloudari-sortable-venue-index]');
+      if (indexEl) {
+        indexEl.textContent = String(index + 1);
+      }
+    });
+  }
+
+  function isVenueOrderEnabled() {
+    return !venueOrderToggle || venueOrderToggle.checked;
+  }
+
+  function updateVenueOrderState() {
+    if (!venueOrderWrap || !venueOrderList) return;
+
+    const enabled = isVenueOrderEnabled();
+    venueOrderWrap.classList.toggle('is-disabled', !enabled);
+    venueOrderWrap.dataset.enabled = enabled ? '1' : '0';
+    venueOrderList.setAttribute('aria-disabled', enabled ? 'false' : 'true');
+
+    const hint = venueOrderWrap.querySelector('[data-cloudari-sortable-venue-hint]');
+    if (hint) {
+      hint.textContent = enabled
+        ? 'Arrastra y suelta para cambiar el orden.'
+        : 'Activa la prioridad manual para poder reordenar los espacios.';
+    }
+
+    getVenueOrderItems().forEach((item) => {
+      item.draggable = enabled;
+      const handle = item.querySelector('[data-cloudari-sortable-venue-handle]');
+      if (handle) {
+        handle.setAttribute('aria-disabled', enabled ? 'false' : 'true');
+        handle.tabIndex = enabled ? 0 : -1;
+      }
+    });
+  }
+
+  function getVenueDragAfterElement(container, clientY) {
+    const items = Array.from(
+      container.querySelectorAll('[data-cloudari-sortable-venue-item]:not(.is-dragging)')
+    );
+
+    return items.reduce(
+      (closest, item) => {
+        const box = item.getBoundingClientRect();
+        const offset = clientY - box.top - box.height / 2;
+
+        if (offset < 0 && offset > closest.offset) {
+          return { offset, element: item };
+        }
+
+        return closest;
+      },
+      { offset: Number.NEGATIVE_INFINITY, element: null }
+    ).element;
+  }
+
+  function bindVenueOrderSorting() {
+    if (!venueOrderList || !venueOrderWrap) return;
+
+    updateVenueOrderIndices();
+    updateVenueOrderState();
+
+    venueOrderToggle?.addEventListener('change', () => {
+      updateVenueOrderState();
+    });
+
+    venueOrderList.addEventListener('click', (event) => {
+      const handle = event.target.closest('[data-cloudari-sortable-venue-handle]');
+      if (handle) {
+        event.preventDefault();
+      }
+    });
+
+    venueOrderList.addEventListener('dragstart', (event) => {
+      const item = event.target.closest('[data-cloudari-sortable-venue-item]');
+      if (!item || !isVenueOrderEnabled()) {
+        event.preventDefault();
+        return;
+      }
+
+      item.classList.add('is-dragging');
+
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', item.dataset.venueKey || '');
+      }
+    });
+
+    venueOrderList.addEventListener('dragend', (event) => {
+      const item = event.target.closest('[data-cloudari-sortable-venue-item]');
+      if (!item) return;
+
+      item.classList.remove('is-dragging');
+      updateVenueOrderIndices();
+    });
+
+    venueOrderList.addEventListener('dragover', (event) => {
+      if (!isVenueOrderEnabled()) return;
+
+      const draggingItem = venueOrderList.querySelector('.is-dragging');
+      if (!draggingItem) return;
+
+      event.preventDefault();
+
+      const afterElement = getVenueDragAfterElement(venueOrderList, event.clientY);
+      if (!afterElement) {
+        venueOrderList.appendChild(draggingItem);
+        return;
+      }
+
+      if (afterElement !== draggingItem) {
+        venueOrderList.insertBefore(draggingItem, afterElement);
+      }
+    });
+
+    venueOrderList.addEventListener('drop', (event) => {
+      if (!isVenueOrderEnabled()) return;
+
+      event.preventDefault();
+      updateVenueOrderIndices();
+    });
+  }
+
   if (container) {
     container.addEventListener('click', (event) => {
       const toggleBtn = event.target.closest('[data-toggle-secret]');
@@ -338,4 +472,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
   ensureDefaultChecked();
   refreshStylePreview();
+  bindVenueOrderSorting();
 });

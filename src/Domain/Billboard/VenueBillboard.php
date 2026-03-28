@@ -80,6 +80,8 @@ final class VenueBillboard
     private static function aggregate(array $sessions, array $eventMap): array
     {
         $venues = [];
+        $profile = ProfileRepository::getActive();
+        $manualOrderMap = self::buildVenueOrderMap($profile->venueDisplayOrder ?? []);
 
         foreach ($sessions as $session) {
             if (!is_array($session)) {
@@ -183,7 +185,14 @@ final class VenueBillboard
 
         usort(
             $result,
-            static function (array $left, array $right): int {
+            static function (array $left, array $right) use ($manualOrderMap): int {
+                $leftOrder = self::resolveVenueManualOrderPosition($left, $manualOrderMap);
+                $rightOrder = self::resolveVenueManualOrderPosition($right, $manualOrderMap);
+
+                if ($leftOrder !== $rightOrder) {
+                    return $leftOrder <=> $rightOrder;
+                }
+
                 $cmp = self::compareDateStrings($left['next_start'] ?? '', $right['next_start'] ?? '');
                 if ($cmp !== 0) {
                     return $cmp;
@@ -446,6 +455,39 @@ final class VenueBillboard
         }
 
         return null;
+    }
+
+    private static function buildVenueOrderMap(array $venueDisplayOrder): array
+    {
+        $map = [];
+
+        foreach ($venueDisplayOrder as $index => $key) {
+            $normalizedKey = sanitize_key((string) $key);
+            if ($normalizedKey === '' || isset($map[$normalizedKey])) {
+                continue;
+            }
+
+            $map[$normalizedKey] = $index;
+        }
+
+        return $map;
+    }
+
+    private static function resolveVenueManualOrderPosition(array $venue, array $manualOrderMap): int
+    {
+        $keys = [
+            sanitize_key((string) ($venue['id'] ?? '')),
+            sanitize_key((string) ($venue['slug'] ?? '')),
+            sanitize_key((string) ($venue['name'] ?? '')),
+        ];
+
+        foreach ($keys as $key) {
+            if ($key !== '' && isset($manualOrderMap[$key])) {
+                return $manualOrderMap[$key];
+            }
+        }
+
+        return PHP_INT_MAX;
     }
 
     private static function buildAggregateEventKey(
