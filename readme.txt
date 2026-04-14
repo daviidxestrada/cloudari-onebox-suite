@@ -3,131 +3,196 @@ Contributors: cloudari
 Tags: onebox, theatre, calendar, billboard, events
 Requires at least: 6.0
 Requires PHP: 8.0
-Stable tag: 1.3.5
+Stable tag: 1.3.6
 
-Suite para integrar OneBox en WordPress: calendario, cartelera, cartelera por espacios, contador y eventos manuales, con multiples integraciones por teatro.
+Suite Cloudari para integrar OneBox en WordPress: calendario, cartelera, cartelera por espacios, contador y eventos manuales, con soporte para multiples integraciones por teatro.
 
 == Description ==
-Cloudari OneBox Suite conecta OneBox con WordPress y pinta:
-- Calendario con sesiones de OneBox + eventos manuales.
-- Calendario opcional con venues visibles por sesion.
-- Cartelera con eventos de OneBox + manuales.
-- Cartelera opcional agrupada por espacios / venues.
+Cloudari OneBox Suite conecta OneBox con WordPress y pinta las experiencias principales de cartelera:
+
+- Calendario con sesiones de OneBox y eventos manuales.
+- Calendario opcional con el venue visible por sesion.
+- Cartelera clasica con eventos de OneBox y manuales.
+- Cartelera agrupada por espacios / venues.
 - Contador de proximas sesiones por evento.
 
-El modelo de datos se basa en un Perfil MAIN (teatro) y una o varias integraciones OneBox dentro del perfil.
+El modelo de datos se basa en un Perfil MAIN del teatro y una o varias integraciones OneBox dentro de ese perfil. Esto permite trabajar con carteleras multicanal, unificar venues equivalentes y mantener eventos manuales dentro del mismo flujo visual.
 
 == Installation ==
 1. Sube la carpeta `cloudari-onebox-suite` a `wp-content/plugins/`.
 2. Activa el plugin en el panel de WordPress.
-3. Ve a Cloudari OneBox > Perfil MAIN y configura el teatro e integraciones.
-4. Inserta los shortcodes en tus paginas.
+3. Ve a Cloudari OneBox > Perfil MAIN.
+4. Configura los datos del teatro, las integraciones OneBox y la paleta.
+5. Inserta los shortcodes en tus paginas o pega los widgets HTML donde corresponda.
 
 == Configuration ==
 Perfil MAIN:
-- Nombre del perfil (interno)
-- Nombre del teatro (display, usado en eventos manuales)
-- Paleta de colores (primary, accent, bg, text, selected day)
 
-Integraciones OneBox (1..N):
-- Label
-- Channel ID
-- Client Secret
-- Catalog API URL
-- Auth API URL
-- Purchase base URL
+- Nombre del perfil interno.
+- Nombre del teatro usado como fallback en eventos manuales.
+- Paleta global: primary, accent, bg, text y selected day.
+- Overrides de color por widget.
+- Prioridad manual de espacios para la cartelera por venues.
+- Equivalencias de venues entre OneBox y eventos manuales.
+
+Integraciones OneBox:
+
+- Label.
+- Channel ID.
+- Client Secret.
+- Catalog API URL.
+- Auth API URL.
+- Purchase base URL.
 
 Notas:
-- Debe existir al menos una integracion.
-- Puedes marcar una integracion como default (fallback para purchaseBase).
 
-Opcionales (wp-config.php):
-- `define('CLOUDARI_ONEBOX_PUBLIC_REST', false);` para restringir REST a admins.
-- `define('CLOUDARI_ONEBOX_REQUIRE_AJAX_NONCE', false);` para desactivar nonce en AJAX si hay cache agresiva.
-- `define('CLOUDARI_ONEBOX_DEBUG_LOG', true);` para activar logs internos del plugin de forma explicita.
+- Debe existir al menos una integracion.
+- Puedes marcar una integracion como default para el fallback de `purchaseBase`.
+- Si un venue llega desde canales distintos, puedes unificarlo desde la tabla de equivalencias del Perfil MAIN.
+
+Opcionales en `wp-config.php`:
+
+- `define('CLOUDARI_ONEBOX_PUBLIC_REST', false);` restringe REST publico a administradores.
+- `define('CLOUDARI_ONEBOX_REQUIRE_AJAX_NONCE', false);` desactiva el nonce AJAX si hay cache agresiva.
+- `define('CLOUDARI_ONEBOX_DEBUG_LOG', true);` activa logs internos del plugin de forma explicita.
+- `define('CLOUDARI_ONEBOX_GITHUB_TOKEN', '...');` permite updates desde repositorios privados.
 
 == Shortcodes ==
 `[cloudari_calendar]`
-- Muestra el calendario principal del plugin con sesiones de OneBox y eventos manuales.
-- Es la opcion recomendada si quieres la vista de calendario estandar.
+
+- Muestra el calendario principal con sesiones OneBox y eventos manuales.
+- Es la opcion recomendada para la vista de calendario estandar.
 
 `[cloudari_calendar_venues]`
-- Muestra el mismo calendario, anadiendo el nombre del espacio o `venue` en el detalle de cada sesion.
-- Es util en instalaciones multiteatro o cuando una misma cartelera se reparte por varias salas.
+
+- Muestra el calendario con el nombre del espacio en el detalle de cada sesion.
+- Es util en instalaciones multisala o multiteatro.
 
 `[cloudari_billboard]`
-- Muestra la cartelera clasica del plugin con eventos de OneBox y eventos manuales.
-- Mantiene el formato base de listado de eventos sin agrupar por espacios.
+
+- Muestra la cartelera clasica con eventos OneBox y manuales.
+- Mantiene el listado de eventos sin agrupar por espacios.
 
 `[cloudari_billboard_venues]`
-- Muestra una cartelera agrupada por espacios o `venues`.
-- Permite priorizar manualmente los espacios desde el Perfil MAIN, unificar espacios equivalentes entre canales y mantiene fallback por proxima funcion disponible.
+
+- Muestra la cartelera agrupada por espacios / venues.
+- Permite priorizar manualmente espacios desde el Perfil MAIN.
+- Permite unificar espacios equivalentes entre canales.
+- Integra eventos manuales dentro del mismo agrupador.
 
 `[cloudari_billboard_spaces]`
+
 - Alias de `[cloudari_billboard_venues]`.
-- Sirve para invocar la misma funcionalidad usando un nombre de shortcode alternativo.
 
 `[cloudari_event_countdown event_id="123" extra_days="180" duration="90 min" age="12+"]`
-- Muestra un bloque de contador o ficha resumida para un evento concreto.
-- Permite indicar el `event_id` del evento y datos auxiliares como rango de busqueda (`extra_days`), duracion (`duration`) y clasificacion por edad (`age`).
 
-== Widgets (HTML) ==
+- Muestra un bloque de contador o ficha resumida para un evento concreto.
+- `event_id` indica el evento objetivo.
+- `extra_days`, `duration` y `age` permiten ajustar la ficha.
+
+== Widgets HTML ==
 Los widgets HTML estan en la carpeta `widgets/`.
-Para usarlos en Elementor, anade un "Widget HTML" y pega el contenido del widget.
+
+Para usarlos en Elementor, anade un Widget HTML y pega el contenido del archivo correspondiente.
 
 == Manual events ==
-Se crean con el CPT `evento_manual` y la taxonomia `evento_manual_cat`.
-Se incluyen automaticamente en calendario y cartelera.
-El nombre del teatro se toma del Perfil MAIN.
-Opcionalmente cada manual puede definir su propio `venue`.
-Opcionalmente cada manual puede definir su propio texto de CTA.
-Si el `venue` manual esta vacio, la cartelera por espacios usa `venue_name` del perfil activo como fallback.
+Los eventos manuales se crean con el CPT `evento_manual` y la taxonomia `evento_manual_cat`.
+
+Se incluyen automaticamente en calendario, cartelera y cartelera por espacios.
+
+Campos relevantes:
+
+- URL del evento.
+- Imagen.
+- Categoria manual.
+- Sesiones o rango de fechas.
+- Venue opcional.
+- Texto de CTA opcional.
+
+Venue manual:
+
+- Si el campo `Espacio / venue` esta vacio, se usa el nombre del teatro del Perfil MAIN.
+- Si se rellena, el texto se usa como nombre visible del venue.
+- La cartelera por venues genera el slug con `sanitize_title(...)`, salvo que exista una equivalencia canonica configurada.
+- Para identificar slugs reales, consulta `GET /wp-json/cloudari/v1/billboard-venues` y mira el campo `slug`.
+
+Categorias manuales:
+
+- Si una categoria manual coincide con una categoria canonica (`teatro`, `musica`, `musical`, `humor`, `talk`), el frontend mantiene el color tradicional de esa categoria.
+- Los colores personalizados de la taxonomia solo se usan para categorias manuales no canonicas.
 
 == REST ==
+Endpoints:
+
 - `GET /wp-json/cloudari/v1/ping`
 - `GET /wp-json/cloudari/v1/billboard-events`
 - `GET /wp-json/cloudari/v1/billboard-venues`
 - `GET /wp-json/cloudari/v1/manual-events`
 
 Notas:
+
 - `ping` queda reservado para administradores autenticados.
-- `billboard-events` mantiene la salida de la cartelera clasica.
-- `billboard-venues` devuelve la cartelera agrupada por venue, con prioridad manual configurable desde el Perfil MAIN y fallback por proxima fecha.
+- `billboard-events` devuelve la cartelera clasica.
+- `billboard-venues` devuelve la cartelera agrupada por venue, con `id`, `name`, `slug`, `next_start`, `event_count` y `events`.
+- `manual-events` devuelve los eventos manuales normalizados para el frontend.
 
 == Data storage ==
 Options:
+
 - `cloudari_onebox_profiles`
 - `cloudari_onebox_active_profile`
 - `cloudari_onebox_event_overrides`
 
 Transients:
+
 - `cloudari_onebox_jwt_token_{integration}`
 - `cloudari_onebox_refresh_token_{integration}`
-- `cloudari_onebox_billboard_events_v1_{profile}`
+- `cloudari_onebox_billboard_events_v2_{profile}`
 - `cloudari_onebox_billboard_venues_v1_{profile}`
 
 Meta relevante en eventos manuales:
+
 - `_manual_event_venue`
 - `_manual_event_cta_label`
+- `_manual_event_mode`
+- `_manual_event_range_start`
+- `_manual_event_range_end`
+- `_manual_event_schedule_rules`
+- `_manual_event_schedule_exceptions`
+- `_sesiones_evento`
+- `_url_evento`
+- `_imagen_evento_id`
 
 Custom post types / taxonomy:
+
 - `evento_manual`
 - `evento_manual_cat`
 
 == Caching ==
-- Cartelera: cache server-side (5 min).
-- Cartelera por espacios: cache server-side (5 min).
-- Sesiones calendario/contador: cache server-side por rango (5 min).
+- Cartelera: cache server-side de 5 minutos.
+- Cartelera por espacios: cache server-side de 5 minutos.
+- Sesiones calendario/contador: cache server-side por rango de 5 minutos.
 - Tokens OneBox: cache por integracion con transients.
-- Para limpiar cache, guarda el Perfil MAIN o actualiza un evento manual.
+- Cartelera clasica en navegador: cache local con versionado interno.
+
+Para limpiar caches server-side, guarda el Perfil MAIN o actualiza un evento manual.
 
 == Production checklist ==
 - Definir `WP_DEBUG` en false.
 - Verificar credenciales OneBox y endpoints.
-- Revisar que no haya colision de IDs entre integraciones (overrides y URLs usan el ID del evento).
+- Verificar que el Perfil MAIN tiene una integracion default.
+- Revisar equivalencias de venues si hay varias integraciones o eventos manuales que deban caer en el mismo espacio.
+- Comprobar que los slugs de `billboard-venues` son los esperados.
+- Revisar que no haya colision de IDs entre integraciones cuando se usen overrides.
 - Usar HTTPS y cache a nivel de servidor si aplica.
 
 == Changelog ==
+= 1.3.6 =
+* Fix de colores de categorias en eventos manuales: las categorias canonicas vuelven a respetar la identidad visual tradicional (`teatro`, `musica`, `musical`, `humor`, `talk`).
+* Los colores personalizados de taxonomia manual ya no pisan las clases canonicas cuando el frontend reconoce la categoria.
+* La cartelera clasica fuerza una nueva clave de cache local para evitar normalizaciones antiguas en navegador.
+* Documentacion ampliada sobre slugs de venues, eventos manuales y endpoint `billboard-venues`.
+
 = 1.3.5 =
 * Nueva unificacion manual de espacios entre canales desde el Perfil MAIN para evitar venues duplicados en carteleras multicanal.
 * La unificacion tambien soporta eventos manuales sin romper el fallback actual cuando no hay reglas configuradas.
@@ -152,14 +217,17 @@ Custom post types / taxonomy:
 * Nueva documentacion y metadatos de release alineados para merge a `main`.
 
 = 1.1 =
-* Fix de autoupdates (plugin-update-checker).
-* AJAX del calendario/contador con nonce + URL admin-ajax dinamica.
+* Fix de autoupdates con plugin-update-checker.
+* AJAX del calendario/contador con nonce y URL admin-ajax dinamica.
 * Cache de sesiones por rango.
 
 = 1.0 =
 * Release inicial con multi-integracion, eventos manuales y overrides.
 
 == Upgrade Notice ==
+= 1.3.6 =
+Corrige los colores de categorias canonicas en eventos manuales y actualiza la documentacion de venues/slugs.
+
 = 1.3.5 =
 Nueva unificacion manual de espacios entre canales para carteleras multicanal sin romper eventos manuales.
 

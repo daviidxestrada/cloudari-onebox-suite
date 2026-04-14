@@ -298,12 +298,14 @@
       ).trim();
     }
 
-    const rawColor = String(
-      eventItem?.cloudari?.category_color ||
-        category?.custom?.color ||
-        category?.color ||
-        ""
-    ).trim();
+    const rawColor = className
+      ? ""
+      : String(
+          eventItem?.cloudari?.category_color ||
+            category?.custom?.color ||
+            category?.color ||
+            ""
+        ).trim();
 
     const color = /^#[0-9A-Fa-f]{6}$/.test(rawColor)
       ? rawColor

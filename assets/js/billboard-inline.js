@@ -6,7 +6,7 @@
    *  ========================= */
   const CONFIG = Object.freeze({
     // Bump de versión para limpiar caché vieja de categorías
-    CACHE_KEY: "obx_events_v8_category_colors",
+    CACHE_KEY: "obx_events_v9_category_colors",
     CACHE_TTL_MS: 24 * 60 * 60 * 1000,
     CHUNK_SIZE: 24,
 
@@ -501,9 +501,16 @@
           // 2) manual real (slug/name de taxonomía)
           const mc = getManualCategory(ev);
           if (mc.key) {
-            categoryKey = mc.key;                 // ej: "mercado"
-            categoryLabel = mc.label || "Teatro"; // ej: "Mercado"
+            const canon = CANONICALS.get(mc.key);
+            if (canon) {
+              categoryKey = canon.key;
+              categoryLabel = canon.label;
+              categoryClass = canon.cls;
+            } else {
+              categoryKey = mc.key;                 // ej: "mercado"
+              categoryLabel = mc.label || "Teatro"; // ej: "Mercado"
             categoryClass = "";                   // no hay clase canónica
+            }
           } else {
             // 3) fallback
             const canon = CANONICALS.get(CONFIG.DEFAULT_CATEGORY_SLUG);
@@ -524,7 +531,7 @@
       }
 
       // Color de categoría (si viene del backend)
-      const categoryColor = pickCategoryColor(ev);
+      const categoryColor = categoryClass ? "" : pickCategoryColor(ev);
       const categoryTextColor = categoryColor ? pickTextColor(categoryColor) : "";
 
       return {
