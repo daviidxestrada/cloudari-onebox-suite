@@ -80,6 +80,26 @@ final class Sessions
         ];
     }
 
+    public static function clearCache(): void
+    {
+        global $wpdb;
+
+        if (!isset($wpdb) || !($wpdb instanceof \wpdb)) {
+            return;
+        }
+
+        $like = $wpdb->esc_like('_transient_' . self::SESSIONS_CACHE_KEY_PREFIX) . '%';
+        $timeoutLike = $wpdb->esc_like('_transient_timeout_' . self::SESSIONS_CACHE_KEY_PREFIX) . '%';
+
+        $wpdb->query(
+            $wpdb->prepare(
+                "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
+                $like,
+                $timeoutLike
+            )
+        );
+    }
+
     public static function getRangeSessions(string $inicio, string $fin): array
     {
         $inicio = substr(trim($inicio), 0, 10);

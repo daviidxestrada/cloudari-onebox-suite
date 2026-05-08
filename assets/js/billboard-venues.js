@@ -148,6 +148,20 @@
       : `Del ${formatDateFull(start)} al ${formatDateFull(end)}`;
   };
 
+  const formatEventDateLabel = (eventItem) => {
+    if (eventItem?.cloudari?.permanent) {
+      return "Información permanente";
+    }
+
+    const label =
+      formatRange(eventItem?.start || "", eventItem?.end || "") ||
+      "Fecha pendiente";
+
+    return eventItem?.cloudari?.time_tba
+      ? `${label} · Horario pendiente`
+      : label;
+  };
+
   const getEventLookupId = (eventItem) =>
     String(eventItem?.event_id ?? eventItem?.id ?? "").trim();
 
@@ -411,9 +425,7 @@
     const category = getCategoryDescriptor(eventItem);
     const url = getEventUrl(eventItem);
     const title = String(eventItem?.title || "Evento").trim() || "Evento";
-    const dateLabel =
-      formatRange(eventItem?.start || "", eventItem?.end || "") ||
-      "Fecha pendiente";
+    const dateLabel = formatEventDateLabel(eventItem);
     const venueName = getVenueName(eventItem, venue);
     const eager = index < 4;
     const attrs = eager

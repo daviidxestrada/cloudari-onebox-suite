@@ -60,6 +60,10 @@
   }
 
   function buildHoraDisplay(eventoRaw, fechaEventoDate) {
+    if (eventoRaw?.cloudari?.time_tba) {
+      return "Horario pendiente";
+    }
+
     const startTime = fmtTimeFromDate(fechaEventoDate);
     const isManual = Boolean(eventoRaw?.cloudari?.manual);
     const endDt = isManual ? toDateSafe(eventoRaw?.date?.end) : null;

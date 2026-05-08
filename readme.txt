@@ -3,7 +3,7 @@ Contributors: cloudari
 Tags: onebox, theatre, calendar, billboard, events
 Requires at least: 6.0
 Requires PHP: 8.0
-Stable tag: 1.3.6
+Stable tag: 1.3.7
 
 Suite Cloudari para integrar OneBox en WordPress: calendario, cartelera, cartelera por espacios, contador y eventos manuales, con soporte para multiples integraciones por teatro.
 
@@ -105,9 +105,15 @@ Campos relevantes:
 - URL del evento.
 - Imagen.
 - Categoria manual.
-- Sesiones o rango de fechas.
+- Sesiones, rango de fechas o ficha permanente.
 - Venue opcional.
 - Texto de CTA opcional.
+
+Modos de evento manual:
+
+- `Funciones (sesiones)`: fechas concretas con hora de inicio opcional y hora fin opcional. Si la hora de inicio se deja vacia, el calendario muestra "Horario pendiente" en lugar de `00:00`.
+- `Evento por rango`: genera sesiones diarias dentro de un rango con horarios por defecto para entre semana, fin de semana y excepciones.
+- `Ficha permanente`: para espacios, servicios o propuestas sin fecha de cierre, como un Ambigu. Aparece en cartelera y cartelera por espacios con "Informacion permanente", pero no genera una sesion diaria en el calendario.
 
 Venue manual:
 
@@ -149,6 +155,7 @@ Transients:
 - `cloudari_onebox_refresh_token_{integration}`
 - `cloudari_onebox_billboard_events_v2_{profile}`
 - `cloudari_onebox_billboard_venues_v1_{profile}`
+- `cloudari_onebox_sessions_v1_{profile}_{inicio}_{fin}`
 
 Meta relevante en eventos manuales:
 
@@ -176,6 +183,7 @@ Custom post types / taxonomy:
 - Cartelera clasica en navegador: cache local con versionado interno.
 
 Para limpiar caches server-side, guarda el Perfil MAIN o actualiza un evento manual.
+Desde la version 1.3.7, esta limpieza tambien borra las caches de sesiones por rango para que los eventos manuales se reflejen inmediatamente en calendario, contador y carteleras por espacios.
 
 == Production checklist ==
 - Definir `WP_DEBUG` en false.
@@ -187,6 +195,13 @@ Para limpiar caches server-side, guarda el Perfil MAIN o actualiza un evento man
 - Usar HTTPS y cache a nivel de servidor si aplica.
 
 == Changelog ==
+= 1.3.7 =
+* Nuevo modo de evento manual `Ficha permanente` para espacios o servicios estables sin fecha de cierre.
+* Los eventos manuales sin hora de inicio ya no se muestran como `00:00`; el frontend los marca como "Horario pendiente".
+* Las respuestas REST publicas conservan `cloudari.mode`, `cloudari.permanent` y `cloudari.time_tba` para que los widgets puedan pintar estos estados.
+* Guardar el Perfil MAIN o un evento manual limpia tambien las caches de sesiones por rango.
+* Nueva clave de cache local de cartelera clasica para recoger la normalizacion de modos manuales.
+
 = 1.3.6 =
 * Fix de colores de categorias en eventos manuales: las categorias canonicas vuelven a respetar la identidad visual tradicional (`teatro`, `musica`, `musical`, `humor`, `talk`).
 * Los colores personalizados de taxonomia manual ya no pisan las clases canonicas cuando el frontend reconoce la categoria.
@@ -225,6 +240,9 @@ Para limpiar caches server-side, guarda el Perfil MAIN o actualiza un evento man
 * Release inicial con multi-integracion, eventos manuales y overrides.
 
 == Upgrade Notice ==
+= 1.3.7 =
+Anade fichas permanentes, horario pendiente para manuales sin hora y limpieza completa de caches de sesiones al guardar manuales o el Perfil MAIN.
+
 = 1.3.6 =
 Corrige los colores de categorias canonicas en eventos manuales y actualiza la documentacion de venues/slugs.
 

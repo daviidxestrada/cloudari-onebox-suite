@@ -123,6 +123,10 @@ document.addEventListener('DOMContentLoaded', function () {
   // - Manual + tiene end => "HH:MM - HH:MM"
   // - Si no => "HH:MM"
   function buildHoraDisplay(eventoRaw, fechaEventoDate) {
+    if (eventoRaw?.cloudari?.time_tba) {
+      return 'Horario pendiente';
+    }
+
     const startTime = fmtTimeFromDate(fechaEventoDate);
 
     const isManual = Boolean(eventoRaw?.cloudari?.manual);
