@@ -7,7 +7,7 @@ final class MetaBox
     public const NONCE_ACTION = 'guardar_evento_manual_nonce';
 
     // Meta keys (nuevo)
-    private const META_MODE             = '_manual_event_mode'; // 'sessions' | 'range'
+    private const META_MODE             = '_manual_event_mode'; // 'sessions' | 'range' | 'permanent'
     private const META_RANGE_START      = '_manual_event_range_start'; // YYYY-MM-DD
     private const META_RANGE_END        = '_manual_event_range_end';   // YYYY-MM-DD
     private const META_RULES            = '_manual_event_schedule_rules'; // array
@@ -52,7 +52,7 @@ final class MetaBox
 
         // Modo (nuevo)
         $mode = get_post_meta($post_id, self::META_MODE, true);
-        $mode = in_array($mode, ['sessions', 'range'], true) ? $mode : 'sessions';
+        $mode = in_array($mode, ['sessions', 'range', 'permanent'], true) ? $mode : 'sessions';
 
         // =========================
         // SESIONES (modo clásico)
@@ -186,6 +186,7 @@ final class MetaBox
             <p class="description">
                 <strong>Funciones (sesiones)</strong>: como un espectáculo normal con fechas/hora de inicio (y opcional hora fin).<br>
                 <strong>Evento por rango</strong>: útil para mercados/exposiciones con horarios por día (entre semana, fin de semana y excepciones).
+                <br><strong>Ficha permanente</strong>: útil para espacios o servicios estables; aparece en carteleras, pero no bloquea todos los días del calendario.
             </p>
 
             <p>
@@ -197,6 +198,11 @@ final class MetaBox
                 <label style="display:inline-flex;gap:10px;align-items:center;">
                     <input type="radio" name="manual_event_mode" value="range" <?php checked($mode, 'range'); ?>>
                     <strong>Evento por rango (mercado / expo)</strong>
+                </label>
+                &nbsp;&nbsp;&nbsp;
+                <label style="display:inline-flex;gap:10px;align-items:center;">
+                    <input type="radio" name="manual_event_mode" value="permanent" <?php checked($mode, 'permanent'); ?>>
+                    <strong>Ficha permanente</strong>
                 </label>
             </p>
 
@@ -391,6 +397,13 @@ final class MetaBox
                 </p>
             </div>
 
+            <div id="cloudari-mode-permanent" style="<?php echo $mode === 'permanent' ? '' : 'display:none;'; ?>">
+                <p><strong>Ficha permanente</strong></p>
+                <p class="description">
+                    Este modo está pensado para espacios, servicios o propuestas sin fecha de cierre. Se muestra en cartelera y cartelera por espacios con la etiqueta "Información permanente", pero no genera una sesión diaria en el calendario.
+                </p>
+            </div>
+
             <hr>
 
             <p>
@@ -423,13 +436,20 @@ final class MetaBox
                 function setMode(mode) {
                     const s = document.getElementById('cloudari-mode-sessions');
                     const r = document.getElementById('cloudari-mode-range');
-                    if (!s || !r) return;
+                    const p = document.getElementById('cloudari-mode-permanent');
+                    if (!s || !r || !p) return;
                     if (mode === 'range') {
                         s.style.display = 'none';
                         r.style.display = '';
+                        p.style.display = 'none';
+                    } else if (mode === 'permanent') {
+                        s.style.display = 'none';
+                        r.style.display = 'none';
+                        p.style.display = '';
                     } else {
                         r.style.display = 'none';
                         s.style.display = '';
+                        p.style.display = 'none';
                     }
                 }
 
@@ -680,7 +700,7 @@ final class MetaBox
         $mode = isset($_POST['manual_event_mode'])
             ? sanitize_key(wp_unslash($_POST['manual_event_mode']))
             : 'sessions';
-        if (!in_array($mode, ['sessions', 'range'], true)) {
+        if (!in_array($mode, ['sessions', 'range', 'permanent'], true)) {
             $mode = 'sessions';
         }
         update_post_meta($post_id, self::META_MODE, $mode);

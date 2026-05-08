@@ -6,7 +6,7 @@
    *  ========================= */
   const CONFIG = Object.freeze({
     // Bump de versión para limpiar caché vieja de categorías
-    CACHE_KEY: "obx_events_v9_category_colors",
+    CACHE_KEY: "obx_events_v10_manual_modes",
     CACHE_TTL_MS: 24 * 60 * 60 * 1000,
     CHUNK_SIZE: 24,
 
@@ -546,6 +546,8 @@
         image,
         firstDate,
         lastDate,
+        permanent: Boolean(ev?.cloudari?.permanent),
+        timeTba: Boolean(ev?.cloudari?.time_tba),
         url: finalUrl,
         ctaLabel,
       };
@@ -596,10 +598,13 @@
           <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
             <path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 16H5V9h14v11z" fill="currentColor"/>
           </svg>
-          <span class="obx-datebar__text">${fmtRange(
-            e.firstDate,
-            e.lastDate
-          )}</span>
+          <span class="obx-datebar__text">${
+            e.permanent
+              ? "Información permanente"
+              : e.timeTba
+                ? `${fmtRange(e.firstDate, e.lastDate)} · Horario pendiente`
+                : fmtRange(e.firstDate, e.lastDate)
+          }</span>
         </div>
         <div class="obx-metaRow">
           <div class="obx-pill obx-pill--cat ${e.categoryClass}" ${catStyle}>${esc(

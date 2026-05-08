@@ -7,6 +7,7 @@ use Cloudari\Onebox\Domain\Billboard\VenueBillboard;
 use Cloudari\Onebox\Domain\ManualEvents\Repository as ManualRepository;
 use Cloudari\Onebox\Domain\Theatre\ProfileRepository;
 use Cloudari\Onebox\Infrastructure\Onebox\Events;
+use Cloudari\Onebox\Infrastructure\Onebox\Sessions;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -94,6 +95,7 @@ final class Routes
     {
         delete_transient(self::getBillboardCacheKey());
         VenueBillboard::clearCache();
+        Sessions::clearCache();
     }
 
     public static function getBillboardEvents(WP_REST_Request $request)
@@ -249,6 +251,19 @@ final class Routes
 
         if (!empty($cloudari['manual'])) {
             $clean['manual'] = true;
+        }
+
+        $mode = trim((string) ($cloudari['mode'] ?? ''));
+        if ($mode !== '') {
+            $clean['mode'] = $mode;
+        }
+
+        if (!empty($cloudari['permanent'])) {
+            $clean['permanent'] = true;
+        }
+
+        if (!empty($cloudari['time_tba'])) {
+            $clean['time_tba'] = true;
         }
 
         $ctaLabel = trim((string) ($cloudari['cta_label'] ?? ''));

@@ -11,7 +11,7 @@ final class Repository
     /**
      * Meta keys (de MetaBox.php)
      */
-    private const META_MODE        = '_manual_event_mode'; // 'sessions' | 'range'
+    private const META_MODE        = '_manual_event_mode'; // 'sessions' | 'range' | 'permanent'
     private const META_RANGE_START = '_manual_event_range_start'; // YYYY-MM-DD
     private const META_RANGE_END   = '_manual_event_range_end';   // YYYY-MM-DD
     private const META_RULES       = '_manual_event_schedule_rules'; // array
@@ -62,6 +62,17 @@ final class Repository
         if ($t === '') return $fallback;
         if (preg_match('/^\d{2}:\d{2}$/', $t)) return $t;
         return $fallback;
+    }
+
+    private static function normalizeMode($mode): string
+    {
+        $mode = (string) $mode;
+        return in_array($mode, ['sessions', 'range', 'permanent'], true) ? $mode : 'sessions';
+    }
+
+    private static function todayIso(string $time = '00:00:00'): string
+    {
+        return self::isoFromLocal((new DateTime('today', wp_timezone()))->format('Y-m-d'), $time);
     }
 
     /**
@@ -335,6 +346,92 @@ final class Repository
         return $sessions;
     }
 
+    private static function buildPermanentSession(
+        int $post_id,
+        string $titulo,
+        string $url,
+        string $img_url,
+        string $venueName,
+        ?array $category
+    ): array {
+        $cloudari = [
+            'manual'    => true,
+            'mode'      => 'permanent',
+            'permanent' => true,
+        ];
+
+        $ctaLabel = self::getCtaLabel($post_id);
+        if ($ctaLabel !== '') {
+            $cloudari['cta_label'] = $ctaLabel;
+        }
+        if (!empty($category['custom']['color'])) {
+            $cloudari['category_color'] = (string) $category['custom']['color'];
+        }
+
+        return [
+            'id'   => 'manual-' . $post_id . '-permanent',
+            'name' => $titulo,
+            'type' => 'SESSION',
+            'event' => [
+                'id'    => $post_id,
+                'name'  => $titulo,
+                'texts' => ['title' => ['es-ES' => $titulo]],
+            ],
+            'venue' => ['name' => $venueName],
+            'date'  => [
+                'start' => self::todayIso('00:00:00'),
+                'end'   => self::todayIso('23:59:59'),
+            ],
+            'images'=> ['landscape' => [['es-ES' => $img_url]]],
+            'price' => ['min' => ['value' => '']],
+            'url'   => $url,
+            'category' => $category,
+            'cloudari' => $cloudari,
+        ];
+    }
+
+    private static function getPermanentSessions(): array
+    {
+        $profile = ProfileRepository::getActive();
+        $venueName = trim((string) $profile->venueName);
+        if ($venueName === '') {
+            $venueName = 'Teatro';
+        }
+
+        $posts = get_posts([
+            'post_type'      => PostType::SLUG,
+            'post_status'    => 'publish',
+            'posts_per_page' => -1,
+            'orderby'        => 'date',
+            'order'          => 'ASC',
+            'meta_query'     => [
+                [
+                    'key'   => self::META_MODE,
+                    'value' => 'permanent',
+                ],
+            ],
+        ]);
+
+        $sessions = [];
+
+        foreach ($posts as $post) {
+            $post_id = (int) $post->ID;
+            $img_id  = (int) get_post_meta($post_id, self::META_IMG_ID, true);
+            $category = self::buildCategoryPayload(self::getCategoryTerm($post_id));
+
+            $sessions[] = self::buildPermanentSession(
+                $post_id,
+                (string) $post->post_title,
+                (string) get_post_meta($post_id, self::META_URL, true),
+                $img_id ? (string) wp_get_attachment_image_url($img_id, 'full') : '',
+                self::getManualVenueName($post_id, $venueName),
+                $category
+            );
+        }
+
+        return $sessions;
+    }
+
     /**
      * Datos "fake sessions" para el calendario
      */
@@ -378,8 +475,10 @@ final class Repository
 
             $ctaLabel = self::getCtaLabel($post_id);
 
-            $mode = get_post_meta($post_id, self::META_MODE, true);
-            $mode = in_array($mode, ['sessions', 'range'], true) ? $mode : 'sessions';
+            $mode = self::normalizeMode(get_post_meta($post_id, self::META_MODE, true));
+            if ($mode === 'permanent') {
+                continue;
+            }
 
             if ($mode === 'range') {
                 $rangeSessions = self::buildRangeSessions(
@@ -416,6 +515,8 @@ final class Repository
 
                 if (empty($fecha)) continue;
 
+                $timeTba = trim($hora) === '';
+
                 try {
                     $horaCompleta = ($hora ?: '00:00') . ':00';
                     $sessionDt    = new DateTime($fecha . ' ' . $horaCompleta, $tz);
@@ -435,8 +536,9 @@ final class Repository
                 }
 
                 $cloudari = [
-                    'manual' => true,
-                    'mode'   => 'sessions',
+                    'manual'  => true,
+                    'mode'    => 'sessions',
+                    'time_tba'=> $timeTba,
                 ];
                 if ($ctaLabel !== '') {
                     $cloudari['cta_label'] = $ctaLabel;
@@ -474,20 +576,26 @@ final class Repository
     public static function getUpcomingSessions(): array
     {
         $today = (new DateTime('today', wp_timezone()))->format('Y-m-d');
+        $todayDt = new DateTime('today', wp_timezone());
         $now = new DateTime('now', wp_timezone());
 
         $sessions = self::getForCalendar($today, null);
 
-        return array_values(
+        $sessions = array_values(
             array_filter(
                 $sessions,
-                static function ($session) use ($now) {
+                static function ($session) use ($now, $todayDt) {
                     if (empty($session['date']['start'])) {
                         return false;
                     }
 
                     try {
                         $start = new DateTime((string) $session['date']['start']);
+                        if (!empty($session['cloudari']['time_tba'])) {
+                            $start->setTime(0, 0, 0);
+                            return $start >= $todayDt;
+                        }
+
                         return $start >= $now;
                     } catch (Exception $e) {
                         return false;
@@ -495,6 +603,13 @@ final class Repository
                 }
             )
         );
+
+        $permanentSessions = self::getPermanentSessions();
+        if (!empty($permanentSessions)) {
+            $sessions = array_merge($permanentSessions, $sessions);
+        }
+
+        return $sessions;
     }
 
     /**
@@ -525,13 +640,16 @@ final class Repository
 
             $ctaLabel = self::getCtaLabel($post_id);
 
-            $mode = get_post_meta($post_id, self::META_MODE, true);
-            $mode = in_array($mode, ['sessions', 'range'], true) ? $mode : 'sessions';
+            $mode = self::normalizeMode(get_post_meta($post_id, self::META_MODE, true));
 
             $start_iso = '';
             $end_iso   = '';
+            $timeTba   = false;
 
-            if ($mode === 'range') {
+            if ($mode === 'permanent') {
+                $start_iso = self::todayIso('00:00:00');
+                $end_iso   = self::todayIso('23:59:59');
+            } elseif ($mode === 'range') {
                 $rangeStart = trim((string)get_post_meta($post_id, self::META_RANGE_START, true));
                 $rangeEnd   = trim((string)get_post_meta($post_id, self::META_RANGE_END, true));
 
@@ -558,6 +676,7 @@ final class Repository
 
                 $primera = $sesiones[0];
                 $ultima  = $sesiones[count($sesiones) - 1];
+                $timeTba = trim((string)($primera['hora'] ?? '')) === '';
 
                 $start_iso = !empty($primera['fecha'])
                     ? self::isoFromLocal((string)$primera['fecha'], ((string)($primera['hora'] ?: '00:00')) . ':00')
@@ -568,10 +687,14 @@ final class Repository
                 $ultimaFin   = self::normTime((string)($ultima['hora_fin'] ?? ''), '');
 
                 if ($ultimaFecha !== '') {
-                    $end_iso = self::isoFromLocal(
-                        $ultimaFecha,
-                        ($ultimaFin !== '' ? $ultimaFin : $ultimaHora) . ':00'
-                    );
+                    if ($timeTba && $ultimaFin === '') {
+                        $end_iso = self::isoFromLocal($ultimaFecha, '23:59:59');
+                    } else {
+                        $end_iso = self::isoFromLocal(
+                            $ultimaFecha,
+                            ($ultimaFin !== '' ? $ultimaFin : $ultimaHora) . ':00'
+                        );
+                    }
                 } else {
                     $end_iso = $start_iso;
                 }
@@ -579,18 +702,26 @@ final class Repository
 
             if ($start_iso === '' || $end_iso === '') continue;
 
-            try {
-                $now    = new DateTime('now', wp_timezone());
-                $end_dt = new DateTime(substr($end_iso, 0, 19), wp_timezone());
-                if ($end_dt < $now) continue;
-            } catch (Exception $e) {
-                // ignore
+            if ($mode !== 'permanent') {
+                try {
+                    $now    = new DateTime('now', wp_timezone());
+                    $end_dt = new DateTime(substr($end_iso, 0, 19), wp_timezone());
+                    if ($end_dt < $now) continue;
+                } catch (Exception $e) {
+                    // ignore
+                }
             }
 
             $cloudari = [
                 'manual' => true,
                 'mode'   => $mode,
             ];
+            if ($mode === 'permanent') {
+                $cloudari['permanent'] = true;
+            }
+            if ($timeTba) {
+                $cloudari['time_tba'] = true;
+            }
             if (!empty($category['custom']['color'])) {
                 $cloudari['category_color'] = (string) $category['custom']['color'];
             }
