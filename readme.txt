@@ -3,7 +3,7 @@ Contributors: cloudari
 Tags: onebox, theatre, calendar, billboard, events
 Requires at least: 6.0
 Requires PHP: 8.0
-Stable tag: 1.3.7
+Stable tag: 1.3.8
 
 Suite Cloudari para integrar OneBox en WordPress: calendario, cartelera, cartelera por espacios, contador y eventos manuales, con soporte para multiples integraciones por teatro.
 
@@ -117,8 +117,9 @@ Modos de evento manual:
 
 Venue manual:
 
-- Si el campo `Espacio / venue` esta vacio, se usa el nombre del teatro del Perfil MAIN.
-- Si se rellena, el texto se usa como nombre visible del venue.
+- El campo `Espacio / venue` se muestra como un selector alimentado por los espacios detectados desde OneBox.
+- Si se deja vacio, se usa el nombre del teatro del Perfil MAIN.
+- Si un evento tenia guardado un venue antiguo que ya no aparece en OneBox, el selector conserva ese valor para no perder datos al editar.
 - La cartelera por venues genera el slug con `sanitize_title(...)`, salvo que exista una equivalencia canonica configurada.
 - Para identificar slugs reales, consulta `GET /wp-json/cloudari/v1/billboard-venues` y mira el campo `slug`.
 
@@ -195,6 +196,11 @@ Desde la version 1.3.7, esta limpieza tambien borra las caches de sesiones por r
 - Usar HTTPS y cache a nivel de servidor si aplica.
 
 == Changelog ==
+= 1.3.8 =
+* El campo `Espacio / venue` de eventos manuales pasa de texto libre a selector con los espacios detectados desde OneBox.
+* El selector conserva valores manuales ya guardados aunque no aparezcan en la API, para evitar perdida accidental de datos.
+* Documentacion actualizada para explicar el nuevo selector de venues manuales.
+
 = 1.3.7 =
 * Nuevo modo de evento manual `Ficha permanente` para espacios o servicios estables sin fecha de cierre.
 * Los eventos manuales sin hora de inicio ya no se muestran como `00:00`; el frontend los marca como "Horario pendiente".
@@ -240,6 +246,9 @@ Desde la version 1.3.7, esta limpieza tambien borra las caches de sesiones por r
 * Release inicial con multi-integracion, eventos manuales y overrides.
 
 == Upgrade Notice ==
+= 1.3.8 =
+El venue de eventos manuales ahora se elige desde un selector alimentado por OneBox, manteniendo valores antiguos guardados.
+
 = 1.3.7 =
 Anade fichas permanentes, horario pendiente para manuales sin hora y limpieza completa de caches de sesiones al guardar manuales o el Perfil MAIN.
 

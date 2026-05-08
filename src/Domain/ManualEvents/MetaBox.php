@@ -1,6 +1,8 @@
 <?php
 namespace Cloudari\Onebox\Domain\ManualEvents;
 
+use Cloudari\Onebox\Domain\Billboard\VenueBillboard;
+
 final class MetaBox
 {
     public const NONCE_FIELD  = 'evento_manual_nonce';
@@ -32,6 +34,70 @@ final class MetaBox
         );
     }
 
+    private static function getOneboxVenueOptions(string $currentVenue = ''): array
+    {
+        $options = [];
+
+        try {
+            $payload = VenueBillboard::get();
+            $venues = isset($payload['data']) && is_array($payload['data'])
+                ? $payload['data']
+                : [];
+
+            foreach ($venues as $venue) {
+                if (!is_array($venue)) {
+                    continue;
+                }
+
+                $context = isset($venue['source_context']) && is_array($venue['source_context'])
+                    ? $venue['source_context']
+                    : [];
+                $sources = isset($context['sources']) && is_array($context['sources'])
+                    ? $context['sources']
+                    : [];
+
+                if (in_array('onebox', $sources, true)) {
+                    $name = trim((string) ($venue['name'] ?? ''));
+                    if ($name !== '') {
+                        $options[sanitize_title($name)] = $name;
+                    }
+                }
+
+                $sourceVenues = isset($context['source_venues']) && is_array($context['source_venues'])
+                    ? $context['source_venues']
+                    : [];
+
+                foreach ($sourceVenues as $sourceVenue) {
+                    if (!is_array($sourceVenue) || ($sourceVenue['source'] ?? '') !== 'onebox') {
+                        continue;
+                    }
+
+                    $name = trim((string) ($sourceVenue['canonical_name'] ?? ''));
+                    if ($name === '') {
+                        $name = trim((string) ($sourceVenue['raw_name'] ?? ''));
+                    }
+                    if ($name !== '') {
+                        $options[sanitize_title($name)] = $name;
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            $options = [];
+        }
+
+        asort($options, SORT_NATURAL | SORT_FLAG_CASE);
+
+        $currentVenue = trim($currentVenue);
+        if ($currentVenue !== '') {
+            $currentKey = sanitize_title($currentVenue);
+            if (!isset($options[$currentKey])) {
+                $options[$currentKey] = $currentVenue;
+            }
+        }
+
+        return array_values($options);
+    }
+
     public static function render(\WP_Post $post): void
     {
         // Nonce
@@ -42,6 +108,7 @@ final class MetaBox
         // URL del evento
         $url_evento = get_post_meta($post_id, self::META_URL, true);
         $manualVenue = (string) get_post_meta($post_id, self::META_VENUE, true);
+        $venueOptions = self::getOneboxVenueOptions($manualVenue);
 
         // CTA label
         $cta_label = (string) get_post_meta($post_id, self::META_CTA_LABEL, true);
@@ -132,12 +199,19 @@ final class MetaBox
 
             <p>
                 <label for="manual_event_venue"><strong>Espacio / venue (opcional):</strong></label><br>
-                <input type="text"
-                       id="manual_event_venue"
-                       name="manual_event_venue"
-                       class="widefat"
-                       value="<?php echo esc_attr($manualVenue); ?>"
-                       placeholder="Si se deja vacio, se usa el venue del perfil">
+                <select id="manual_event_venue"
+                        name="manual_event_venue"
+                        class="widefat">
+                    <option value="">Usar venue del Perfil MAIN</option>
+                    <?php foreach ($venueOptions as $venueOption) : ?>
+                        <option value="<?php echo esc_attr($venueOption); ?>" <?php selected($manualVenue, $venueOption); ?>>
+                            <?php echo esc_html($venueOption); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <span class="description">
+                    Se alimenta de los espacios detectados desde OneBox. Si no aparece un espacio nuevo, guarda el Perfil MAIN o espera a que la cartelera por espacios refresque su cache.
+                </span>
             </p>
 
             <!-- NUEVO: texto del botón -->
