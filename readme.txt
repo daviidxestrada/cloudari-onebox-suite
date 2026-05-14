@@ -3,7 +3,7 @@ Contributors: cloudari
 Tags: onebox, theatre, calendar, billboard, events
 Requires at least: 6.0
 Requires PHP: 8.0
-Stable tag: 1.3.11
+Stable tag: 1.3.12
 
 Suite Cloudari para integrar OneBox en WordPress: calendario, cartelera, cartelera por espacios, contador y eventos manuales, con soporte para multiples integraciones por teatro.
 
@@ -15,7 +15,6 @@ Cloudari OneBox Suite conecta OneBox con WordPress y pinta las experiencias prin
 - Cartelera clasica con eventos de OneBox y manuales.
 - Cartelera agrupada por espacios / venues.
 - Contador de proximas sesiones por evento.
-- Hero semanal gestionable desde el back office.
 
 El modelo de datos se basa en un Perfil MAIN del teatro y una o varias integraciones OneBox dentro de ese perfil. Esto permite trabajar con carteleras multicanal, unificar venues equivalentes y mantener eventos manuales dentro del mismo flujo visual.
 
@@ -91,12 +90,6 @@ Opcionales en `wp-config.php`:
 - `event_id` indica el evento objetivo.
 - `extra_days`, `duration` y `age` permiten ajustar la ficha.
 
-`[cloudari_weekly_hero]`
-
-- Muestra un hero tipo carrusel con orden semanal calculado en servidor.
-- Los slides se gestionan desde Cloudari OneBox > Hero semanal.
-- Atributos opcionales: `autoplay_delay="5000"` y `arrows="0"` para ocultar flechas.
-
 == Widgets HTML ==
 Los widgets HTML estan en la carpeta `widgets/`.
 
@@ -156,7 +149,6 @@ Options:
 - `cloudari_onebox_profiles`
 - `cloudari_onebox_active_profile`
 - `cloudari_onebox_event_overrides`
-- `cloudari_weekly_hero_slides`
 
 Transients:
 
@@ -204,20 +196,9 @@ Desde la version 1.3.7, esta limpieza tambien borra las caches de sesiones por r
 - Usar HTTPS y cache a nivel de servidor si aplica.
 
 == Changelog ==
-= 1.3.11 =
-* El shortcode `[cloudari_weekly_hero]` replica los resets visuales del widget HTML original para resistir estilos de Elementor y temas.
-* El hero semanal fuerza layout full-bleed, dimensiones, flechas y media queries equivalentes al widget original.
-* En tablet, el shortcode usa la imagen movil hasta 1024px para igualar el comportamiento anterior.
-
-= 1.3.10 =
-* El plugin pasa a mostrarse como `Cloudari OneBox Suite` sin limitar el titulo a calendario y cartelera.
-* La pantalla de Hero semanal permite anadir slides desde un boton sin usar una fila vacia permanente.
-* Los campos de imagen desktop y movil se integran con la biblioteca de medios de WordPress y rellenan URL y texto alt.
-
-= 1.3.9 =
-* Nuevo shortcode `[cloudari_weekly_hero]` para renderizar un hero tipo carrusel con orden semanal calculado en servidor.
-* Nueva pantalla `Cloudari OneBox > Hero semanal` para gestionar slides, enlaces e imagenes desde el back office.
-* El primer slide semanal se entrega ya como primer elemento HTML para evitar saltos visuales al cargar en Elementor.
+= 1.3.12 =
+* Downgrade funcional: se retira la seccion Hero semanal, su shortcode y sus assets.
+* El plugin vuelve al alcance previo a `1.3.9`, manteniendo las mejoras publicadas hasta `1.3.8`.
 
 = 1.3.8 =
 * El campo `Espacio / venue` de eventos manuales pasa de texto libre a selector con los espacios detectados desde OneBox.
@@ -269,14 +250,8 @@ Desde la version 1.3.7, esta limpieza tambien borra las caches de sesiones por r
 * Release inicial con multi-integracion, eventos manuales y overrides.
 
 == Upgrade Notice ==
-= 1.3.11 =
-El hero semanal del shortcode queda alineado visualmente con el widget HTML original en Elementor.
-
-= 1.3.10 =
-Mejora de gestion del Hero semanal: anadir slides y seleccionar imagenes desde la biblioteca de medios.
-
-= 1.3.9 =
-Nuevo hero semanal gestionable desde el back office con render server-side para evitar el flash del primer slide.
+= 1.3.12 =
+Se retira el Hero semanal introducido en `1.3.9`; usa esta version para volver al comportamiento previo.
 
 = 1.3.8 =
 El venue de eventos manuales ahora se elige desde un selector alimentado por OneBox, manteniendo valores antiguos guardados.

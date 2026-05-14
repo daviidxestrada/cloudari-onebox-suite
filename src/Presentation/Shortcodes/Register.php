@@ -2,7 +2,6 @@
 
 namespace Cloudari\Onebox\Presentation\Shortcodes;
 
-use Cloudari\Onebox\Domain\Hero\WeeklyHeroRepository;
 use Cloudari\Onebox\Presentation\Assets\Enqueue;
 
 final class Register
@@ -15,7 +14,6 @@ final class Register
         add_shortcode('cloudari_billboard_venues', [static::class, 'billboardVenues']);
         add_shortcode('cloudari_billboard_spaces', [static::class, 'billboardVenues']);
         add_shortcode('cloudari_event_countdown', [static::class, 'eventCountdown']);
-        add_shortcode('cloudari_weekly_hero', [static::class, 'weeklyHero']);
 
     }
 
@@ -276,85 +274,5 @@ final class Register
     <?php
     return ob_get_clean();
 }
-
-    /**
-     * ==============================
-     *  HERO SEMANAL
-     * ==============================
-     */
-    public static function weeklyHero($atts = [], $content = ''): string
-    {
-        Enqueue::weeklyHero();
-
-        if (!CLOUDARI_ONEBOX_ENABLE_OUTPUT) {
-            return '<!-- Cloudari Weekly Hero desactivado por flag -->';
-        }
-
-        $atts = shortcode_atts(
-            [
-                'autoplay_delay' => 5000,
-                'arrows' => '1',
-            ],
-            $atts,
-            'cloudari_weekly_hero'
-        );
-
-        $slides = WeeklyHeroRepository::orderedForWeek();
-
-        if (empty($slides)) {
-            return '<!-- Cloudari Weekly Hero: no hay slides activos -->';
-        }
-
-        $autoplayDelay = max(1000, (int) $atts['autoplay_delay']);
-        $showArrows = !in_array((string) $atts['arrows'], ['0', 'false', 'no'], true);
-
-        ob_start(); ?>
-
-        <div class="cloudari-weekly-hero-widget">
-            <div class="swiper cloudari-weekly-hero"
-                 data-cloudari-weekly-hero
-                 data-autoplay-delay="<?php echo esc_attr((string) $autoplayDelay); ?>"
-                 aria-label="Hero semanal">
-                <div class="swiper-wrapper">
-                    <?php foreach ($slides as $index => $slide) : ?>
-                        <?php
-                            $title = (string) ($slide['title'] ?? '');
-                            $url = (string) ($slide['url'] ?? '');
-                            $desktopImage = (string) ($slide['desktop_image'] ?? '');
-                            $mobileImage = (string) ($slide['mobile_image'] ?? '') ?: $desktopImage;
-                            $alt = (string) ($slide['alt'] ?? $title);
-                            $isFirst = $index === 0;
-                        ?>
-                        <div class="swiper-slide">
-                            <a class="cloudari-weekly-hero__slide"
-                               href="<?php echo esc_url($url); ?>"
-                               target="_blank"
-                               rel="noopener noreferrer"
-                               aria-label="<?php echo esc_attr($title !== '' ? 'Comprar entradas para ' . $title : 'Comprar entradas'); ?>">
-                                <picture>
-                                    <source media="(max-width: 1024px)" srcset="<?php echo esc_url($mobileImage); ?>">
-                                    <img
-                                        src="<?php echo esc_url($desktopImage); ?>"
-                                        alt="<?php echo esc_attr($alt); ?>"
-                                        loading="<?php echo $isFirst ? 'eager' : 'lazy'; ?>"
-                                        decoding="<?php echo $isFirst ? 'sync' : 'async'; ?>"
-                                        <?php echo $isFirst ? 'fetchpriority="high"' : ''; ?>
-                                    >
-                                </picture>
-                            </a>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-
-                <?php if ($showArrows) : ?>
-                    <button class="cloudari-weekly-hero__arrow cloudari-weekly-hero__arrow--prev" type="button" aria-label="Slide anterior"></button>
-                    <button class="cloudari-weekly-hero__arrow cloudari-weekly-hero__arrow--next" type="button" aria-label="Slide siguiente"></button>
-                <?php endif; ?>
-            </div>
-        </div>
-
-        <?php
-        return ob_get_clean();
-    }
 
 }
