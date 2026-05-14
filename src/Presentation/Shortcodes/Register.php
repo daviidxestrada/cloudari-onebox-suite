@@ -332,7 +332,7 @@ final class Register
                                rel="noopener noreferrer"
                                aria-label="<?php echo esc_attr($title !== '' ? 'Comprar entradas para ' . $title : 'Comprar entradas'); ?>">
                                 <picture>
-                                    <source media="(max-width: 767px)" srcset="<?php echo esc_url($mobileImage); ?>">
+                                    <source media="(max-width: 1024px)" srcset="<?php echo esc_url($mobileImage); ?>">
                                     <img
                                         src="<?php echo esc_url($desktopImage); ?>"
                                         alt="<?php echo esc_attr($alt); ?>"

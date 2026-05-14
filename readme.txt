@@ -3,7 +3,7 @@ Contributors: cloudari
 Tags: onebox, theatre, calendar, billboard, events
 Requires at least: 6.0
 Requires PHP: 8.0
-Stable tag: 1.3.10
+Stable tag: 1.3.11
 
 Suite Cloudari para integrar OneBox en WordPress: calendario, cartelera, cartelera por espacios, contador y eventos manuales, con soporte para multiples integraciones por teatro.
 
@@ -204,6 +204,11 @@ Desde la version 1.3.7, esta limpieza tambien borra las caches de sesiones por r
 - Usar HTTPS y cache a nivel de servidor si aplica.
 
 == Changelog ==
+= 1.3.11 =
+* El shortcode `[cloudari_weekly_hero]` replica los resets visuales del widget HTML original para resistir estilos de Elementor y temas.
+* El hero semanal fuerza layout full-bleed, dimensiones, flechas y media queries equivalentes al widget original.
+* En tablet, el shortcode usa la imagen movil hasta 1024px para igualar el comportamiento anterior.
+
 = 1.3.10 =
 * El plugin pasa a mostrarse como `Cloudari OneBox Suite` sin limitar el titulo a calendario y cartelera.
 * La pantalla de Hero semanal permite anadir slides desde un boton sin usar una fila vacia permanente.
@@ -264,6 +269,9 @@ Desde la version 1.3.7, esta limpieza tambien borra las caches de sesiones por r
 * Release inicial con multi-integracion, eventos manuales y overrides.
 
 == Upgrade Notice ==
+= 1.3.11 =
+El hero semanal del shortcode queda alineado visualmente con el widget HTML original en Elementor.
+
 = 1.3.10 =
 Mejora de gestion del Hero semanal: anadir slides y seleccionar imagenes desde la biblioteca de medios.
 

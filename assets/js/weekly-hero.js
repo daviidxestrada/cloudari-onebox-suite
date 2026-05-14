@@ -20,11 +20,25 @@
         prevEl: carousel.querySelector(".cloudari-weekly-hero__arrow--prev"),
         nextEl: carousel.querySelector(".cloudari-weekly-hero__arrow--next")
       },
+      observer: true,
+      observeParents: true,
       watchOverflow: true,
       preloadImages: false,
       lazyPreloadPrevNext: 1
     });
   }
+
+  document.addEventListener("click", function (event) {
+    var link = event.target.closest(".cloudari-weekly-hero__slide[href]");
+
+    if (!link) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    window.open(link.href, "_blank", "noopener,noreferrer");
+  }, true);
 
   function init() {
     document.querySelectorAll("[data-cloudari-weekly-hero]").forEach(initWeeklyHeroCarousel);
