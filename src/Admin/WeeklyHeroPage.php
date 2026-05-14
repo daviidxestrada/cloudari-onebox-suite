@@ -22,6 +22,25 @@ final class WeeklyHeroPage
             self::PAGE_SLUG,
             [self::class, 'renderPage']
         );
+
+        add_action('admin_enqueue_scripts', [self::class, 'enqueueAssets']);
+    }
+
+    public static function enqueueAssets(string $hook): void
+    {
+        if ($hook !== 'cloudari-onebox_page_' . self::PAGE_SLUG) {
+            return;
+        }
+
+        wp_enqueue_media();
+
+        wp_enqueue_script(
+            'cloudari-weekly-hero-admin',
+            CLOUDARI_ONEBOX_URL . 'assets/js/weekly-hero-admin.js',
+            ['jquery'],
+            CLOUDARI_ONEBOX_VER,
+            true
+        );
     }
 
     public static function renderPage(): void
@@ -33,14 +52,7 @@ final class WeeklyHeroPage
         self::handlePost();
 
         $slides = WeeklyHeroRepository::all(true);
-        $slides[] = [
-            'enabled' => true,
-            'title' => '',
-            'url' => '',
-            'desktop_image' => '',
-            'mobile_image' => '',
-            'alt' => '',
-        ];
+        $blankSlide = self::getBlankSlide();
 
         ?>
         <div class="wrap cloudari-weekly-hero-admin">
@@ -62,8 +74,18 @@ final class WeeklyHeroPage
                     <?php endforeach; ?>
                 </div>
 
+                <p>
+                    <button type="button" class="button button-secondary" data-cloudari-add-hero-slide>
+                        Anadir slide
+                    </button>
+                </p>
+
                 <?php submit_button('Guardar hero semanal'); ?>
             </form>
+
+            <template id="cloudari-weekly-hero-slide-template">
+                <?php self::renderSlideFields($blankSlide, '__INDEX__'); ?>
+            </template>
         </div>
 
         <?php self::renderInlineStyles(); ?>
@@ -92,13 +114,27 @@ final class WeeklyHeroPage
         );
     }
 
-    private static function renderSlideFields(array $slide, int $index): void
+    private static function getBlankSlide(): array
+    {
+        return [
+            'enabled' => true,
+            'title' => '',
+            'url' => '',
+            'desktop_image' => '',
+            'mobile_image' => '',
+            'alt' => '',
+        ];
+    }
+
+    private static function renderSlideFields(array $slide, $index): void
     {
         $fieldBase = 'slides[' . $index . ']';
+        $indexAttr = (string) $index;
+        $displayNumber = is_numeric($index) ? ((int) $index + 1) : '';
         ?>
-        <section class="cloudari-weekly-hero-card">
+        <section class="cloudari-weekly-hero-card" data-cloudari-hero-card data-slide-index="<?php echo esc_attr($indexAttr); ?>">
             <div class="cloudari-weekly-hero-card__head">
-                <h2>Slide <?php echo esc_html((string) ($index + 1)); ?></h2>
+                <h2>Slide <span data-cloudari-slide-number><?php echo esc_html((string) $displayNumber); ?></span></h2>
                 <label>
                     <input type="checkbox" name="<?php echo esc_attr($fieldBase); ?>[enabled]" value="1" <?php checked(!empty($slide['enabled'])); ?>>
                     Activo
@@ -133,25 +169,47 @@ final class WeeklyHeroPage
                 <tr>
                     <th scope="row"><label for="cloudari_hero_desktop_<?php echo esc_attr((string) $index); ?>">Imagen desktop</label></th>
                     <td>
-                        <input
-                            id="cloudari_hero_desktop_<?php echo esc_attr((string) $index); ?>"
-                            name="<?php echo esc_attr($fieldBase); ?>[desktop_image]"
-                            type="url"
-                            class="large-text code"
-                            value="<?php echo esc_attr((string) ($slide['desktop_image'] ?? '')); ?>"
-                        >
+                        <div class="cloudari-weekly-hero-media-field">
+                            <input
+                                id="cloudari_hero_desktop_<?php echo esc_attr((string) $index); ?>"
+                                name="<?php echo esc_attr($fieldBase); ?>[desktop_image]"
+                                type="url"
+                                class="large-text code"
+                                value="<?php echo esc_attr((string) ($slide['desktop_image'] ?? '')); ?>"
+                            >
+                            <button
+                                type="button"
+                                class="button"
+                                data-cloudari-media-button
+                                data-target="cloudari_hero_desktop_<?php echo esc_attr((string) $index); ?>"
+                                data-alt-target="cloudari_hero_alt_<?php echo esc_attr((string) $index); ?>"
+                            >
+                                Seleccionar imagen
+                            </button>
+                        </div>
                     </td>
                 </tr>
                 <tr>
                     <th scope="row"><label for="cloudari_hero_mobile_<?php echo esc_attr((string) $index); ?>">Imagen movil</label></th>
                     <td>
-                        <input
-                            id="cloudari_hero_mobile_<?php echo esc_attr((string) $index); ?>"
-                            name="<?php echo esc_attr($fieldBase); ?>[mobile_image]"
-                            type="url"
-                            class="large-text code"
-                            value="<?php echo esc_attr((string) ($slide['mobile_image'] ?? '')); ?>"
-                        >
+                        <div class="cloudari-weekly-hero-media-field">
+                            <input
+                                id="cloudari_hero_mobile_<?php echo esc_attr((string) $index); ?>"
+                                name="<?php echo esc_attr($fieldBase); ?>[mobile_image]"
+                                type="url"
+                                class="large-text code"
+                                value="<?php echo esc_attr((string) ($slide['mobile_image'] ?? '')); ?>"
+                            >
+                            <button
+                                type="button"
+                                class="button"
+                                data-cloudari-media-button
+                                data-target="cloudari_hero_mobile_<?php echo esc_attr((string) $index); ?>"
+                                data-alt-target="cloudari_hero_alt_<?php echo esc_attr((string) $index); ?>"
+                            >
+                                Seleccionar imagen
+                            </button>
+                        </div>
                         <p class="description">Si se deja vacia, se usa la imagen desktop.</p>
                     </td>
                 </tr>
@@ -198,6 +256,23 @@ final class WeeklyHeroPage
             }
             .cloudari-weekly-hero-card .form-table {
                 margin-top: 8px;
+            }
+            .cloudari-weekly-hero-media-field {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .cloudari-weekly-hero-media-field input {
+                flex: 1 1 auto;
+            }
+            .cloudari-weekly-hero-media-field .button {
+                flex: 0 0 auto;
+            }
+            @media (max-width: 782px) {
+                .cloudari-weekly-hero-media-field {
+                    align-items: stretch;
+                    flex-direction: column;
+                }
             }
         </style>
         <?php

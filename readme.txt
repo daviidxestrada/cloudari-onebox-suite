@@ -3,7 +3,7 @@ Contributors: cloudari
 Tags: onebox, theatre, calendar, billboard, events
 Requires at least: 6.0
 Requires PHP: 8.0
-Stable tag: 1.3.9
+Stable tag: 1.3.10
 
 Suite Cloudari para integrar OneBox en WordPress: calendario, cartelera, cartelera por espacios, contador y eventos manuales, con soporte para multiples integraciones por teatro.
 
@@ -15,6 +15,7 @@ Cloudari OneBox Suite conecta OneBox con WordPress y pinta las experiencias prin
 - Cartelera clasica con eventos de OneBox y manuales.
 - Cartelera agrupada por espacios / venues.
 - Contador de proximas sesiones por evento.
+- Hero semanal gestionable desde el back office.
 
 El modelo de datos se basa en un Perfil MAIN del teatro y una o varias integraciones OneBox dentro de ese perfil. Esto permite trabajar con carteleras multicanal, unificar venues equivalentes y mantener eventos manuales dentro del mismo flujo visual.
 
@@ -203,6 +204,11 @@ Desde la version 1.3.7, esta limpieza tambien borra las caches de sesiones por r
 - Usar HTTPS y cache a nivel de servidor si aplica.
 
 == Changelog ==
+= 1.3.10 =
+* El plugin pasa a mostrarse como `Cloudari OneBox Suite` sin limitar el titulo a calendario y cartelera.
+* La pantalla de Hero semanal permite anadir slides desde un boton sin usar una fila vacia permanente.
+* Los campos de imagen desktop y movil se integran con la biblioteca de medios de WordPress y rellenan URL y texto alt.
+
 = 1.3.9 =
 * Nuevo shortcode `[cloudari_weekly_hero]` para renderizar un hero tipo carrusel con orden semanal calculado en servidor.
 * Nueva pantalla `Cloudari OneBox > Hero semanal` para gestionar slides, enlaces e imagenes desde el back office.
@@ -258,6 +264,9 @@ Desde la version 1.3.7, esta limpieza tambien borra las caches de sesiones por r
 * Release inicial con multi-integracion, eventos manuales y overrides.
 
 == Upgrade Notice ==
+= 1.3.10 =
+Mejora de gestion del Hero semanal: anadir slides y seleccionar imagenes desde la biblioteca de medios.
+
 = 1.3.9 =
 Nuevo hero semanal gestionable desde el back office con render server-side para evitar el flash del primer slide.
 
