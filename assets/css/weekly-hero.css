@@ -1,0 +1,178 @@
+.cloudari-weekly-hero-widget {
+  display: block;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #050505;
+}
+
+.cloudari-weekly-hero-widget *,
+.cloudari-weekly-hero-widget *::before,
+.cloudari-weekly-hero-widget *::after {
+  box-sizing: border-box;
+}
+
+.cloudari-weekly-hero {
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: 83vh;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.cloudari-weekly-hero .swiper-wrapper,
+.cloudari-weekly-hero .swiper-slide,
+.cloudari-weekly-hero__slide,
+.cloudari-weekly-hero__slide picture {
+  height: 100%;
+}
+
+.cloudari-weekly-hero .swiper-slide {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #050505;
+}
+
+.cloudari-weekly-hero__slide {
+  display: block;
+  width: 100%;
+  color: inherit;
+  text-decoration: none;
+  overflow: hidden;
+}
+
+.cloudari-weekly-hero__slide picture {
+  display: block;
+  width: 100%;
+}
+
+.cloudari-weekly-hero__slide img {
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  border: 0;
+  object-fit: cover;
+  object-position: center;
+  transform: scale(1);
+  transition: transform 700ms ease;
+}
+
+.cloudari-weekly-hero__slide:hover img,
+.cloudari-weekly-hero__slide:focus-visible img {
+  transform: scale(1.035);
+}
+
+.cloudari-weekly-hero::after {
+  content: "";
+  display: block;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  z-index: 2;
+  height: clamp(42px, 5vw, 82px);
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201000%20100'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%23fff8ec'%20d='M500%2097C126.7%2096.3%200.8%2019.8%200%200v100h1000V1c0%2018.4-126.7%2096.8-500%2096z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-position: center bottom;
+}
+
+.cloudari-weekly-hero__arrow {
+  appearance: none;
+  -webkit-appearance: none;
+  position: absolute;
+  top: 50%;
+  z-index: 3;
+  display: block;
+  width: 48px;
+  height: 48px;
+  border: 0;
+  border-radius: 50%;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  transform: translateY(-50%);
+  background: transparent;
+  color: #fff;
+  line-height: 1;
+  font-size: 0;
+  box-shadow: none;
+}
+
+.cloudari-weekly-hero__arrow::before {
+  content: "";
+  position: absolute;
+  inset: 15px;
+  border-top: 3px solid currentColor;
+  border-right: 3px solid currentColor;
+}
+
+.cloudari-weekly-hero__arrow--prev {
+  left: 24px;
+}
+
+.cloudari-weekly-hero__arrow--next {
+  right: 24px;
+}
+
+.cloudari-weekly-hero__arrow--prev::before {
+  transform: rotate(-135deg);
+  left: 18px;
+  right: 12px;
+}
+
+.cloudari-weekly-hero__arrow--next::before {
+  transform: rotate(45deg);
+  left: 12px;
+  right: 18px;
+}
+
+@media (max-width: 767px) {
+  .cloudari-weekly-hero {
+    height: 35vh;
+    min-height: 0;
+  }
+
+  .cloudari-weekly-hero::after {
+    display: none;
+    content: none;
+  }
+
+  .cloudari-weekly-hero__arrow {
+    width: 38px;
+    height: 38px;
+  }
+
+  .cloudari-weekly-hero__arrow::before {
+    inset: 12px;
+    border-width: 2px;
+  }
+
+  .cloudari-weekly-hero__arrow--prev {
+    left: 12px;
+  }
+
+  .cloudari-weekly-hero__arrow--next {
+    right: 12px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .cloudari-weekly-hero {
+    height: 65vh;
+    min-height: 0;
+  }
+
+  .cloudari-weekly-hero::after {
+    display: none;
+    content: none;
+  }
+}

@@ -3,7 +3,7 @@ Contributors: cloudari
 Tags: onebox, theatre, calendar, billboard, events
 Requires at least: 6.0
 Requires PHP: 8.0
-Stable tag: 1.3.8
+Stable tag: 1.3.9
 
 Suite Cloudari para integrar OneBox en WordPress: calendario, cartelera, cartelera por espacios, contador y eventos manuales, con soporte para multiples integraciones por teatro.
 
@@ -90,6 +90,12 @@ Opcionales en `wp-config.php`:
 - `event_id` indica el evento objetivo.
 - `extra_days`, `duration` y `age` permiten ajustar la ficha.
 
+`[cloudari_weekly_hero]`
+
+- Muestra un hero tipo carrusel con orden semanal calculado en servidor.
+- Los slides se gestionan desde Cloudari OneBox > Hero semanal.
+- Atributos opcionales: `autoplay_delay="5000"` y `arrows="0"` para ocultar flechas.
+
 == Widgets HTML ==
 Los widgets HTML estan en la carpeta `widgets/`.
 
@@ -149,6 +155,7 @@ Options:
 - `cloudari_onebox_profiles`
 - `cloudari_onebox_active_profile`
 - `cloudari_onebox_event_overrides`
+- `cloudari_weekly_hero_slides`
 
 Transients:
 
@@ -196,6 +203,11 @@ Desde la version 1.3.7, esta limpieza tambien borra las caches de sesiones por r
 - Usar HTTPS y cache a nivel de servidor si aplica.
 
 == Changelog ==
+= 1.3.9 =
+* Nuevo shortcode `[cloudari_weekly_hero]` para renderizar un hero tipo carrusel con orden semanal calculado en servidor.
+* Nueva pantalla `Cloudari OneBox > Hero semanal` para gestionar slides, enlaces e imagenes desde el back office.
+* El primer slide semanal se entrega ya como primer elemento HTML para evitar saltos visuales al cargar en Elementor.
+
 = 1.3.8 =
 * El campo `Espacio / venue` de eventos manuales pasa de texto libre a selector con los espacios detectados desde OneBox.
 * El selector conserva valores manuales ya guardados aunque no aparezcan en la API, para evitar perdida accidental de datos.
@@ -246,6 +258,9 @@ Desde la version 1.3.7, esta limpieza tambien borra las caches de sesiones por r
 * Release inicial con multi-integracion, eventos manuales y overrides.
 
 == Upgrade Notice ==
+= 1.3.9 =
+Nuevo hero semanal gestionable desde el back office con render server-side para evitar el flash del primer slide.
+
 = 1.3.8 =
 El venue de eventos manuales ahora se elige desde un selector alimentado por OneBox, manteniendo valores antiguos guardados.
 

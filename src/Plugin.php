@@ -7,6 +7,7 @@ namespace Cloudari\Onebox;
 use Cloudari\Onebox\Admin\SettingsPage;
 
 use Cloudari\Onebox\Admin\EventOverridesPage;
+use Cloudari\Onebox\Admin\WeeklyHeroPage;
 
 use Cloudari\Onebox\Rest\Routes;
 
@@ -56,6 +57,7 @@ final class Plugin
 
         add_action( 'admin_menu', [ SettingsPage::class, 'register' ] );
         add_action( 'admin_menu', [ EventOverridesPage::class, 'registerMenu' ] );
+        add_action( 'admin_menu', [ WeeklyHeroPage::class, 'registerMenu' ] );
 
 
 

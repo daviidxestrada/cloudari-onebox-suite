@@ -333,4 +333,37 @@ final class Enqueue
             ]
         );
     }
+
+    public static function weeklyHero(): void
+    {
+        wp_enqueue_style(
+            'cloudari-swiper',
+            'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css',
+            [],
+            '11'
+        );
+
+        wp_enqueue_style(
+            'cloudari-weekly-hero',
+            CLOUDARI_ONEBOX_URL . 'assets/css/weekly-hero.css',
+            ['cloudari-swiper'],
+            self::assetVersion('assets/css/weekly-hero.css')
+        );
+
+        wp_enqueue_script(
+            'cloudari-swiper',
+            'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js',
+            [],
+            '11',
+            true
+        );
+
+        wp_enqueue_script(
+            'cloudari-weekly-hero',
+            CLOUDARI_ONEBOX_URL . 'assets/js/weekly-hero.js',
+            ['cloudari-swiper'],
+            self::assetVersion('assets/js/weekly-hero.js'),
+            true
+        );
+    }
 }
