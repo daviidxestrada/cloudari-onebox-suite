@@ -5,8 +5,8 @@
    *  CONFIG
    *  ========================= */
   const CONFIG = Object.freeze({
-    // Bump de versión para limpiar caché vieja de categorías
-    CACHE_KEY: "obx_events_v10_manual_modes",
+    // Bump de versión para limpiar caché local con manuales borrados.
+    CACHE_KEY: "obx_events_v11_manual_delete_sync",
     CACHE_TTL_MS: 24 * 60 * 60 * 1000,
     CHUNK_SIZE: 24,
 

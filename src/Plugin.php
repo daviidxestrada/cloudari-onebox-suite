@@ -20,6 +20,8 @@ use Cloudari\Onebox\Domain\ManualEvents\Taxonomy as ManualTaxonomy;
 
 use Cloudari\Onebox\Domain\ManualEvents\MetaBox as ManualMetaBox;
 
+use Cloudari\Onebox\Domain\ManualEvents\Lifecycle as ManualLifecycle;
+
 
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -136,6 +138,8 @@ final class Plugin
         add_action( 'admin_enqueue_scripts', [ ManualMetaBox::class, 'enqueueAdminAssets' ] );
 
         add_action( 'save_post_' . ManualPostType::SLUG, [ ManualMetaBox::class, 'save' ] );
+
+        ManualLifecycle::register();
 
     }
 

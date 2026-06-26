@@ -3,7 +3,7 @@ Contributors: cloudari
 Tags: onebox, theatre, calendar, billboard, events
 Requires at least: 6.0
 Requires PHP: 8.0
-Stable tag: 1.3.12
+Stable tag: 1.3.13
 
 Suite Cloudari para integrar OneBox en WordPress: calendario, cartelera, cartelera por espacios, contador y eventos manuales, con soporte para multiples integraciones por teatro.
 
@@ -196,6 +196,11 @@ Desde la version 1.3.7, esta limpieza tambien borra las caches de sesiones por r
 - Usar HTTPS y cache a nivel de servidor si aplica.
 
 == Changelog ==
+= 1.3.13 =
+* Fix: borrar, mandar a papelera, restaurar o cambiar el estado de un evento manual limpia inmediatamente las caches de cartelera, cartelera por espacios y sesiones.
+* La rutina de mantenimiento por version limpia caches al actualizar, para retirar manuales ya borrados antes de instalar este fix.
+* Nueva clave de cache local de cartelera clasica para evitar que navegadores con datos antiguos sigan mostrando manuales eliminados.
+
 = 1.3.12 =
 * Downgrade funcional: se retira la seccion Hero semanal, su shortcode y sus assets.
 * El plugin vuelve al alcance previo a `1.3.9`, manteniendo las mejoras publicadas hasta `1.3.8`.
@@ -250,6 +255,9 @@ Desde la version 1.3.7, esta limpieza tambien borra las caches de sesiones por r
 * Release inicial con multi-integracion, eventos manuales y overrides.
 
 == Upgrade Notice ==
+= 1.3.13 =
+Limpia caches al actualizar y sincroniza borrados de eventos manuales con todas las carteleras.
+
 = 1.3.12 =
 Se retira el Hero semanal introducido en `1.3.9`; usa esta version para volver al comportamiento previo.
 
