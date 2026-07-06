@@ -1257,6 +1257,7 @@ final class SettingsPage
                                 $safeKey = sanitize_key((string)$key);
                                 $secretId = 'cloudari_client_secret_' . $safeKey;
                                 $isDefault = ($defaultIntegration === $integration->slug);
+                                $hasSecret = ($integration->clientSecret !== '');
                             ?>
                             <div class="cloudari-integration" data-integration>
                                 <div class="cloudari-integration-header">
@@ -1295,10 +1296,13 @@ final class SettingsPage
                                                     type="password"
                                                     id="<?php echo esc_attr($secretId); ?>"
                                                     name="integrations[<?php echo esc_attr($integration->slug); ?>][client_secret]"
-                                                    value="<?php echo esc_attr($integration->clientSecret); ?>"
+                                                    value=""
                                                     class="regular-text"
                                                     autocomplete="off"
                                                     data-secret-input
+                                                    placeholder="<?php echo $hasSecret
+                                                        ? esc_attr('•••••••• (guardado — deja vacio para conservarlo)')
+                                                        : esc_attr('Introduce el client secret'); ?>"
                                                 />
                                                 <button
                                                     type="button"
@@ -1309,6 +1313,11 @@ final class SettingsPage
                                                     Mostrar
                                                 </button>
                                             </div>
+                                            <p class="description">
+                                                <?php echo $hasSecret
+                                                    ? 'Hay un client secret guardado y cifrado. Dejalo vacio para conservarlo, o escribe uno nuevo para reemplazarlo.'
+                                                    : 'El client secret se guarda cifrado en la base de datos.'; ?>
+                                            </p>
                                         </td>
                                     </tr>
                                     <tr>

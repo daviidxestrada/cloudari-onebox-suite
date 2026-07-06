@@ -1,6 +1,8 @@
 <?php
 namespace Cloudari\Onebox\Domain\Theatre;
 
+use Cloudari\Onebox\Support\Secret;
+
 final class ProfileRepository
 {
     private const OPTION_PROFILES = 'cloudari_onebox_profiles';
@@ -32,6 +34,7 @@ final class ProfileRepository
 
             $data['slug'] = $slug;
             $migrated = self::migrateLegacyStyleData($data);
+            $migrated = self::migrateIntegrationSecrets($migrated);
             if ($migrated !== $data) {
                 $data = $migrated;
                 $raw[$slug] = $data;
@@ -78,6 +81,35 @@ final class ProfileRepository
         $all[$profile->slug] = $profile->toArray();
         update_option(self::OPTION_PROFILES, $all);
         update_option(self::OPTION_ACTIVE, $profile->slug);
+    }
+
+    /**
+     * Cifra los client_secret que aun esten en texto plano (instalaciones
+     * anteriores a la introduccion del cifrado). Se ejecuta al leer los perfiles
+     * y persiste una sola vez; los ya cifrados no se tocan.
+     */
+    private static function migrateIntegrationSecrets(array $data): array
+    {
+        if (isset($data['integrations']) && is_array($data['integrations'])) {
+            foreach ($data['integrations'] as $slug => $row) {
+                if (!is_array($row)) {
+                    continue;
+                }
+
+                $secret = (string) ($row['client_secret'] ?? '');
+                if ($secret !== '' && !Secret::isEncrypted($secret)) {
+                    $data['integrations'][$slug]['client_secret'] = Secret::encrypt($secret);
+                }
+            }
+        }
+
+        // Formato legacy con el secreto a nivel raiz del perfil.
+        $legacySecret = (string) ($data['client_secret'] ?? '');
+        if ($legacySecret !== '' && !Secret::isEncrypted($legacySecret)) {
+            $data['client_secret'] = Secret::encrypt($legacySecret);
+        }
+
+        return $data;
     }
 
     private static function migrateLegacyStyleData(array $data): array

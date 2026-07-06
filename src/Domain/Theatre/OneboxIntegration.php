@@ -1,6 +1,8 @@
 <?php
 namespace Cloudari\Onebox\Domain\Theatre;
 
+use Cloudari\Onebox\Support\Secret;
+
 final class OneboxIntegration
 {
     public string $slug;
@@ -50,11 +52,16 @@ final class OneboxIntegration
             $rawBase = '';
         }
 
+        // El secreto se guarda cifrado (ver Secret). Secret::decrypt() devuelve
+        // el texto plano y deja pasar sin cambios los secretos antiguos que aun
+        // esten en texto plano (migracion transparente).
+        $clientSecret = Secret::decrypt((string)($data['client_secret'] ?? ''));
+
         return new self(
             $slug,
             (string)($data['label'] ?? 'OneBox'),
             (string)($data['channel_id'] ?? ''),
-            (string)($data['client_secret'] ?? ''),
+            $clientSecret,
             (string)($data['api_catalog_url'] ?? 'https://api.oneboxtds.com/catalog-api/v1'),
             (string)($data['api_auth_url'] ?? 'https://oauth2.oneboxtds.com/oauth/token'),
             (string)$rawBase
@@ -67,7 +74,8 @@ final class OneboxIntegration
             'slug'           => $this->slug,
             'label'          => $this->label,
             'channel_id'     => $this->channelId,
-            'client_secret'  => $this->clientSecret,
+            // Se cifra en reposo. Secret::encrypt() no re-cifra si ya lo estaba.
+            'client_secret'  => Secret::encrypt($this->clientSecret),
             'api_catalog_url'=> $this->apiCatalogUrl,
             'api_auth_url'   => $this->apiAuthUrl,
             'purchase_base'  => $this->purchaseBaseUrl,

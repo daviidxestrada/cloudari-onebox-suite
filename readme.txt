@@ -200,6 +200,7 @@ Desde la version 1.3.7, esta limpieza tambien borra las caches de sesiones por r
 * Fix: las horas y fechas de los eventos en calendario, cartelera y cartelera por espacios se muestran siempre en horario de Espana (Europe/Madrid), sin depender de la zona horaria/IP del dispositivo del visitante.
 * Antes, visitantes fuera de Espana (p. ej. Portugal) veian las horas desplazadas y algunos eventos cerca de medianoche caian en el dia equivocado.
 * Fix: la invalidacion de cache (cartelera, cartelera por espacios y sesiones) pasa a un sistema de versionado en lugar de borrar transients por SQL. Ahora funciona tambien en instalaciones con object cache persistente (Redis/Memcached), donde antes la cache no se limpiaba al editar o borrar eventos.
+* Seguridad: el client_secret de OneBox se guarda ahora cifrado (libsodium o AES-256-GCM) en lugar de en texto plano, y deja de mostrarse en el formulario de ajustes. Los secretos existentes se cifran automaticamente al actualizar. Opcional: define CLOUDARI_ONEBOX_ENC_KEY en wp-config.php para una clave de cifrado estable.
 
 = 1.3.13 =
 * Fix: borrar, mandar a papelera, restaurar o cambiar el estado de un evento manual limpia inmediatamente las caches de cartelera, cartelera por espacios y sesiones.
@@ -261,7 +262,7 @@ Desde la version 1.3.7, esta limpieza tambien borra las caches de sesiones por r
 
 == Upgrade Notice ==
 = 1.3.14 =
-Los horarios de los eventos se fijan a la hora de Espana (Madrid) para todos los visitantes, corrigiendo el desfase que veian desde otras zonas horarias. Ademas se corrige la invalidacion de cache en sitios con object cache (Redis/Memcached).
+Los horarios de los eventos se fijan a la hora de Espana (Madrid) para todos los visitantes, corrigiendo el desfase que veian desde otras zonas horarias. Ademas se corrige la invalidacion de cache en sitios con object cache (Redis/Memcached) y el client_secret de OneBox pasa a guardarse cifrado.
 
 = 1.3.13 =
 Limpia caches al actualizar y sincroniza borrados de eventos manuales con todas las carteleras.
