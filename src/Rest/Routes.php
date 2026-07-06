@@ -7,7 +7,7 @@ use Cloudari\Onebox\Domain\Billboard\VenueBillboard;
 use Cloudari\Onebox\Domain\ManualEvents\Repository as ManualRepository;
 use Cloudari\Onebox\Domain\Theatre\ProfileRepository;
 use Cloudari\Onebox\Infrastructure\Onebox\Events;
-use Cloudari\Onebox\Infrastructure\Onebox\Sessions;
+use Cloudari\Onebox\Support\CacheVersion;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -88,35 +88,19 @@ final class Routes
     {
         $profile = ProfileRepository::getActive();
         $slug = !empty($profile->slug) ? sanitize_key((string)$profile->slug) : 'default';
-        return self::BILLBOARD_CACHE_KEY_PREFIX . $slug;
+        return self::BILLBOARD_CACHE_KEY_PREFIX . CacheVersion::token() . $slug;
     }
 
+    /**
+     * Invalida cartelera, cartelera por espacios y sesiones de golpe.
+     *
+     * Las tres cachees comparten el mismo contador de version (CacheVersion),
+     * asi que basta con incrementarlo una vez: no hace falta borrar transients
+     * uno a uno y funciona tambien con object cache (Redis/Memcached).
+     */
     public static function clearBillboardCache(): void
     {
-        delete_transient(self::getBillboardCacheKey());
-        self::clearTransientsByPrefix(self::BILLBOARD_CACHE_KEY_PREFIX);
-        VenueBillboard::clearCache();
-        Sessions::clearCache();
-    }
-
-    private static function clearTransientsByPrefix(string $prefix): void
-    {
-        global $wpdb;
-
-        if (!isset($wpdb) || !($wpdb instanceof \wpdb) || $prefix === '') {
-            return;
-        }
-
-        $like = $wpdb->esc_like('_transient_' . $prefix) . '%';
-        $timeoutLike = $wpdb->esc_like('_transient_timeout_' . $prefix) . '%';
-
-        $wpdb->query(
-            $wpdb->prepare(
-                "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
-                $like,
-                $timeoutLike
-            )
-        );
+        CacheVersion::bump();
     }
 
     public static function getBillboardEvents(WP_REST_Request $request)

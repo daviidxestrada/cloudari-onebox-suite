@@ -4,6 +4,7 @@ namespace Cloudari\Onebox\Infrastructure\Onebox;
 use Cloudari\Onebox\Domain\ManualEvents\Repository as ManualRepository;
 use Cloudari\Onebox\Domain\Theatre\OneboxIntegration;
 use Cloudari\Onebox\Domain\Theatre\ProfileRepository;
+use Cloudari\Onebox\Support\CacheVersion;
 use Cloudari\Onebox\Support\Logger;
 
 if (!defined('ABSPATH')) {
@@ -82,22 +83,9 @@ final class Sessions
 
     public static function clearCache(): void
     {
-        global $wpdb;
-
-        if (!isset($wpdb) || !($wpdb instanceof \wpdb)) {
-            return;
-        }
-
-        $like = $wpdb->esc_like('_transient_' . self::SESSIONS_CACHE_KEY_PREFIX) . '%';
-        $timeoutLike = $wpdb->esc_like('_transient_timeout_' . self::SESSIONS_CACHE_KEY_PREFIX) . '%';
-
-        $wpdb->query(
-            $wpdb->prepare(
-                "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
-                $like,
-                $timeoutLike
-            )
-        );
+        // Invalidacion por versionado (ver CacheVersion): funciona tambien con
+        // object cache persistente, donde los transients no estan en wp_options.
+        CacheVersion::bump();
     }
 
     public static function getRangeSessions(string $inicio, string $fin): array
@@ -327,7 +315,7 @@ final class Sessions
 
     private static function buildCacheKey(string $profileSlug, string $inicio, string $fin): string
     {
-        return self::SESSIONS_CACHE_KEY_PREFIX . $profileSlug . '_' . $inicio . '_' . $fin;
+        return self::SESSIONS_CACHE_KEY_PREFIX . CacheVersion::token() . $profileSlug . '_' . $inicio . '_' . $fin;
     }
 
     private static function applyIntegrationContext(array $session, OneboxIntegration $integration): array
