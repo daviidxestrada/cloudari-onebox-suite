@@ -100,12 +100,32 @@
     return text.charAt(0).toUpperCase() + text.slice(1);
   };
 
-  const sameDay = (left, right) =>
-    left &&
-    right &&
-    left.getFullYear() === right.getFullYear() &&
-    left.getMonth() === right.getMonth() &&
-    left.getDate() === right.getDate();
+  // Todos los teatros operan en España: fijamos la zona horaria a Madrid para que
+  // las fechas de los eventos NO dependan de la IP/zona del navegador.
+  const CLOUDARI_TZ = "Europe/Madrid";
+  const cloudariMadridYmd = (() => {
+    let fmt = null;
+    return (d) => {
+      if (!(d instanceof Date) || Number.isNaN(d.getTime())) return "";
+      if (!fmt) {
+        fmt = new Intl.DateTimeFormat("en-GB", {
+          timeZone: CLOUDARI_TZ,
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        });
+      }
+      const out = {};
+      fmt.formatToParts(d).forEach((p) => { out[p.type] = p.value; });
+      return `${out.year}-${out.month}-${out.day}`;
+    };
+  })();
+
+  const sameDay = (left, right) => {
+    const yl = cloudariMadridYmd(left);
+    const yr = cloudariMadridYmd(right);
+    return Boolean(yl) && yl === yr;
+  };
 
   const formatDateFull = (value) => {
     if (!value) {
@@ -118,6 +138,7 @@
     }
 
     return date.toLocaleDateString("es-ES", {
+      timeZone: CLOUDARI_TZ,
       day: "2-digit",
       month: "long",
       year: "numeric",

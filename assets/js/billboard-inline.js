@@ -107,15 +107,37 @@
   const clamp = (n, min, max) => Math.min(Math.max(n, min), max);
   const eTime = (d) =>
     d instanceof Date && !isNaN(d) ? d.getTime() : Number.POSITIVE_INFINITY;
-  const sameDay = (a, b) =>
-    a &&
-    b &&
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate();
+
+  // Todos los teatros operan en España: fijamos la zona horaria a Madrid para que
+  // las fechas de los eventos NO dependan de la IP/zona del navegador.
+  const CLOUDARI_TZ = "Europe/Madrid";
+  const cloudariMadridYmd = (() => {
+    let fmt = null;
+    return (d) => {
+      if (!(d instanceof Date) || isNaN(d)) return "";
+      if (!fmt) {
+        fmt = new Intl.DateTimeFormat("en-GB", {
+          timeZone: CLOUDARI_TZ,
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        });
+      }
+      const out = {};
+      fmt.formatToParts(d).forEach((p) => { out[p.type] = p.value; });
+      return `${out.year}-${out.month}-${out.day}`;
+    };
+  })();
+
+  const sameDay = (a, b) => {
+    const ya = cloudariMadridYmd(a);
+    const yb = cloudariMadridYmd(b);
+    return Boolean(ya) && ya === yb;
+  };
   const fmtDateFull = (d) =>
     d
       ? new Date(d).toLocaleDateString("es-ES", {
+          timeZone: CLOUDARI_TZ,
           day: "2-digit",
           month: "long",
           year: "numeric",

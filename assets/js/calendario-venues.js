@@ -46,8 +46,41 @@
     return String(value).padStart(2, "0");
   }
 
+  // Todos los teatros operan en España: fijamos la zona horaria a Madrid para que
+  // las horas y fechas de los eventos NO dependan de la IP/zona del navegador
+  // (p. ej. visitantes desde Portugal veían las horas desplazadas).
+  const CLOUDARI_TZ = "Europe/Madrid";
+
+  const cloudariMadridParts = (function () {
+    let fmt = null;
+    return function (date) {
+      if (!fmt) {
+        fmt = new Intl.DateTimeFormat("en-GB", {
+          timeZone: CLOUDARI_TZ,
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          hourCycle: "h23",
+        });
+      }
+      const out = {};
+      fmt.formatToParts(date).forEach(function (p) { out[p.type] = p.value; });
+      return out;
+    };
+  })();
+
+  // "HH:MM" en horario de Madrid
   function fmtTimeFromDate(date) {
-    return `${pad2(date.getHours())}:${pad2(date.getMinutes())}`;
+    const p = cloudariMadridParts(date);
+    return `${p.hour}:${p.minute}`;
+  }
+
+  // "YYYY-MM-DD" en horario de Madrid (para agrupar por día en la celda correcta)
+  function ymdFromDate(date) {
+    const p = cloudariMadridParts(date);
+    return `${p.year}-${p.month}-${p.day}`;
   }
 
   function toDateSafe(value) {
@@ -126,8 +159,7 @@
           return;
         }
 
-        const fechaFormateada =
-          `${fechaEvento.getFullYear()}-${String(fechaEvento.getMonth() + 1).padStart(2, "0")}-${String(fechaEvento.getDate()).padStart(2, "0")}`;
+        const fechaFormateada = ymdFromDate(fechaEvento);
 
         if (!eventos[fechaFormateada]) {
           eventos[fechaFormateada] = [];
