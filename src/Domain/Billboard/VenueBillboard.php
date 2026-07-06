@@ -5,6 +5,7 @@ use Cloudari\Onebox\Domain\Theatre\ProfileRepository;
 use Cloudari\Onebox\Domain\Theatre\TheatreProfile;
 use Cloudari\Onebox\Infrastructure\Onebox\Events;
 use Cloudari\Onebox\Infrastructure\Onebox\Sessions;
+use Cloudari\Onebox\Support\CacheVersion;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -54,23 +55,9 @@ final class VenueBillboard
 
     public static function clearCache(): void
     {
-        delete_transient(self::getCacheKey());
-
-        global $wpdb;
-        if (!isset($wpdb) || !($wpdb instanceof \wpdb)) {
-            return;
-        }
-
-        $like = $wpdb->esc_like('_transient_' . self::CACHE_KEY_PREFIX) . '%';
-        $timeoutLike = $wpdb->esc_like('_transient_timeout_' . self::CACHE_KEY_PREFIX) . '%';
-
-        $wpdb->query(
-            $wpdb->prepare(
-                "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
-                $like,
-                $timeoutLike
-            )
-        );
+        // Invalidacion por versionado (ver CacheVersion): funciona tambien con
+        // object cache persistente, donde los transients no estan en wp_options.
+        CacheVersion::bump();
     }
 
     private static function getCacheKey(): string
@@ -78,7 +65,7 @@ final class VenueBillboard
         $profile = ProfileRepository::getActive();
         $slug = !empty($profile->slug) ? sanitize_key((string) $profile->slug) : 'default';
 
-        return self::CACHE_KEY_PREFIX . $slug;
+        return self::CACHE_KEY_PREFIX . CacheVersion::token() . $slug;
     }
 
     private static function countEvents(array $venues): int
