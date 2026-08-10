@@ -2,7 +2,7 @@
   "use strict";
 
   const config = window.cloudariFeaturedPopup;
-  const dialog = document.querySelector("[data-cloudari-event-popup]");
+  const dialog = document.querySelector("[data-cloudari-obx56934-popup]");
   if (!config?.endpoint || !(dialog instanceof HTMLDialogElement)) return;
 
   const path = window.location.pathname.replace(/\/+$/, "") || "/";
@@ -11,7 +11,7 @@
     return;
   }
 
-  const roles = (name) => dialog.querySelector(`[data-role="${name}"]`);
+  const roles = (name) => dialog.querySelector(`[data-obx56934-role="${name}"]`);
   const fields = {
     days: roles("days"),
     hours: roles("hours"),

@@ -75,45 +75,45 @@ final class EventPopup
         self::enqueue();
         ob_start();
         ?>
-        <dialog class="cloudari-event-popup" data-cloudari-event-popup hidden aria-labelledby="cloudari-event-popup-title" aria-describedby="cloudari-event-popup-description">
-            <article class="cloudari-event-popup__card">
-                <button class="cloudari-event-popup__close" type="button" aria-label="Cerrar" data-role="close">
+        <dialog class="cloudari-obx56934-popup" data-cloudari-obx56934-popup hidden aria-labelledby="cloudari-obx56934-popup-title" aria-describedby="cloudari-obx56934-popup-description">
+            <article class="cloudari-obx56934-popup__card">
+                <button class="cloudari-obx56934-popup__close" type="button" aria-label="Cerrar" data-obx56934-role="close">
                     <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg>
                 </button>
 
-                <div class="cloudari-event-popup__layout">
-                    <header class="cloudari-event-popup__title-block">
-                        <h2 id="cloudari-event-popup-title">
+                <div class="cloudari-obx56934-popup__layout">
+                    <header class="cloudari-obx56934-popup__title-block">
+                        <h2 id="cloudari-obx56934-popup-title">
                             <span>Los secretos del castillo</span>
                             <small>— Jorge Blass</small>
                         </h2>
                     </header>
 
-                    <div class="cloudari-event-popup__description">
-                        <p class="cloudari-event-popup__lead">Una experiencia mágica en el Castillo de Pedraza</p>
-                        <p id="cloudari-event-popup-description">Recorre las estancias de la fortaleza del siglo XIII guiado por ilusionistas. El viaje culmina con un espectáculo exclusivo de Jorge Blass al atardecer.</p>
+                    <div class="cloudari-obx56934-popup__description">
+                        <p class="cloudari-obx56934-popup__lead">Una experiencia mágica en el Castillo de Pedraza</p>
+                        <p id="cloudari-obx56934-popup-description">Recorre las estancias de la fortaleza del siglo XIII guiado por ilusionistas. El viaje culmina con un espectáculo exclusivo de Jorge Blass al atardecer.</p>
                     </div>
 
-                    <figure class="cloudari-event-popup__poster">
-                        <img data-role="poster" width="680" height="370" alt="Cartel de Los secretos del castillo — Jorge Blass">
+                    <figure class="cloudari-obx56934-popup__poster">
+                        <img data-obx56934-role="poster" width="680" height="370" alt="Cartel de Los secretos del castillo — Jorge Blass">
                     </figure>
 
-                    <section class="cloudari-event-popup__booking" aria-label="Próxima función y entradas">
-                        <p class="cloudari-event-popup__remaining" data-role="days-label"></p>
+                    <section class="cloudari-obx56934-popup__booking" aria-label="Próxima función y entradas">
+                        <p class="cloudari-obx56934-popup__remaining" data-obx56934-role="days-label"></p>
 
-                        <div class="cloudari-event-popup__countdown" role="timer" aria-label="Tiempo restante para la próxima función">
-                            <div><strong data-role="days">--</strong><small>Días</small></div>
+                        <div class="cloudari-obx56934-popup__countdown" role="timer" aria-label="Tiempo restante para la próxima función">
+                            <div><strong data-obx56934-role="days">--</strong><small>Días</small></div>
                             <i aria-hidden="true"></i>
-                            <div><strong data-role="hours">--</strong><small>Horas</small></div>
+                            <div><strong data-obx56934-role="hours">--</strong><small>Horas</small></div>
                             <i aria-hidden="true"></i>
-                            <div><strong data-role="minutes">--</strong><small>Min</small></div>
+                            <div><strong data-obx56934-role="minutes">--</strong><small>Min</small></div>
                             <i aria-hidden="true"></i>
-                            <div><strong data-role="seconds">--</strong><small>Seg</small></div>
+                            <div><strong data-obx56934-role="seconds">--</strong><small>Seg</small></div>
                         </div>
 
-                        <div class="cloudari-event-popup__action">
+                        <div class="cloudari-obx56934-popup__action">
                             <p>Entradas muy limitadas</p>
-                            <a class="cloudari-event-popup__cta" data-role="purchase" href="#" hidden>
+                            <a class="cloudari-obx56934-popup__cta" data-obx56934-role="purchase" href="#" hidden>
                                 Comprar entradas
                                 <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h14m-7-7 7 7-7 7" /></svg>
                             </a>

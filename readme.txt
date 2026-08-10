@@ -3,7 +3,7 @@ Contributors: cloudari
 Tags: onebox, theatre, calendar, billboard, events
 Requires at least: 6.0
 Requires PHP: 8.0
-Stable tag: 1.3.16
+Stable tag: 1.3.17
 
 Suite Cloudari para integrar OneBox en WordPress: calendario, cartelera, cartelera por espacios, contador y eventos manuales, con soporte para multiples integraciones por teatro.
 
@@ -206,6 +206,11 @@ Desde la version 1.3.7, esta limpieza tambien borra las caches de sesiones por r
 - Usar HTTPS y cache a nivel de servidor si aplica.
 
 == Changelog ==
+
+= 1.3.17 =
+- Aisla el popup con clases y atributos exclusivos del evento OneBox 56934.
+- Refuerza los estilos criticos con `!important` para impedir overrides del tema y Elementor.
+- Normaliza botones, enlaces, SVG, tipografia y espaciado dentro del dialogo.
 
 = 1.3.16 =
 - Publica oficialmente el popup de Jorge Blass como shortcode opt-in `[cloudari_event_popup]`.
