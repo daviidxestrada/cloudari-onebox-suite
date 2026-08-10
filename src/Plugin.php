@@ -21,6 +21,7 @@ use Cloudari\Onebox\Domain\ManualEvents\Taxonomy as ManualTaxonomy;
 use Cloudari\Onebox\Domain\ManualEvents\MetaBox as ManualMetaBox;
 
 use Cloudari\Onebox\Domain\ManualEvents\Lifecycle as ManualLifecycle;
+use Cloudari\Onebox\Presentation\Popup\EventPopup;
 
 
 
@@ -96,6 +97,9 @@ final class Plugin
          */
 
         add_action( 'init', [ ShortcodeRegister::class, 'register' ] );
+
+        // Endpoint de datos para el shortcode [cloudari_event_popup].
+        EventPopup::register();
 
 
 

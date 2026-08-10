@@ -3,6 +3,7 @@
 namespace Cloudari\Onebox\Presentation\Shortcodes;
 
 use Cloudari\Onebox\Presentation\Assets\Enqueue;
+use Cloudari\Onebox\Presentation\Popup\EventPopup;
 
 final class Register
 {
@@ -14,6 +15,7 @@ final class Register
         add_shortcode('cloudari_billboard_venues', [static::class, 'billboardVenues']);
         add_shortcode('cloudari_billboard_spaces', [static::class, 'billboardVenues']);
         add_shortcode('cloudari_event_countdown', [static::class, 'eventCountdown']);
+        add_shortcode('cloudari_event_popup', [EventPopup::class, 'shortcode']);
 
     }
 

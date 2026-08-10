@@ -3,7 +3,7 @@ Contributors: cloudari
 Tags: onebox, theatre, calendar, billboard, events
 Requires at least: 6.0
 Requires PHP: 8.0
-Stable tag: 1.3.14
+Stable tag: 1.3.15
 
 Suite Cloudari para integrar OneBox en WordPress: calendario, cartelera, cartelera por espacios, contador y eventos manuales, con soporte para multiples integraciones por teatro.
 
@@ -15,6 +15,7 @@ Cloudari OneBox Suite conecta OneBox con WordPress y pinta las experiencias prin
 - Cartelera clasica con eventos de OneBox y manuales.
 - Cartelera agrupada por espacios / venues.
 - Contador de proximas sesiones por evento.
+- Popup destacado de Jorge Blass en la portada, conectado a las sesiones de OneBox.
 
 El modelo de datos se basa en un Perfil MAIN del teatro y una o varias integraciones OneBox dentro de ese perfil. Esto permite trabajar con carteleras multicanal, unificar venues equivalentes y mantener eventos manuales dentro del mismo flujo visual.
 
@@ -24,6 +25,9 @@ El modelo de datos se basa en un Perfil MAIN del teatro y una o varias integraci
 3. Ve a Cloudari OneBox > Perfil MAIN.
 4. Configura los datos del teatro, las integraciones OneBox y la paleta.
 5. Inserta los shortcodes en tus paginas o pega los widgets HTML donde corresponda.
+
+El popup destacado no se inyecta automaticamente. Para usarlo, inserta `[cloudari_event_popup]` en la portada deseada. El shortcode no genera el popup en paginas interiores, no expone las credenciales en Elementor y deja de mostrarse cuando no quedan sesiones futuras.
+El boton de compra usa la URL base de la integracion y, para este evento, dispone tambien de la ruta oficial de Gran Castillo de Pedraza como fallback.
 
 == Configuration ==
 Perfil MAIN:
@@ -89,6 +93,12 @@ Opcionales en `wp-config.php`:
 - Muestra un bloque de contador o ficha resumida para un evento concreto.
 - `event_id` indica el evento objetivo.
 - `extra_days`, `duration` y `age` permiten ajustar la ficha.
+
+`[cloudari_event_popup]`
+
+- Muestra el popup de Jorge Blass conectado a las sesiones de OneBox.
+- Solo genera salida cuando el shortcode esta colocado en la portada.
+- No afecta a otras instalaciones del plugin que no incluyan este shortcode.
 
 == Widgets HTML ==
 Los widgets HTML estan en la carpeta `widgets/`.
@@ -196,6 +206,13 @@ Desde la version 1.3.7, esta limpieza tambien borra las caches de sesiones por r
 - Usar HTTPS y cache a nivel de servidor si aplica.
 
 == Changelog ==
+
+= 1.3.15 =
+- Anade el popup destacado de Jorge Blass conectado a OneBox.
+- Limita el popup a la portada mediante WordPress y una segunda comprobacion en el navegador.
+- Convierte el popup en el shortcode opt-in `[cloudari_event_popup]`, sin inyeccion automatica.
+- Oculta el popup cuando no quedan sesiones futuras o la API no esta disponible.
+- Calcula los dias de show restantes por fechas distintas y avanza el contador a la siguiente sesion.
 = 1.3.14 =
 * Fix: las horas y fechas de los eventos en calendario, cartelera y cartelera por espacios se muestran siempre en horario de Espana (Europe/Madrid), sin depender de la zona horaria/IP del dispositivo del visitante.
 * Antes, visitantes fuera de Espana (p. ej. Portugal) veian las horas desplazadas y algunos eventos cerca de medianoche caian en el dia equivocado.
