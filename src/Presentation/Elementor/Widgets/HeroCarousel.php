@@ -117,7 +117,7 @@ final class HeroCarousel extends Widget_Base
                 'media_types' => ['image', 'video'],
                 'description' => sprintf(
                     /* translators: %d: ancho en píxeles del punto de corte. */
-                    esc_html__('Se sirve por debajo de %d px. Puede ser de distinto tipo que el de escritorio (por ejemplo, vídeo arriba e imagen abajo). Si se deja vacío se reutiliza el de escritorio.', 'cloudari-onebox'),
+                    esc_html__('Se sirve por debajo de %d px. Puede ser de distinto tipo que el de escritorio (por ejemplo, vídeo arriba e imagen abajo). Si se deja vacío se reutiliza el de escritorio: con vídeo eso significa descargar el archivo grande también por datos móviles, así que conviene subir aquí una versión ligera o una imagen.', 'cloudari-onebox'),
                     self::MOBILE_BREAKPOINT
                 ),
             ]
@@ -691,6 +691,15 @@ final class HeroCarousel extends Widget_Base
             return;
         }
 
+        // Sin medio móvil propio, ambos apuntan al mismo archivo: emitirlo dos
+        // veces solo duplicaría peticiones para mostrar exactamente lo mismo.
+        if ($slide->desktopUrl === $slide->mobileUrl) {
+            echo '<div class="cld-hero__fg">';
+            $this->renderSingleMedia($slide, $slide->desktopUrl, $slide->desktopIsVideo, '', $index === 0);
+            echo '</div>';
+            return;
+        }
+
         $this->renderResponsivePair($slide, $index);
     }
 
@@ -723,6 +732,12 @@ final class HeroCarousel extends Widget_Base
      */
     private function renderResponsivePair(HeroSlide $slide, int $index): void
     {
+        // En el primer cartel se priorizan los dos medios, no solo el de escritorio:
+        // cuál de ellos acaba siendo el LCP depende del ancho de pantalla, y el
+        // servidor no lo sabe. Despriorizar el móvil "por si acaso" hacía que en
+        // el teléfono el medio visible fuese justo el que esperaba a descargarse.
+        // El coste es una descarga de más, y solo en el primer cartel.
+        $isFirst = $index === 0;
         ?>
         <div class="cld-hero__fg">
             <?php
@@ -731,7 +746,7 @@ final class HeroCarousel extends Widget_Base
                 $slide->desktopUrl,
                 $slide->desktopIsVideo,
                 'cld-hero__source--desktop',
-                $index === 0
+                $isFirst
             );
 
             $this->renderSingleMedia(
@@ -739,7 +754,7 @@ final class HeroCarousel extends Widget_Base
                 $slide->mobileUrl,
                 $slide->mobileIsVideo,
                 'cld-hero__source--mobile',
-                false
+                $isFirst
             );
             ?>
         </div>
@@ -770,7 +785,10 @@ final class HeroCarousel extends Widget_Base
                src="<?php echo esc_url($url); ?>"
                <?php if ($slide->posterUrl !== '') { ?>poster="<?php echo esc_url($slide->posterUrl); ?>"<?php } ?>
                <?php if ($slide->alt !== '') { ?>aria-label="<?php echo esc_attr($slide->alt); ?>"<?php } ?>
-               preload="<?php echo $isPriority ? 'metadata' : 'none'; ?>"
+               <?php // El primero se va a reproducir seguro, asi que empieza a bufferear
+                     // con el HTML en vez de esperar al play() del JS. El resto no
+                     // gasta datos hasta que su cartel entra en pantalla. ?>
+               preload="<?php echo $isPriority ? 'auto' : 'none'; ?>"
                muted
                loop
                playsinline

@@ -3,7 +3,7 @@ Contributors: cloudari
 Tags: onebox, theatre, calendar, billboard, events
 Requires at least: 6.0
 Requires PHP: 8.0
-Stable tag: 1.6.0
+Stable tag: 1.6.1
 
 Suite Cloudari para integrar OneBox en WordPress: calendario, cartelera, cartelera por espacios, contador y eventos manuales, con soporte para multiples integraciones por teatro.
 
@@ -206,6 +206,12 @@ Desde la version 1.3.7, esta limpieza tambien borra las caches de sesiones por r
 - Usar HTTPS y cache a nivel de servidor si aplica.
 
 == Changelog ==
+
+= 1.6.1 =
+- Corrige la carga lenta del video en movil: el medio movil del primer cartel se quedaba sin prioridad, asi que en el telefono el medio visible era justo el que esperaba a descargarse.
+- El video del primer cartel empieza a bufferear con el HTML en vez de esperar al JS.
+- Sin medio movil propio, el archivo heredado ya no se emite dos veces.
+- Avisa en el control de que heredar un video de escritorio implica descargarlo entero por datos moviles.
 
 = 1.6.0 =
 - Los iconos de las flechas y del boton de pausa pasan a SVG: simetricos por construccion y sin bordes rotados que los temas descuadren.
