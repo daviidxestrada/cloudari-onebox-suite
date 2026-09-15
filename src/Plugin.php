@@ -23,6 +23,8 @@ use Cloudari\Onebox\Domain\ManualEvents\MetaBox as ManualMetaBox;
 use Cloudari\Onebox\Domain\ManualEvents\Lifecycle as ManualLifecycle;
 use Cloudari\Onebox\Presentation\Popup\EventPopup;
 
+use Cloudari\Onebox\Presentation\Elementor\Bootstrap as ElementorBootstrap;
+
 
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -144,6 +146,24 @@ final class Plugin
         add_action( 'save_post_' . ManualPostType::SLUG, [ ManualMetaBox::class, 'save' ] );
 
         ManualLifecycle::register();
+
+
+
+        /**
+
+         * ELEMENTOR
+
+         * - Categoría "Cloudari" en el panel de widgets
+
+         * - Widget "Cloudari Hero Carrusel"
+
+         *
+
+         * No hace nada si Elementor no está activo.
+
+         */
+
+        ElementorBootstrap::register();
 
     }
 

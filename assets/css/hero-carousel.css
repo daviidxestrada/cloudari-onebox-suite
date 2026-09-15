@@ -1,0 +1,343 @@
+/**
+ * Cloudari Hero Carrusel
+ *
+ * Todos los valores configurables llegan como custom properties escritas por
+ * Elementor desde los `selectors` de los controles. El `!important` se reserva
+ * para los resets de imagen, que es donde los temas suelen pisar el layout.
+ */
+
+.cld-hero {
+  --cld-hero-height: 83vh;
+  --cld-hero-bg: #050505;
+  --cld-hero-zoom: 1.035;
+  --cld-hero-curve-color: #ffffff;
+  --cld-hero-curve-height: 62px;
+  --cld-hero-control-color: #ffffff;
+  --cld-hero-arrow-size: 48px;
+  --cld-hero-arrow-thickness: 3px;
+  --cld-hero-arrow-offset: 24px;
+
+  position: relative;
+  display: block;
+  width: 100%;
+  height: var(--cld-hero-height);
+  margin: 0;
+  padding: 0;
+  background: var(--cld-hero-bg);
+}
+
+/* Sin curva no hay nada que esquivar bajo los controles. */
+.cld-hero--no-curve {
+  --cld-hero-curve-height: 0px;
+}
+
+.cld-hero *,
+.cld-hero *::before,
+.cld-hero *::after {
+  box-sizing: border-box;
+}
+
+.cld-hero__viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.cld-hero__track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  transform: translate3d(0, 0, 0);
+  transition: transform 650ms ease;
+  will-change: transform;
+}
+
+.cld-hero__slide {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: var(--cld-hero-bg);
+}
+
+.cld-hero__media {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-decoration: none;
+}
+
+.cld-hero__media--static {
+  cursor: default;
+}
+
+.cld-hero__media picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.cld-hero__img {
+  display: block;
+  width: 100% !important;
+  max-width: none !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+  object-fit: cover;
+  object-position: var(--cld-hero-pos-x, 50%) var(--cld-hero-pos-y, 50%);
+  transform: scale(1);
+  transition: transform 700ms ease;
+  will-change: transform;
+}
+
+.cld-hero__media:hover .cld-hero__fg .cld-hero__img,
+.cld-hero__media:focus-visible .cld-hero__fg .cld-hero__img {
+  transform: scale(var(--cld-hero-zoom));
+}
+
+/**
+ * Anillo de foco de doble capa. El color de los controles es configurable y los
+ * carteles son impredecibles, así que el par blanco/negro garantiza contraste
+ * sobre cualquier fondo en vez de confiar en el token del tema.
+ */
+.cld-hero__media:focus-visible,
+.cld-hero__arrow:focus-visible,
+.cld-hero__toggle:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: -3px;
+  box-shadow: 0 0 0 3px #000000, inset 0 0 0 3px #000000;
+}
+
+.cld-hero__arrow:focus-visible,
+.cld-hero__toggle:focus-visible {
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px #000000;
+}
+
+.cld-hero__backdrop {
+  display: none;
+}
+
+/**
+ * Curva inferior
+ */
+.cld-hero__curve {
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  z-index: 2;
+  height: var(--cld-hero-curve-height);
+  overflow: hidden;
+  color: var(--cld-hero-curve-color);
+  pointer-events: none;
+}
+
+.cld-hero__curve svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/**
+ * Controles
+ */
+.cld-hero__arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 3;
+  display: block;
+  width: var(--cld-hero-arrow-size);
+  height: var(--cld-hero-arrow-size);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  appearance: none;
+  background: transparent;
+  color: var(--cld-hero-control-color);
+  font-size: 0;
+  line-height: 1;
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: transform 180ms ease;
+}
+
+.cld-hero__arrow:hover,
+.cld-hero__arrow:focus-visible {
+  background: transparent;
+  transform: translateY(-50%) scale(1.04);
+}
+
+.cld-hero__arrow::before {
+  content: "";
+  position: absolute;
+  inset: 31%;
+  border-top: var(--cld-hero-arrow-thickness) solid currentColor;
+  border-right: var(--cld-hero-arrow-thickness) solid currentColor;
+  border-bottom: 0;
+  border-left: 0;
+}
+
+.cld-hero__arrow--prev {
+  left: var(--cld-hero-arrow-offset);
+}
+
+.cld-hero__arrow--prev::before {
+  transform: rotate(-135deg) translate(-8%, -8%);
+}
+
+.cld-hero__arrow--next {
+  right: var(--cld-hero-arrow-offset);
+}
+
+.cld-hero__arrow--next::before {
+  transform: rotate(45deg) translate(-8%, -8%);
+}
+
+.cld-hero__toggle {
+  position: absolute;
+  right: var(--cld-hero-arrow-offset);
+  bottom: calc(var(--cld-hero-curve-height) + 12px);
+  z-index: 3;
+  display: flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  appearance: none;
+  background: rgba(0, 0, 0, 0.45);
+  color: var(--cld-hero-control-color);
+  cursor: pointer;
+}
+
+.cld-hero__toggle-icon {
+  position: relative;
+  display: block;
+  width: 12px;
+  height: 14px;
+}
+
+.cld-hero__toggle-icon::before,
+.cld-hero__toggle-icon::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 3px;
+  height: 100%;
+  background: currentColor;
+}
+
+.cld-hero__toggle-icon::before {
+  left: 1px;
+}
+
+.cld-hero__toggle-icon::after {
+  right: 1px;
+}
+
+/* Pausado: el botón ofrece ahora la acción de reanudar. */
+.cld-hero__toggle[data-paused="true"] .cld-hero__toggle-icon::after {
+  display: none;
+}
+
+.cld-hero__toggle[data-paused="true"] .cld-hero__toggle-icon::before {
+  left: 2px;
+  width: 0;
+  height: 0;
+  background: transparent;
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  border-left: 11px solid currentColor;
+}
+
+.cld-hero__live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.cld-hero__placeholder {
+  display: flex;
+  min-height: 160px;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  border: 1px dashed currentColor;
+  opacity: 0.7;
+  text-align: center;
+}
+
+/**
+ * Cartel completo en pantallas pequeñas: el backdrop desenfocado rellena las
+ * bandas que deja el `contain` sin recortar el cartel.
+ */
+@media (max-width: 1024px) {
+  .cld-hero__slide--contain-mobile .cld-hero__backdrop {
+    position: absolute;
+    z-index: 0;
+    display: block;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .cld-hero__slide--contain-mobile .cld-hero__backdrop .cld-hero__img {
+    object-fit: cover;
+    object-position: center;
+    transform: scale(1.2);
+    filter: blur(24px);
+    transition: none;
+  }
+
+  .cld-hero__slide--contain-mobile .cld-hero__fg {
+    position: relative;
+    z-index: 1;
+  }
+
+  .cld-hero__slide--contain-mobile .cld-hero__fg .cld-hero__img {
+    object-fit: contain;
+    object-position: center;
+  }
+
+  .cld-hero__slide--contain-mobile .cld-hero__media:hover .cld-hero__fg .cld-hero__img,
+  .cld-hero__slide--contain-mobile .cld-hero__media:focus-visible .cld-hero__fg .cld-hero__img {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cld-hero__track,
+  .cld-hero__img,
+  .cld-hero__arrow {
+    transition: none;
+  }
+
+  .cld-hero__media:hover .cld-hero__fg .cld-hero__img,
+  .cld-hero__media:focus-visible .cld-hero__fg .cld-hero__img {
+    transform: scale(1);
+  }
+}

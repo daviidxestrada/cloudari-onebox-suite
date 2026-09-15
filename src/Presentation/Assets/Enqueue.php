@@ -6,6 +6,7 @@ use Cloudari\Onebox\Domain\Theatre\ProfileRepository;
 use Cloudari\Onebox\Infrastructure\Onebox\Sessions;
 use Cloudari\Onebox\Domain\Events\EventOverridesRepository;
 use Cloudari\Onebox\Presentation\Ajax\CalendarAjax;
+use Cloudari\Onebox\Presentation\Elementor\Bootstrap as ElementorBootstrap;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -109,6 +110,32 @@ final class Enqueue
                 self::getBaseThemeVariables(),
                 self::getWidgetOverrideVariables()
             )
+        );
+    }
+
+    /**
+     * El widget hero declara estos handles en `get_style_depends()` /
+     * `get_script_depends()`, así que basta con registrarlos: Elementor los encola
+     * solo en las páginas donde el widget está realmente colocado.
+     */
+    public static function registerHeroCarouselStyle(): void
+    {
+        wp_register_style(
+            ElementorBootstrap::HERO_ASSET_HANDLE,
+            CLOUDARI_ONEBOX_URL . 'assets/css/hero-carousel.css',
+            [],
+            self::assetVersion('assets/css/hero-carousel.css')
+        );
+    }
+
+    public static function registerHeroCarouselScript(): void
+    {
+        wp_register_script(
+            ElementorBootstrap::HERO_ASSET_HANDLE,
+            CLOUDARI_ONEBOX_URL . 'assets/js/hero-carousel.js',
+            [],
+            self::assetVersion('assets/js/hero-carousel.js'),
+            true
         );
     }
 

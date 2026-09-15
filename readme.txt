@@ -3,7 +3,7 @@ Contributors: cloudari
 Tags: onebox, theatre, calendar, billboard, events
 Requires at least: 6.0
 Requires PHP: 8.0
-Stable tag: 1.3.17
+Stable tag: 1.4.0
 
 Suite Cloudari para integrar OneBox en WordPress: calendario, cartelera, cartelera por espacios, contador y eventos manuales, con soporte para multiples integraciones por teatro.
 
@@ -206,6 +206,14 @@ Desde la version 1.3.7, esta limpieza tambien borra las caches de sesiones por r
 - Usar HTTPS y cache a nivel de servidor si aplica.
 
 == Changelog ==
+
+= 1.4.0 =
+- Anade el widget de Elementor "Cloudari Hero Carrusel" en la categoria Cloudari.
+- Permite editar por cartel: texto alternativo, imagen de escritorio, imagen movil y enlace de compra.
+- Anade control de encuadre (posicion X/Y responsive) para reencuadrar carteles con texto incrustado sin recortarlo.
+- Anade curva inferior configurable: color, profundidad, altura por dispositivo e inversion.
+- Renderiza el markup en servidor, con la primera imagen priorizada para LCP.
+- Cumple WCAG 2.1 AA: patron ARIA de carrusel, boton de pausa, foco visible y respeto a `prefers-reduced-motion`.
 
 = 1.3.17 =
 - Aisla el popup con clases y atributos exclusivos del evento OneBox 56934.
