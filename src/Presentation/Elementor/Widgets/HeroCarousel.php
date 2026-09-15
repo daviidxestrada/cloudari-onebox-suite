@@ -274,18 +274,6 @@ final class HeroCarousel extends Widget_Base
             ]
         );
 
-        $this->add_control(
-            'curve_flip',
-            [
-                'label' => esc_html__('Invertir curva', 'cloudari-onebox'),
-                'type' => Controls_Manager::SWITCHER,
-                'return_value' => 'yes',
-                'default' => '',
-                'description' => esc_html__('Cambia el valle por una loma: los laterales bajan y el centro sube.', 'cloudari-onebox'),
-                'condition' => ['curve_enabled' => 'yes'],
-            ]
-        );
-
         $this->add_responsive_control(
             'curve_height',
             [
@@ -603,11 +591,15 @@ final class HeroCarousel extends Widget_Base
                 <button class="cld-hero__arrow cld-hero__arrow--prev"
                         type="button"
                         data-cld-hero-prev
-                        aria-label="<?php esc_attr_e('Cartel anterior', 'cloudari-onebox'); ?>"></button>
+                        aria-label="<?php esc_attr_e('Cartel anterior', 'cloudari-onebox'); ?>">
+                    <?php $this->renderIcon('M15.5 4 7.5 12l8 8'); ?>
+                </button>
                 <button class="cld-hero__arrow cld-hero__arrow--next"
                         type="button"
                         data-cld-hero-next
-                        aria-label="<?php esc_attr_e('Cartel siguiente', 'cloudari-onebox'); ?>"></button>
+                        aria-label="<?php esc_attr_e('Cartel siguiente', 'cloudari-onebox'); ?>">
+                    <?php $this->renderIcon('M8.5 4l8 8-8 8'); ?>
+                </button>
             <?php } ?>
 
             <?php if ($showToggle) { ?>
@@ -618,7 +610,21 @@ final class HeroCarousel extends Widget_Base
                         aria-label="<?php esc_attr_e('Pausar el carrusel', 'cloudari-onebox'); ?>"
                         data-label-pause="<?php esc_attr_e('Pausar el carrusel', 'cloudari-onebox'); ?>"
                         data-label-play="<?php esc_attr_e('Reanudar el carrusel', 'cloudari-onebox'); ?>">
-                    <span class="cld-hero__toggle-icon" aria-hidden="true"></span>
+                    <svg class="cld-hero__icon cld-hero__icon--pause"
+                         viewBox="0 0 16 16"
+                         aria-hidden="true"
+                         focusable="false"
+                         role="presentation">
+                        <rect x="3" y="2" width="3.5" height="12" rx="0.75"></rect>
+                        <rect x="9.5" y="2" width="3.5" height="12" rx="0.75"></rect>
+                    </svg>
+                    <svg class="cld-hero__icon cld-hero__icon--play"
+                         viewBox="0 0 16 16"
+                         aria-hidden="true"
+                         focusable="false"
+                         role="presentation">
+                        <path d="M5 2.5 13.5 8 5 13.5Z"></path>
+                    </svg>
                 </button>
             <?php } ?>
 
@@ -772,6 +778,24 @@ final class HeroCarousel extends Widget_Base
         <?php
     }
 
+    /**
+     * Chevron de las flechas. Va en SVG y no en bordes rotados sobre un
+     * pseudo-elemento porque los temas pisan `border` con facilidad y el icono
+     * acaba descuadrado; `non-scaling-stroke` mantiene el grosor en px reales.
+     */
+    private function renderIcon(string $path): void
+    {
+        ?>
+        <svg class="cld-hero__icon cld-hero__icon--chevron"
+             viewBox="0 0 24 24"
+             aria-hidden="true"
+             focusable="false"
+             role="presentation">
+            <path d="<?php echo esc_attr($path); ?>" vector-effect="non-scaling-stroke"></path>
+        </svg>
+        <?php
+    }
+
     private function renderBackdrop(string $url, int $index): void
     {
         ?>
@@ -793,17 +817,14 @@ final class HeroCarousel extends Widget_Base
             return;
         }
 
-        $path = CurveShape::path(
-            $settings['curve_depth']['size'] ?? CurveShape::DEFAULT_DEPTH,
-            ($settings['curve_flip'] ?? '') === 'yes'
-        );
+        $path = CurveShape::path($settings['curve_depth']['size'] ?? CurveShape::DEFAULT_DEPTH);
         ?>
         <div class="cld-hero__curve" aria-hidden="true">
             <svg viewBox="<?php echo esc_attr(CurveShape::viewBox()); ?>"
                  preserveAspectRatio="none"
                  focusable="false"
                  role="presentation">
-                <path d="<?php echo esc_attr($path); ?>" fill="currentColor"></path>
+                <path class="cld-hero__curve-path" d="<?php echo esc_attr($path); ?>"></path>
             </svg>
         </div>
         <?php

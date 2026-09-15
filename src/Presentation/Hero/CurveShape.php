@@ -22,21 +22,9 @@ final class CurveShape
     public const VIEWBOX_HEIGHT = 100;
     public const DEFAULT_DEPTH = 97.0;
 
-    public static function path($depth, bool $flipped): string
+    public static function path($depth): string
     {
         $depth = Helpers::clampFloat($depth, 0, 100, self::DEFAULT_DEPTH);
-
-        if ($flipped) {
-            $control = round(self::VIEWBOX_HEIGHT - ($depth * 2), 2);
-
-            return sprintf(
-                'M0,%1$d Q%2$d,%3$s %4$d,%1$d L%4$d,0 L0,0 Z',
-                self::VIEWBOX_HEIGHT,
-                self::VIEWBOX_WIDTH / 2,
-                $control,
-                self::VIEWBOX_WIDTH
-            );
-        }
 
         return sprintf(
             'M0,0 Q%1$d,%2$s %3$d,0 L%3$d,%4$d L0,%4$d Z',

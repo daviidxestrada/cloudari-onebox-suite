@@ -99,8 +99,13 @@
   padding: 0;
   border: 0;
   box-shadow: none;
-  object-fit: cover;
-  object-position: var(--cld-hero-pos-x, 50%) var(--cld-hero-pos-y, 50%);
+  /**
+   * El encuadre va con `!important` y sin transicion a proposito: si el tema
+   * pisa `object-position`, mover los sliders del widget no se ve, y cualquier
+   * transicion aqui haria que el ajuste llegase con retardo en vez de al momento.
+   */
+  object-fit: cover !important;
+  object-position: var(--cld-hero-pos-x, 50%) var(--cld-hero-pos-y, 50%) !important;
   transform: scale(1);
   transition: transform 700ms ease;
   will-change: transform;
@@ -109,25 +114,6 @@
 .cld-hero__media:hover .cld-hero__fg .cld-hero__img,
 .cld-hero__media:focus-visible .cld-hero__fg .cld-hero__img {
   transform: scale(var(--cld-hero-zoom));
-}
-
-/**
- * Anillo de foco de doble capa. El color de los controles es configurable y los
- * carteles son impredecibles, así que el par blanco/negro garantiza contraste
- * sobre cualquier fondo en vez de confiar en el token del tema.
- */
-.cld-hero__media:focus-visible,
-.cld-hero__arrow:focus-visible,
-.cld-hero__toggle:focus-visible {
-  outline: 3px solid #ffffff;
-  outline-offset: -3px;
-  box-shadow: 0 0 0 3px #000000, inset 0 0 0 3px #000000;
-}
-
-.cld-hero__arrow:focus-visible,
-.cld-hero__toggle:focus-visible {
-  outline-offset: 2px;
-  box-shadow: 0 0 0 6px #000000;
 }
 
 /* El vídeo comparte los resets de .cld-hero__img: encuadra igual que una imagen. */
@@ -175,124 +161,145 @@
 }
 
 .cld-hero__curve svg {
-  display: block;
-  width: 100%;
-  height: 100%;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* El color de la curva se fija en el path: los temas suelen pisar `color`. */
+.cld-hero__curve-path {
+  fill: var(--cld-hero-curve-color) !important;
 }
 
 /**
  * Controles
+ *
+ * Todo lo que un tema o Elementor suele repintar en `button` (fondo, borde,
+ * sombra, radio, tipografia) va con `!important`. Sin eso el hover del tema
+ * mete su color de marca detras de las flechas y del boton de pausa.
  */
-.cld-hero__arrow {
+.cld-hero__arrow,
+.cld-hero__toggle {
   position: absolute;
-  top: 50%;
   z-index: 3;
-  display: block;
-  width: var(--cld-hero-arrow-size);
-  height: var(--cld-hero-arrow-size);
-  margin: 0;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  appearance: none;
-  background: transparent;
-  color: var(--cld-hero-control-color);
-  font-size: 0;
-  line-height: 1;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  color: var(--cld-hero-control-color) !important;
+  font-size: 0 !important;
+  line-height: 1 !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
   cursor: pointer;
+  opacity: 1 !important;
+}
+
+.cld-hero__arrow {
+  top: 50%;
+  display: block !important;
+  width: var(--cld-hero-arrow-size) !important;
+  height: var(--cld-hero-arrow-size) !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: none !important;
+  padding: 0 !important;
+  background: transparent !important;
   transform: translateY(-50%);
   transition: transform 180ms ease;
 }
 
+/**
+ * Los estados se repiten con pseudo-clase a proposito: un `button:hover` del
+ * tema tiene mas especificidad que `.cld-hero__toggle`, asi que sin esto el
+ * borde y el fondo de marca del tema ganan aunque la regla base lleve !important.
+ */
 .cld-hero__arrow:hover,
+.cld-hero__arrow:active,
+.cld-hero__arrow:focus,
 .cld-hero__arrow:focus-visible {
-  background: transparent;
-  transform: translateY(-50%) scale(1.04);
+  background: transparent !important;
+  color: var(--cld-hero-control-color) !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  padding: 0 !important;
+  box-shadow: none !important;
 }
 
-.cld-hero__arrow::before {
-  content: "";
-  position: absolute;
-  inset: 31%;
-  border-top: var(--cld-hero-arrow-thickness) solid currentColor;
-  border-right: var(--cld-hero-arrow-thickness) solid currentColor;
-  border-bottom: 0;
-  border-left: 0;
+.cld-hero__arrow:hover,
+.cld-hero__arrow:focus-visible {
+  transform: translateY(-50%) scale(1.04);
 }
 
 .cld-hero__arrow--prev {
   left: var(--cld-hero-arrow-offset);
 }
 
-.cld-hero__arrow--prev::before {
-  transform: rotate(-135deg) translate(-8%, -8%);
-}
-
 .cld-hero__arrow--next {
   right: var(--cld-hero-arrow-offset);
 }
 
-.cld-hero__arrow--next::before {
-  transform: rotate(45deg) translate(-8%, -8%);
-}
-
 .cld-hero__toggle {
-  position: absolute;
   right: var(--cld-hero-arrow-offset);
   bottom: calc(var(--cld-hero-curve-height) + 12px);
-  z-index: 3;
-  display: flex;
-  width: 34px;
-  height: 34px;
+  display: flex !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: none !important;
   align-items: center;
   justify-content: center;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  appearance: none;
-  background: rgba(0, 0, 0, 0.45);
-  color: var(--cld-hero-control-color);
-  cursor: pointer;
+  padding: 9px !important;
+  background: rgba(0, 0, 0, 0.5) !important;
 }
 
-.cld-hero__toggle-icon {
-  position: relative;
-  display: block;
-  width: 12px;
-  height: 14px;
+.cld-hero__toggle:hover,
+.cld-hero__toggle:active,
+.cld-hero__toggle:focus,
+.cld-hero__toggle:focus-visible {
+  background: rgba(0, 0, 0, 0.72) !important;
+  color: var(--cld-hero-control-color) !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  padding: 9px !important;
+  box-shadow: none !important;
 }
 
-.cld-hero__toggle-icon::before,
-.cld-hero__toggle-icon::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  width: 3px;
-  height: 100%;
-  background: currentColor;
+/* Iconos en SVG: simetricos por construccion e inmunes a overrides de borde. */
+.cld-hero__icon {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  fill: currentColor;
+  pointer-events: none;
 }
 
-.cld-hero__toggle-icon::before {
-  left: 1px;
+.cld-hero__arrow .cld-hero__icon {
+  padding: 22% !important;
 }
 
-.cld-hero__toggle-icon::after {
-  right: 1px;
+.cld-hero__icon--chevron path {
+  fill: none !important;
+  stroke: currentColor !important;
+  stroke-width: var(--cld-hero-arrow-thickness);
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-/* Pausado: el botón ofrece ahora la acción de reanudar. */
-.cld-hero__toggle[data-paused="true"] .cld-hero__toggle-icon::after {
-  display: none;
-}
-
-.cld-hero__toggle[data-paused="true"] .cld-hero__toggle-icon::before {
-  left: 2px;
-  width: 0;
-  height: 0;
-  background: transparent;
-  border-top: 7px solid transparent;
-  border-bottom: 7px solid transparent;
-  border-left: 11px solid currentColor;
+/* Pausado: el boton pasa a ofrecer la accion de reanudar. */
+.cld-hero__toggle[data-paused="false"] .cld-hero__icon--play,
+.cld-hero__toggle[data-paused="true"] .cld-hero__icon--pause {
+  display: none !important;
 }
 
 .cld-hero__live {
@@ -329,8 +336,8 @@
     display: block;
     inset: 0;
     pointer-events: none;
-    object-fit: cover;
-    object-position: center;
+    object-fit: cover !important;
+    object-position: center !important;
     transform: scale(1.2);
     filter: blur(24px);
     transition: none;
@@ -341,9 +348,10 @@
     z-index: 1;
   }
 
+  /* Gana al `cover !important` de la regla base: aqui el cartel no debe recortarse. */
   .cld-hero__slide--contain-mobile .cld-hero__fg .cld-hero__img {
-    object-fit: contain;
-    object-position: center;
+    object-fit: contain !important;
+    object-position: center !important;
   }
 
   .cld-hero__slide--contain-mobile .cld-hero__media:hover .cld-hero__fg .cld-hero__img,
@@ -363,4 +371,26 @@
   .cld-hero__media:focus-visible .cld-hero__fg .cld-hero__img {
     transform: scale(1);
   }
+}
+
+/**
+ * Anillo de foco de doble capa, al final del archivo a proposito.
+ *
+ * Comparte especificidad con las reglas de estado de mas arriba, asi que tiene
+ * que ir despues para ganarles. El par blanco/negro garantiza contraste sobre
+ * cualquier cartel y sobre el color de control que se configure, en vez de
+ * confiar en el token del tema.
+ */
+.cld-hero__media:focus-visible,
+.cld-hero__arrow:focus-visible,
+.cld-hero__toggle:focus-visible {
+  outline: 3px solid #ffffff !important;
+  outline-offset: -3px !important;
+  box-shadow: 0 0 0 3px #000000, inset 0 0 0 3px #000000 !important;
+}
+
+.cld-hero__arrow:focus-visible,
+.cld-hero__toggle:focus-visible {
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 6px #000000 !important;
 }
