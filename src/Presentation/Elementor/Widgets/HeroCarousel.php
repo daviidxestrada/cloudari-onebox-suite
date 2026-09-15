@@ -102,22 +102,34 @@ final class HeroCarousel extends Widget_Base
         $repeater->add_control(
             'image_desktop',
             [
-                'label' => esc_html__('Imagen escritorio', 'cloudari-onebox'),
+                'label' => esc_html__('Medio de escritorio', 'cloudari-onebox'),
                 'type' => Controls_Manager::MEDIA,
-                'description' => esc_html__('Proporción recomendada 1920 × 800 px.', 'cloudari-onebox'),
+                'media_types' => ['image', 'video'],
+                'description' => esc_html__('Imagen o vídeo de la Mediateca. Proporción recomendada 1920 × 800 px.', 'cloudari-onebox'),
             ]
         );
 
         $repeater->add_control(
             'image_mobile',
             [
-                'label' => esc_html__('Imagen móvil y tablet', 'cloudari-onebox'),
+                'label' => esc_html__('Medio para móvil y tablet', 'cloudari-onebox'),
                 'type' => Controls_Manager::MEDIA,
+                'media_types' => ['image', 'video'],
                 'description' => sprintf(
                     /* translators: %d: ancho en píxeles del punto de corte. */
-                    esc_html__('Se sirve por debajo de %d px. Si se deja vacía se reutiliza la de escritorio.', 'cloudari-onebox'),
+                    esc_html__('Se sirve por debajo de %d px. Puede ser de distinto tipo que el de escritorio (por ejemplo, vídeo arriba e imagen abajo). Si se deja vacío se reutiliza el de escritorio.', 'cloudari-onebox'),
                     self::MOBILE_BREAKPOINT
                 ),
+            ]
+        );
+
+        $repeater->add_control(
+            'video_poster',
+            [
+                'label' => esc_html__('Imagen de reserva del vídeo', 'cloudari-onebox'),
+                'type' => Controls_Manager::MEDIA,
+                'media_types' => ['image'],
+                'description' => esc_html__('Se ve mientras el vídeo carga, y en lugar del vídeo cuando el visitante pide reducir las animaciones. Muy recomendable.', 'cloudari-onebox'),
             ]
         );
 
@@ -543,6 +555,20 @@ final class HeroCarousel extends Widget_Base
         // En el editor el autoplay estorba: el lienzo se movería mientras se ajustan los controles.
         $autoplay = ($settings['autoplay'] ?? '') === 'yes' && $total > 1 && !$isEditMode;
 
+        $hasVideo = false;
+
+        foreach ($slides as $slide) {
+            if ($slide->hasVideo()) {
+                $hasVideo = true;
+                break;
+            }
+        }
+
+        // Un vídeo en bucle es movimiento automático aunque el carrusel no avance
+        // solo, así que también exige un control de pausa (WCAG 2.2.2). El JS lo
+        // oculta si acaba no habiendo nada en movimiento.
+        $showToggle = $autoplay || ($hasVideo && !$isEditMode);
+
         $config = [
             'autoplay' => $autoplay,
             'delay' => (int) Helpers::clampFloat($settings['autoplay_delay'] ?? 5000, 2000, 20000, 5000),
@@ -584,7 +610,7 @@ final class HeroCarousel extends Widget_Base
                         aria-label="<?php esc_attr_e('Cartel siguiente', 'cloudari-onebox'); ?>"></button>
             <?php } ?>
 
-            <?php if ($autoplay) { ?>
+            <?php if ($showToggle) { ?>
                 <button class="cld-hero__toggle"
                         type="button"
                         data-cld-hero-toggle
@@ -647,27 +673,114 @@ final class HeroCarousel extends Widget_Base
     {
         // El backdrop desenfocado rellena las bandas que deja el "contain" en móvil.
         if ($slide->containMobile) {
-            $this->renderPicture($slide, $index, 'cld-hero__backdrop', true);
+            $backdropUrl = $slide->backdropImageUrl();
+
+            if ($backdropUrl !== '') {
+                $this->renderBackdrop($backdropUrl, $index);
+            }
         }
 
-        $this->renderPicture($slide, $index, 'cld-hero__fg', false);
+        if (!$slide->hasVideo()) {
+            $this->renderPicture($slide, $index);
+            return;
+        }
+
+        $this->renderResponsivePair($slide, $index);
     }
 
-    private function renderPicture(HeroSlide $slide, int $index, string $className, bool $decorative): void
+    /**
+     * Caso mayoritario: dos imágenes. `<picture>` deja que el navegador descargue
+     * solo la que corresponde al breakpoint, así que se prefiere siempre que se pueda.
+     */
+    private function renderPicture(HeroSlide $slide, int $index): void
     {
-        // Solo el primer cartel es candidato a LCP; el resto no debe competir por ancho de banda.
         $isFirst = $index === 0;
         ?>
-        <picture class="<?php echo esc_attr($className); ?>"<?php echo $decorative ? ' aria-hidden="true"' : ''; ?>>
+        <picture class="cld-hero__fg">
             <source media="(max-width: <?php echo esc_attr((string) self::MOBILE_BREAKPOINT); ?>px)"
                     srcset="<?php echo esc_url($slide->mobileUrl); ?>">
             <img class="cld-hero__img"
                  src="<?php echo esc_url($slide->desktopUrl); ?>"
-                 alt="<?php echo $decorative ? '' : esc_attr($slide->alt); ?>"
+                 alt="<?php echo esc_attr($slide->alt); ?>"
                  loading="<?php echo $isFirst ? 'eager' : 'lazy'; ?>"
                  decoding="<?php echo $isFirst ? 'sync' : 'async'; ?>"
-                 <?php if ($isFirst && !$decorative) { ?>fetchpriority="high"<?php } ?>>
+                 <?php if ($isFirst) { ?>fetchpriority="high"<?php } ?>>
         </picture>
+        <?php
+    }
+
+    /**
+     * Con vídeo por medio no sirve `<picture>`: un `<video>` no puede convivir con
+     * un `<img>` dentro del mismo elemento. Se emiten los dos medios y el CSS
+     * decide cuál se ve; el que sobra lleva `preload="none"` o `loading="lazy"`,
+     * así que no llega a descargarse.
+     */
+    private function renderResponsivePair(HeroSlide $slide, int $index): void
+    {
+        ?>
+        <div class="cld-hero__fg">
+            <?php
+            $this->renderSingleMedia(
+                $slide,
+                $slide->desktopUrl,
+                $slide->desktopIsVideo,
+                'cld-hero__source--desktop',
+                $index === 0
+            );
+
+            $this->renderSingleMedia(
+                $slide,
+                $slide->mobileUrl,
+                $slide->mobileIsVideo,
+                'cld-hero__source--mobile',
+                false
+            );
+            ?>
+        </div>
+        <?php
+    }
+
+    private function renderSingleMedia(
+        HeroSlide $slide,
+        string $url,
+        bool $isVideo,
+        string $visibilityClass,
+        bool $isPriority
+    ): void {
+        if (!$isVideo) {
+            ?>
+            <img class="cld-hero__img <?php echo esc_attr($visibilityClass); ?>"
+                 src="<?php echo esc_url($url); ?>"
+                 alt="<?php echo esc_attr($slide->alt); ?>"
+                 loading="<?php echo $isPriority ? 'eager' : 'lazy'; ?>"
+                 decoding="<?php echo $isPriority ? 'sync' : 'async'; ?>"
+                 <?php if ($isPriority) { ?>fetchpriority="high"<?php } ?>>
+            <?php
+            return;
+        }
+        ?>
+        <video class="cld-hero__img cld-hero__video <?php echo esc_attr($visibilityClass); ?>"
+               data-cld-hero-video
+               src="<?php echo esc_url($url); ?>"
+               <?php if ($slide->posterUrl !== '') { ?>poster="<?php echo esc_url($slide->posterUrl); ?>"<?php } ?>
+               <?php if ($slide->alt !== '') { ?>aria-label="<?php echo esc_attr($slide->alt); ?>"<?php } ?>
+               preload="<?php echo $isPriority ? 'metadata' : 'none'; ?>"
+               muted
+               loop
+               playsinline
+               disablepictureinpicture></video>
+        <?php
+    }
+
+    private function renderBackdrop(string $url, int $index): void
+    {
+        ?>
+        <img class="cld-hero__img cld-hero__backdrop"
+             src="<?php echo esc_url($url); ?>"
+             alt=""
+             aria-hidden="true"
+             loading="<?php echo $index === 0 ? 'eager' : 'lazy'; ?>"
+             decoding="async">
         <?php
     }
 

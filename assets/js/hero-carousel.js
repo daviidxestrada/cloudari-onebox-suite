@@ -75,12 +75,50 @@
         var userPaused = false;
         var autoPause = { hover: false, focus: false, hidden: false };
         var autoplayEnabled = config.autoplay === true && total > 1 && !prefersReducedMotion();
+        var hasVideo = root.querySelector('[data-cld-hero-video]') !== null;
         var delay = typeof config.delay === 'number' && config.delay >= 2000 ? config.delay : 5000;
+
+        // Solo el vídeo del cartel visible se reproduce: los demás ni se descargan
+        // (preload="none") ni consumen CPU de fondo.
+        function syncVideos() {
+            var videos = root.querySelectorAll('[data-cld-hero-video]');
+
+            for (var i = 0; i < videos.length; i++) {
+                var video = videos[i];
+                var slide = video.closest('[data-cld-hero-slide]');
+                // Cuando el cartel mezcla vídeo e imagen se emiten los dos medios
+                // y uno queda oculto por CSS: reproducirlo gastaría datos sin verse.
+                var isVisible = video.offsetWidth > 0 || video.offsetHeight > 0;
+                var shouldPlay = slide === slides[currentIndex]
+                    && isVisible
+                    && !userPaused
+                    && !prefersReducedMotion();
+
+                if (!shouldPlay) {
+                    video.pause();
+                    continue;
+                }
+
+                // Algunos navegadores solo aceptan el autoplay si el silencio está
+                // fijado en la propiedad, no únicamente en el atributo.
+                video.muted = true;
+
+                var playing = video.play();
+
+                // Safari e iOS rechazan la promesa si el navegador bloquea el
+                // autoplay; queda el póster y no hay nada que reportar.
+                if (playing && typeof playing.catch === 'function') {
+                    playing.catch(function () {});
+                }
+            }
+        }
 
         function syncSlides() {
             for (var i = 0; i < total; i++) {
                 setSlideActive(slides[i], i === currentIndex);
             }
+
+            syncVideos();
         }
 
         function goTo(index, announce) {
@@ -156,7 +194,11 @@
         }
 
         if (toggle) {
-            if (!autoplayEnabled) {
+            // Un vídeo en bucle también es movimiento automático, así que el botón
+            // hace falta aunque el carrusel no avance solo (WCAG 2.2.2).
+            var controlsMotion = autoplayEnabled || (hasVideo && !prefersReducedMotion());
+
+            if (!controlsMotion) {
                 toggle.hidden = true;
             } else {
                 // Botón de acción, no de estado: cambia solo la etiqueta. Añadir
@@ -170,6 +212,7 @@
                             ? toggle.getAttribute('data-label-play') || 'Reanudar el carrusel'
                             : toggle.getAttribute('data-label-pause') || 'Pausar el carrusel'
                     );
+                    syncVideos();
                     startTimer();
                 });
             }

@@ -3,7 +3,7 @@ Contributors: cloudari
 Tags: onebox, theatre, calendar, billboard, events
 Requires at least: 6.0
 Requires PHP: 8.0
-Stable tag: 1.4.0
+Stable tag: 1.5.0
 
 Suite Cloudari para integrar OneBox en WordPress: calendario, cartelera, cartelera por espacios, contador y eventos manuales, con soporte para multiples integraciones por teatro.
 
@@ -206,6 +206,13 @@ Desde la version 1.3.7, esta limpieza tambien borra las caches de sesiones por r
 - Usar HTTPS y cache a nivel de servidor si aplica.
 
 == Changelog ==
+
+= 1.5.0 =
+- El Hero Carrusel admite video de la Mediateca, ademas de imagen, en escritorio y en movil.
+- Cada cartel puede combinar tipos: por ejemplo video en escritorio e imagen en movil.
+- Anade imagen de reserva del video, que se ve mientras carga y sustituye al video si se piden menos animaciones.
+- Los videos van silenciados, en bucle y sin controles; solo se reproduce el del cartel visible y el resto ni se descarga.
+- El boton de pausa aparece tambien cuando hay video aunque el carrusel no avance solo, y detiene los videos.
 
 = 1.4.0 =
 - Anade el widget de Elementor "Cloudari Hero Carrusel" en la categoria Cloudari.
