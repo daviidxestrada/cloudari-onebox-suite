@@ -3,7 +3,7 @@ Contributors: cloudari
 Tags: onebox, theatre, calendar, billboard, events
 Requires at least: 6.0
 Requires PHP: 8.0
-Stable tag: 1.7.1
+Stable tag: 1.7.2
 
 Suite Cloudari para integrar OneBox en WordPress: calendario, cartelera, cartelera por espacios, contador y eventos manuales, con soporte para multiples integraciones por teatro.
 
@@ -109,7 +109,7 @@ Para usarlos en Elementor, anade un Widget HTML y pega el contenido del archivo 
 Con Elementor activo, el plugin anade la categoria Cloudari al panel de widgets:
 
 - Cloudari Hero Carrusel: carrusel de carteles con enlace de compra.
-- Cartelera - Gran Teatro Pavon: cartelera por espacios con el diseno del Pavon. Lee los mismos datos que `[cloudari_billboard_venues]`. En Contenido se eligen los espacios que van en caja (por defecto, Ambigu), los filtros visibles y los textos del diseno; en Estilo, los colores y tipografias de cada parte. Un color vacio usa el del diseno.
+- Cartelera - Gran Teatro Pavon: cartelera por espacios con el diseno del Pavon. Lee los mismos datos que `[cloudari_billboard_venues]`. En Contenido se eligen los filtros visibles y los textos del diseno; en Estilo, los colores y tipografias de cada parte. Un color vacio usa el del diseno.
 
 == Manual events ==
 Los eventos manuales se crean con el CPT `evento_manual` y la taxonomia `evento_manual_cat`.
@@ -212,6 +212,10 @@ Desde la version 1.3.7, esta limpieza tambien borra las caches de sesiones por r
 - Usar HTTPS y cache a nivel de servidor si aplica.
 
 == Changelog ==
+
+= 1.7.2 =
+- Cartelera - Gran Teatro Pavon: se retira la caja de fondo del espacio destacado. Todos los espacios se pintan igual y la unica distincion es el selector.
+- Desaparecen el control "Espacios destacados en caja" y la seccion de estilo de la caja.
 
 = 1.7.1 =
 - Cartelera - Gran Teatro Pavon: en movil el selector de espacios pasa a una lista vertical, un espacio por fila con su contador a la derecha.

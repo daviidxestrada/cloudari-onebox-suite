@@ -3,8 +3,8 @@
  *
  * Lee los mismos datos que la cartelera por espacios (REST
  * `cloudari/v1/billboard-venues`, OneBox + eventos manuales) y los pinta con el
- * diseño propio del Pavon: selector segmentado de espacios y caja para los
- * espacios destacados (p. ej. Ambigu).
+ * diseño propio del Pavon: selector segmentado de espacios sobre una misma
+ * rejilla de tarjetas para todos ellos.
  *
  * Toda la configuracion llega por instancia en `data-config`, asi que puede
  * haber varios widgets en la misma pagina con textos distintos.
@@ -128,9 +128,6 @@
       endpoint: String(raw.endpoint || "").trim() || CONFIG.ENDPOINT,
       specialRedirects: asMap(raw.specialRedirects),
       categoryOverrides: asMap(raw.categoryOverrides),
-      boxedVenues: (Array.isArray(raw.boxedVenues) ? raw.boxedVenues : [])
-        .map(normalizeText)
-        .filter(Boolean),
       showCount: raw.showCount !== false,
       texts,
     };
@@ -380,20 +377,6 @@
   const getVenueEvents = (venue) =>
     Array.isArray(venue?.events) ? venue.events : [];
 
-  // Un espacio va en caja si su nombre o su slug coinciden con la lista del widget.
-  const isBoxedVenue = (config, venue) => {
-    if (!config.boxedVenues.length) {
-      return false;
-    }
-
-    const name = normalizeText(venue?.name);
-    const slug = normalizeText(venue?.slug);
-
-    return config.boxedVenues.some(
-      (needle) => needle === slug || (name !== "" && name.includes(needle))
-    );
-  };
-
   const formatShowCount = (config, count) =>
     `${count} ${count === 1 ? config.texts.showSingular : config.texts.showPlural}`;
 
@@ -562,14 +545,6 @@
     const sourceEvents = getVenueEvents(venue);
     const events = getFilteredEvents(state, venue);
     const venueName = String(venue?.name || "Espacio").trim() || "Espacio";
-    const boxed = isBoxedVenue(config, venue);
-
-    const heading = boxed
-      ? `<header class="cbp-panel__head">
-          <h3 class="cbp-panel__title">${esc(venueName)}</h3>
-          <p class="cbp-panel__count">${esc(formatShowCount(config, events.length))}</p>
-        </header>`
-      : `<h3 class="cbp-sr-only">${esc(venueName)}</h3>`;
 
     const body = events.length
       ? `<div class="cbp-grid">${events
@@ -580,10 +555,8 @@
         )}</p>`;
 
     return `
-      <section class="cbp-panel${boxed ? " cbp-panel--boxed" : ""}" id="${esc(
-        state.panelId
-      )}" role="tabpanel" aria-labelledby="${esc(tabId)}">
-        ${heading}
+      <section class="cbp-panel" id="${esc(state.panelId)}" role="tabpanel" aria-labelledby="${esc(tabId)}">
+        <h3 class="cbp-sr-only">${esc(venueName)}</h3>
         ${body}
       </section>
     `;

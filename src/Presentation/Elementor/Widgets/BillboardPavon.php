@@ -49,7 +49,7 @@ final class BillboardPavon extends Widget_Base
 
     public function get_keywords(): array
     {
-        return ['cartelera', 'billboard', 'espacios', 'venues', 'onebox', 'pavon', 'ambigu', 'cloudari'];
+        return ['cartelera', 'billboard', 'espacios', 'venues', 'onebox', 'pavon', 'cloudari'];
     }
 
     public function get_style_depends(): array
@@ -71,7 +71,6 @@ final class BillboardPavon extends Widget_Base
         $this->registerSelectorStyleSection();
         $this->registerFiltersStyleSection();
         $this->registerCardsStyleSection();
-        $this->registerBoxStyleSection();
         $this->registerCategoriesStyleSection();
     }
 
@@ -95,18 +94,6 @@ final class BillboardPavon extends Widget_Base
                 'type' => Controls_Manager::RAW_HTML,
                 'raw' => esc_html__('Los espacios y sus espectáculos llegan de OneBox y de los eventos manuales, igual que en el shortcode de cartelera por espacios. Aquí solo se decide cómo se pintan.', 'cloudari-onebox'),
                 'content_classes' => 'elementor-descriptor',
-            ]
-        );
-
-        $this->add_control(
-            'boxed_venues',
-            [
-                'label' => esc_html__('Espacios destacados en caja', 'cloudari-onebox'),
-                'type' => Controls_Manager::TEXTAREA,
-                'rows' => 3,
-                'default' => 'Ambigú',
-                'placeholder' => 'Ambigú',
-                'description' => esc_html__('Uno por línea. Vale el nombre del espacio (o una parte) o su slug. La cartelera de esos espacios se pinta dentro de una caja con cabecera.', 'cloudari-onebox'),
             ]
         );
 
@@ -421,33 +408,6 @@ final class BillboardPavon extends Widget_Base
         $this->end_controls_section();
     }
 
-    private function registerBoxStyleSection(): void
-    {
-        $this->start_controls_section(
-            'section_style_box',
-            [
-                'label' => esc_html__('Caja del espacio destacado', 'cloudari-onebox'),
-                'tab' => Controls_Manager::TAB_STYLE,
-            ]
-        );
-
-        $this->addColor('box_bg', esc_html__('Fondo', 'cloudari-onebox'), '--cbp-box-bg');
-        $this->addColor('box_line', esc_html__('Borde y separador', 'cloudari-onebox'), '--cbp-box-line');
-        $this->addColor('box_title', esc_html__('Título', 'cloudari-onebox'), '--cbp-box-title');
-        $this->addColor('box_count', esc_html__('Contador', 'cloudari-onebox'), '--cbp-box-count');
-
-        $this->add_group_control(
-            Group_Control_Typography::get_type(),
-            [
-                'name' => 'box_title_typography',
-                'label' => esc_html__('Tipografía del título', 'cloudari-onebox'),
-                'selector' => self::ROOT . ' .cbp-panel__title',
-            ]
-        );
-
-        $this->end_controls_section();
-    }
-
     private function registerCategoriesStyleSection(): void
     {
         $this->start_controls_section(
@@ -556,7 +516,7 @@ final class BillboardPavon extends Widget_Base
      * Configuración que lee `billboard-pavon.js` desde `data-config`.
      *
      * Va por instancia y no por `wp_localize_script` para que dos widgets en la
-     * misma página puedan tener textos y espacios destacados distintos.
+     * misma página puedan tener textos distintos.
      */
     private static function buildConfig(array $settings): array
     {
@@ -567,7 +527,6 @@ final class BillboardPavon extends Widget_Base
             // `(object)` para que un mapa vacío viaje como `{}` y no como `[]`.
             'specialRedirects' => (object) ($overrideMaps['specialRedirects'] ?? []),
             'categoryOverrides' => (object) ($overrideMaps['categoryOverrides'] ?? []),
-            'boxedVenues' => self::parseBoxedVenues((string) ($settings['boxed_venues'] ?? '')),
             'showCount' => ($settings['show_count'] ?? '') === 'yes',
             'texts' => [
                 'allCategories' => self::text($settings, 'text_all_categories'),
@@ -580,24 +539,6 @@ final class BillboardPavon extends Widget_Base
                 'error' => self::text($settings, 'text_error'),
             ],
         ];
-    }
-
-    /**
-     * @return string[]
-     */
-    private static function parseBoxedVenues(string $raw): array
-    {
-        $lines = preg_split('/[\r\n,]+/', $raw) ?: [];
-        $venues = [];
-
-        foreach ($lines as $line) {
-            $line = sanitize_text_field($line);
-            if ($line !== '') {
-                $venues[] = $line;
-            }
-        }
-
-        return array_values(array_unique($venues));
     }
 
     private static function text(array $settings, string $key): string
