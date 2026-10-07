@@ -98,12 +98,24 @@ final class BillboardPavon extends Widget_Base
         );
 
         $this->add_control(
+            'venue_labels',
+            [
+                'label' => esc_html__('Nombres en el selector', 'cloudari-onebox'),
+                'type' => Controls_Manager::TEXTAREA,
+                'rows' => 3,
+                'default' => 'Ambigú Gran Teatro Pavón = Ambigú',
+                'placeholder' => 'Ambigú Gran Teatro Pavón = Ambigú',
+                'description' => esc_html__('Opcional, uno por línea: nombre (o slug) del espacio en OneBox = nombre que se muestra en el selector. Los espacios que no aparezcan aquí usan su nombre de OneBox. Las tarjetas siempre muestran el nombre de OneBox.', 'cloudari-onebox'),
+            ]
+        );
+
+        $this->add_control(
             'show_count',
             [
                 'label' => esc_html__('Mostrar nº de espectáculos en el selector', 'cloudari-onebox'),
                 'type' => Controls_Manager::SWITCHER,
                 'return_value' => 'yes',
-                'default' => 'yes',
+                'default' => '',
             ]
         );
 
@@ -527,6 +539,7 @@ final class BillboardPavon extends Widget_Base
             // `(object)` para que un mapa vacío viaje como `{}` y no como `[]`.
             'specialRedirects' => (object) ($overrideMaps['specialRedirects'] ?? []),
             'categoryOverrides' => (object) ($overrideMaps['categoryOverrides'] ?? []),
+            'venueLabels' => (object) self::parseVenueLabels((string) ($settings['venue_labels'] ?? '')),
             'showCount' => ($settings['show_count'] ?? '') === 'yes',
             'texts' => [
                 'allCategories' => self::text($settings, 'text_all_categories'),
@@ -539,6 +552,32 @@ final class BillboardPavon extends Widget_Base
                 'error' => self::text($settings, 'text_error'),
             ],
         ];
+    }
+
+    /**
+     * Líneas `Nombre en OneBox = Nombre en el selector`.
+     *
+     * @return array<string,string>
+     */
+    private static function parseVenueLabels(string $raw): array
+    {
+        $labels = [];
+
+        foreach (preg_split('/[\r\n]+/', $raw) ?: [] as $line) {
+            $parts = explode('=', $line, 2);
+            if (count($parts) !== 2) {
+                continue;
+            }
+
+            $source = sanitize_text_field($parts[0]);
+            $label = sanitize_text_field($parts[1]);
+
+            if ($source !== '' && $label !== '') {
+                $labels[$source] = $label;
+            }
+        }
+
+        return $labels;
     }
 
     private static function text(array $settings, string $key): string

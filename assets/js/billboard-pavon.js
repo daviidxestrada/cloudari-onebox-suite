@@ -128,7 +128,12 @@
       endpoint: String(raw.endpoint || "").trim() || CONFIG.ENDPOINT,
       specialRedirects: asMap(raw.specialRedirects),
       categoryOverrides: asMap(raw.categoryOverrides),
-      showCount: raw.showCount !== false,
+      venueLabels: Object.fromEntries(
+        Object.entries(asMap(raw.venueLabels))
+          .map(([key, label]) => [normalizeText(key), String(label ?? "").trim()])
+          .filter(([key, label]) => key && label)
+      ),
+      showCount: raw.showCount === true,
       texts,
     };
   };
@@ -374,6 +379,13 @@
   const getVenueKey = (venue) =>
     String(venue?.slug || venue?.id || venue?.name || "").trim();
 
+  // Nombre que se pinta en el selector: el del widget si hay uno para ese
+  // espacio (por nombre o por slug); si no, el que llega de la API.
+  const getVenueLabel = (config, venue) =>
+    config.venueLabels[normalizeText(venue?.name)] ||
+    config.venueLabels[normalizeText(venue?.slug)] ||
+    String(venue?.name || "Espacio");
+
   const getVenueEvents = (venue) =>
     Array.isArray(venue?.events) ? venue.events : [];
 
@@ -584,7 +596,7 @@
             tabindex="${isActive ? "0" : "-1"}"
             data-venue-key="${esc(venueKey)}"
           >
-            <span class="cbp-tab__label">${esc(venue?.name || "Espacio")}</span>
+            <span class="cbp-tab__label">${esc(getVenueLabel(state.config, venue))}</span>
             ${count}
           </button>
         `;

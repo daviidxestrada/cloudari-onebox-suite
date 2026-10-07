@@ -368,12 +368,13 @@
   padding: 0;
   color: var(--cbp-card-title) !important;
   font-family: var(--cbp-font-display);
-  font-size: 1rem;
-  font-weight: 900;
-  letter-spacing: 0.5px;
-  line-height: 1.2;
+  font-size: 1.2rem;
+  font-weight: 400;
+  letter-spacing: 0.4px;
+  line-height: 1.1;
   text-transform: uppercase;
-  word-break: break-word;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
 }
 
 .cld-billboard-pavon .cbp-title-link,
@@ -547,8 +548,8 @@
 /* =====================================================================
    RESPONSIVE
    ===================================================================== */
-/* Movil: un espacio por fila, con el contador a la derecha. Los nombres
-   largos parten linea en vez de obligar a desplazar el selector. */
+/* Movil: un espacio por fila, centrado. Los nombres largos parten linea
+   en vez de obligar a desplazar el selector. */
 @media (max-width: 767.98px) {
   .cld-billboard-pavon .cbp-tabs {
     flex-direction: column;
@@ -558,13 +559,9 @@
 
   .cld-billboard-pavon .cbp-tabs .cbp-tab {
     flex: 0 0 auto;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 14px;
     width: 100%;
-    padding: 13px 14px 12px;
-    text-align: left;
+    padding: 14px 14px 13px;
+    text-align: center;
     white-space: normal;
   }
 
@@ -572,11 +569,6 @@
     min-width: 0;
     line-height: 1.05;
     overflow-wrap: anywhere;
-  }
-
-  .cld-billboard-pavon .cbp-tab__count {
-    flex: 0 0 auto;
-    white-space: nowrap;
   }
 
   .cld-billboard-pavon .cbp-tab--skeleton {
@@ -597,7 +589,11 @@
   }
 
   .cld-billboard-pavon .cbp-tabs .cbp-tab {
-    padding: 11px 22px 10px;
+    padding: 15px 22px 14px;
+    font-size: 1.5rem;
+  }
+
+  .cld-billboard-pavon .cbp-title {
     font-size: 1.5rem;
   }
 

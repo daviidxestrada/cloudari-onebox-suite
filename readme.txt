@@ -3,7 +3,7 @@ Contributors: cloudari
 Tags: onebox, theatre, calendar, billboard, events
 Requires at least: 6.0
 Requires PHP: 8.0
-Stable tag: 1.7.2
+Stable tag: 1.7.3
 
 Suite Cloudari para integrar OneBox en WordPress: calendario, cartelera, cartelera por espacios, contador y eventos manuales, con soporte para multiples integraciones por teatro.
 
@@ -212,6 +212,11 @@ Desde la version 1.3.7, esta limpieza tambien borra las caches de sesiones por r
 - Usar HTTPS y cache a nivel de servidor si aplica.
 
 == Changelog ==
+
+= 1.7.3 =
+- Cartelera - Gran Teatro Pavon: los titulos de las tarjetas crecen (de 16 px a 19 px en movil y 24 px desde tablet) y dejan la negrita sintetica, que emborronaba la tipografia.
+- El selector de espacios muestra solo los nombres, centrados. El numero de espectaculos queda desactivado por defecto y se puede volver a activar en Contenido > Espacios.
+- Nuevo control "Nombres en el selector" para acortar el nombre de un espacio en el selector (por defecto, "Ambigu Gran Teatro Pavon" se muestra como "Ambigu").
 
 = 1.7.2 =
 - Cartelera - Gran Teatro Pavon: se retira la caja de fondo del espacio destacado. Todos los espacios se pintan igual y la unica distincion es el selector.
