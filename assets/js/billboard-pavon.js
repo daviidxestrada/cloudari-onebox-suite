@@ -618,7 +618,8 @@
       })
       .join("");
 
-  // Coloca la pastilla que marca el espacio activo bajo su pestana.
+  // Coloca la pastilla que marca el espacio activo bajo su pestana. Mide los
+  // cuatro lados porque en movil los espacios se apilan en vertical.
   const syncTabThumb = (state) => {
     const activeButton = state.$tabs.querySelector(
       'button[role="tab"][aria-selected="true"]'
@@ -633,8 +634,16 @@
       state.$tabs.clientWidth - left - activeButton.offsetWidth
     );
 
+    const top = activeButton.offsetTop;
+    const bottom = Math.max(
+      0,
+      state.$tabs.clientHeight - top - activeButton.offsetHeight
+    );
+
     state.$tabs.style.setProperty("--cbp-thumb-l", `${left}px`);
     state.$tabs.style.setProperty("--cbp-thumb-r", `${right}px`);
+    state.$tabs.style.setProperty("--cbp-thumb-t", `${top}px`);
+    state.$tabs.style.setProperty("--cbp-thumb-b", `${bottom}px`);
 
     if (!state.thumbReady) {
       state.thumbReady = true;

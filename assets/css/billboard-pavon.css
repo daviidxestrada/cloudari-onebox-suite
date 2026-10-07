@@ -140,7 +140,9 @@
   inset: 0;
   border-radius: 15px;
   background: var(--cbp-thumb);
-  clip-path: inset(4px var(--cbp-thumb-r, 100%) 4px var(--cbp-thumb-l, 0px) round 12px);
+  clip-path: inset(
+    var(--cbp-thumb-t, 4px) var(--cbp-thumb-r, 100%) var(--cbp-thumb-b, 4px) var(--cbp-thumb-l, 0px) round 12px
+  );
   pointer-events: none;
 }
 
@@ -592,6 +594,44 @@
 /* =====================================================================
    RESPONSIVE
    ===================================================================== */
+/* Movil: un espacio por fila, con el contador a la derecha. Los nombres
+   largos parten linea en vez de obligar a desplazar el selector. */
+@media (max-width: 767.98px) {
+  .cld-billboard-pavon .cbp-tabs {
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .cld-billboard-pavon .cbp-tabs .cbp-tab {
+    flex: 0 0 auto;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    width: 100%;
+    padding: 13px 14px 12px;
+    text-align: left;
+    white-space: normal;
+  }
+
+  .cld-billboard-pavon .cbp-tab__label {
+    min-width: 0;
+    line-height: 1.05;
+    overflow-wrap: anywhere;
+  }
+
+  .cld-billboard-pavon .cbp-tab__count {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .cld-billboard-pavon .cbp-tab--skeleton {
+    width: 100%;
+    height: 46px;
+  }
+}
+
 @media (max-width: 480px) {
   .cld-billboard-pavon .cbp-actions {
     grid-template-columns: minmax(0, 1fr);
