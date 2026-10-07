@@ -1,0 +1,690 @@
+/* =====================================================================
+   CARTELERA - GRAN TEATRO PAVON (widget de Elementor)
+
+   Hoja autocontenida: no depende de la paleta del Perfil MAIN ni de
+   billboard-inline.css / billboard-venues.css. El diseño por defecto
+   vive en las variables de `.cld-billboard-pavon`; los controles de
+   estilo del widget solo sobrescriben esas variables.
+
+   Los `!important` de fondos, colores y bordes son deliberados: el kit
+   de Elementor y los temas estilan `button`, `a`, `input` y `select`
+   con mas especificidad que una clase.
+   ===================================================================== */
+.cld-billboard-pavon {
+  /* Marca */
+  --cbp-brand: #f0c35b;
+  --cbp-cta: #d14100;
+  --cbp-cta-text: #ffffff;
+  --cbp-ink: #0b0f1a;
+  --cbp-muted: #475569;
+
+  /* Tipografia */
+  --cbp-font-display: "Staatliches", "Bebas Neue", "Arial Narrow", sans-serif;
+  --cbp-font-text: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+
+  /* Selector de espacios */
+  --cbp-selector-bg: #ffffff;
+  --cbp-selector-line: color-mix(in srgb, var(--cbp-brand) 78%, #7a4a00);
+  --cbp-thumb: var(--cbp-brand);
+  --cbp-tab-text: var(--cbp-ink);
+  --cbp-tab-active-text: var(--cbp-ink);
+  --cbp-tab-hover-bg: color-mix(in srgb, var(--cbp-brand) 22%, transparent);
+
+  /* Buscador y categorias */
+  --cbp-field-bg: #ffffff;
+  --cbp-field-line: #e5e7eb;
+  --cbp-field-text: var(--cbp-ink);
+  --cbp-field-placeholder: #6b7280;
+  --cbp-focus: var(--cbp-brand);
+
+  /* Tarjetas */
+  --cbp-card-bg: #ffffff;
+  --cbp-card-line: #e5e7eb;
+  --cbp-card-topbar: var(--cbp-brand);
+  --cbp-card-title: var(--cbp-ink);
+  --cbp-card-text: var(--cbp-ink);
+  --cbp-card-icon: var(--cbp-muted);
+  --cbp-media-bg: #f3f4f6;
+  --cbp-radius: 12px;
+  --cbp-gap: 16px;
+
+  /* Caja del espacio destacado */
+  --cbp-box-bg: color-mix(in srgb, var(--cbp-brand) 15%, transparent);
+  --cbp-box-line: color-mix(in srgb, var(--cbp-brand) 78%, #7a4a00);
+  --cbp-box-title: var(--cbp-ink);
+  --cbp-box-count: var(--cbp-muted);
+
+  /* Categorias */
+  --cbp-cat-teatro: #3b0764;
+  --cbp-cat-musica: #047857;
+  --cbp-cat-musical: #5f61f2;
+  --cbp-cat-humor: #b45309;
+  --cbp-cat-talk: #0369a1;
+
+  --cbp-focus-ring: color-mix(in srgb, var(--cbp-focus) 72%, white 28%);
+  --cbp-focus-glow: color-mix(in srgb, var(--cbp-focus) 38%, transparent);
+  --cbp-ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  display: block;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 8px 12px 28px;
+  background: transparent !important;
+  color: var(--cbp-ink) !important;
+  font-family: var(--cbp-font-text);
+}
+
+.cld-billboard-pavon,
+.cld-billboard-pavon *,
+.cld-billboard-pavon *::before,
+.cld-billboard-pavon *::after {
+  box-sizing: border-box;
+}
+
+.cld-billboard-pavon .cbp-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* =====================================================================
+   SELECTOR DE ESPACIOS
+   Control segmentado: una pastilla se desliza bajo el espacio activo.
+   ===================================================================== */
+.cld-billboard-pavon .cbp-head {
+  min-width: 0;
+  margin: 0 0 14px;
+}
+
+.cld-billboard-pavon .cbp-tabs-scroller {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+}
+
+.cld-billboard-pavon .cbp-tabs-scroller::-webkit-scrollbar {
+  display: none;
+}
+
+.cld-billboard-pavon .cbp-tabs {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  width: max-content;
+  min-width: 100%;
+  padding: 4px;
+  border: 1px solid var(--cbp-selector-line);
+  border-radius: 16px;
+  background: var(--cbp-selector-bg);
+}
+
+/* Pastilla del espacio activo. Se recorta (no se redimensiona) para
+   animar sin recalcular layout. */
+.cld-billboard-pavon .cbp-tabs::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 15px;
+  background: var(--cbp-thumb);
+  clip-path: inset(4px var(--cbp-thumb-r, 100%) 4px var(--cbp-thumb-l, 0px) round 12px);
+  pointer-events: none;
+}
+
+.cld-billboard-pavon .cbp-tabs.is-thumb-ready::before {
+  transition: clip-path 0.5s var(--cbp-ease);
+}
+
+.cld-billboard-pavon .cbp-tabs .cbp-tab {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  z-index: 1;
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 0;
+  margin: 0;
+  padding: 10px 12px 9px;
+  border: 0 !important;
+  border-radius: 12px !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  color: var(--cbp-tab-text) !important;
+  cursor: pointer;
+  font-family: var(--cbp-font-display);
+  font-size: 1.3rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  line-height: 1;
+  text-transform: none;
+  white-space: nowrap;
+  transition: color 0.25s ease, background-color 0.25s ease;
+}
+
+.cld-billboard-pavon .cbp-tabs .cbp-tab:not([aria-selected="true"]):hover {
+  background: var(--cbp-tab-hover-bg) !important;
+}
+
+.cld-billboard-pavon .cbp-tabs .cbp-tab[aria-selected="true"],
+.cld-billboard-pavon .cbp-tabs .cbp-tab[aria-selected="true"]:hover,
+.cld-billboard-pavon .cbp-tabs .cbp-tab[aria-selected="true"]:focus {
+  background: transparent !important;
+  color: var(--cbp-tab-active-text) !important;
+}
+
+.cld-billboard-pavon .cbp-tabs .cbp-tab:focus {
+  outline: none;
+}
+
+.cld-billboard-pavon .cbp-tabs .cbp-tab:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--cbp-focus-ring), 0 0 16px 2px var(--cbp-focus-glow) !important;
+}
+
+.cld-billboard-pavon .cbp-tab__label,
+.cld-billboard-pavon .cbp-tab__count {
+  display: block;
+  pointer-events: none;
+}
+
+.cld-billboard-pavon .cbp-tab__count {
+  font-family: var(--cbp-font-text);
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  line-height: 1.1;
+  opacity: 0.74;
+  transition: opacity 0.25s ease;
+}
+
+.cld-billboard-pavon .cbp-tab[aria-selected="true"] .cbp-tab__count {
+  opacity: 0.88;
+}
+
+.cld-billboard-pavon .cbp-tab--skeleton {
+  flex: 1 0 auto;
+  min-width: 132px;
+  height: 52px;
+  border-radius: 12px;
+}
+
+/* =====================================================================
+   BUSCADOR Y CATEGORIAS
+   ===================================================================== */
+.cld-billboard-pavon .cbp-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 200px;
+  gap: 8px;
+  width: 100%;
+}
+
+.cld-billboard-pavon .cbp-actions--single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.cld-billboard-pavon .cbp-actions input,
+.cld-billboard-pavon .cbp-actions select {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--cbp-field-line) !important;
+  border-radius: 12px !important;
+  background: var(--cbp-field-bg) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  color: var(--cbp-field-text) !important;
+  font-family: var(--cbp-font-text);
+  font-size: 1rem;
+  line-height: 1.5;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.cld-billboard-pavon .cbp-actions input::placeholder {
+  color: var(--cbp-field-placeholder) !important;
+  opacity: 1;
+}
+
+.cld-billboard-pavon .cbp-actions input:focus,
+.cld-billboard-pavon .cbp-actions input:focus-visible,
+.cld-billboard-pavon .cbp-actions select:focus,
+.cld-billboard-pavon .cbp-actions select:focus-visible {
+  border-color: var(--cbp-focus) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px var(--cbp-focus-ring), 0 0 16px 2px var(--cbp-focus-glow) !important;
+}
+
+/* =====================================================================
+   LISTADO Y TARJETAS
+   ===================================================================== */
+.cld-billboard-pavon .cbp-list {
+  display: block;
+  min-width: 0;
+  margin-top: 16px;
+}
+
+.cld-billboard-pavon .cbp-panel {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.cld-billboard-pavon .cbp-grid {
+  display: grid;
+  gap: var(--cbp-gap);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.cld-billboard-pavon .cbp-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--cbp-card-line) !important;
+  border-radius: var(--cbp-radius);
+  background: var(--cbp-card-bg) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
+  color: var(--cbp-card-text) !important;
+  content-visibility: auto;
+  contain-intrinsic-size: 400px 520px;
+}
+
+.cld-billboard-pavon .cbp-media {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  background: var(--cbp-media-bg) !important;
+}
+
+.cld-billboard-pavon .cbp-media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 0 1px rgba(2, 6, 23, 0.06);
+  pointer-events: none;
+}
+
+.cld-billboard-pavon .cbp-media[data-url] {
+  cursor: pointer;
+}
+
+.cld-billboard-pavon .cbp-media img {
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  object-fit: cover;
+  transform: scale(1);
+  transition: transform 0.35s ease;
+}
+
+.cld-billboard-pavon .cbp-media:hover img,
+.cld-billboard-pavon .cbp-media[data-url]:focus-visible img {
+  transform: scale(1.08);
+}
+
+.cld-billboard-pavon .cbp-media[data-url]:focus {
+  outline: none;
+}
+
+.cld-billboard-pavon .cbp-media[data-url]:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--cbp-focus-ring), 0 0 16px 2px var(--cbp-focus-glow);
+}
+
+.cld-billboard-pavon .cbp-topbar {
+  width: 100%;
+  height: 4px;
+  background: var(--cbp-card-topbar) !important;
+}
+
+.cld-billboard-pavon .cbp-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px 16px;
+  background: transparent !important;
+}
+
+.cld-billboard-pavon .cbp-title {
+  margin: 6px 0 0;
+  padding: 0;
+  color: var(--cbp-card-title) !important;
+  font-family: var(--cbp-font-display);
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+  text-transform: uppercase;
+  word-break: break-word;
+}
+
+.cld-billboard-pavon .cbp-title-link,
+.cld-billboard-pavon .cbp-title-link:link,
+.cld-billboard-pavon .cbp-title-link:visited {
+  color: inherit !important;
+  text-decoration: none !important;
+  transition: color 0.18s ease;
+}
+
+.cld-billboard-pavon .cbp-title-link:hover,
+.cld-billboard-pavon .cbp-title-link:focus-visible {
+  color: var(--cbp-cta) !important;
+  text-decoration: none !important;
+}
+
+.cld-billboard-pavon .cbp-title-link:focus {
+  outline: none;
+}
+
+.cld-billboard-pavon .cbp-meta {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  color: var(--cbp-card-text) !important;
+  font-size: 0.8rem;
+  line-height: 1.25;
+}
+
+.cld-billboard-pavon .cbp-meta--date {
+  padding: 4px 0;
+}
+
+.cld-billboard-pavon .cbp-meta svg {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  color: var(--cbp-card-icon) !important;
+}
+
+.cld-billboard-pavon .cbp-meta__text {
+  white-space: normal;
+  word-break: break-word;
+}
+
+.cld-billboard-pavon .cbp-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  min-width: 0;
+  margin-top: 2px;
+  overflow: hidden;
+}
+
+.cld-billboard-pavon .cbp-pill {
+  display: inline-flex;
+  flex-shrink: 1;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  max-width: 100%;
+  padding: 8px 14px;
+  border-radius: 9999px;
+  font-family: var(--cbp-font-text);
+  font-size: 0.6rem;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: background-color 0.18s, color 0.18s, border-color 0.18s, transform 0.12s;
+}
+
+.cld-billboard-pavon .cbp-pill--cat {
+  border: 0;
+  background: var(--cbp-cat, #111827);
+  color: #fff !important;
+  cursor: default;
+}
+
+.cld-billboard-pavon .cbp-pill--cat:hover {
+  transform: translateY(-1px);
+}
+
+.cld-billboard-pavon .cbp-cat--teatro {
+  --cbp-cat: var(--cbp-cat-teatro);
+}
+
+.cld-billboard-pavon .cbp-cat--musica {
+  --cbp-cat: var(--cbp-cat-musica);
+}
+
+.cld-billboard-pavon .cbp-cat--musical {
+  --cbp-cat: var(--cbp-cat-musical);
+}
+
+.cld-billboard-pavon .cbp-cat--humor {
+  --cbp-cat: var(--cbp-cat-humor);
+}
+
+.cld-billboard-pavon .cbp-cat--talk {
+  --cbp-cat: var(--cbp-cat-talk);
+}
+
+.cld-billboard-pavon .cbp-pill--cta,
+.cld-billboard-pavon .cbp-pill--cta:link,
+.cld-billboard-pavon .cbp-pill--cta:visited {
+  border: 1.5px solid var(--cbp-cta) !important;
+  background: var(--cbp-cta) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  color: var(--cbp-cta-text) !important;
+  cursor: pointer;
+  text-decoration: none !important;
+}
+
+.cld-billboard-pavon .cbp-pill--cta:hover,
+.cld-billboard-pavon .cbp-pill--cta:focus-visible,
+.cld-billboard-pavon .cbp-pill--cta:active {
+  border-color: var(--cbp-cta) !important;
+  background: var(--cbp-cta-text) !important;
+  color: var(--cbp-cta) !important;
+}
+
+.cld-billboard-pavon .cbp-pill--cta:focus {
+  outline: none;
+}
+
+.cld-billboard-pavon .cbp-pill--cta:focus-visible {
+  box-shadow: 0 0 0 2px var(--cbp-focus-ring), 0 0 16px 2px var(--cbp-focus-glow) !important;
+}
+
+.cld-billboard-pavon .cbp-pill--disabled,
+.cld-billboard-pavon .cbp-pill--disabled:hover {
+  border: 1.5px solid #cbd5e1 !important;
+  background: #cbd5e1 !important;
+  color: #475569 !important;
+  cursor: default;
+}
+
+/* Estados */
+.cld-billboard-pavon .cbp-skel {
+  animation: cbp-pulse 1.3s ease-in-out infinite;
+  background: linear-gradient(90deg, #eee, #f6f6f6, #eee) !important;
+  background-size: 200% 100% !important;
+}
+
+@keyframes cbp-pulse {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.cld-billboard-pavon .cbp-empty {
+  margin: 0;
+  padding: 18px;
+  border: 1px dashed var(--cbp-card-line);
+  border-radius: 14px;
+  background: var(--cbp-media-bg) !important;
+  color: var(--cbp-muted) !important;
+  text-align: center;
+}
+
+/* =====================================================================
+   CAJA DEL ESPACIO DESTACADO (p. ej. Ambigu)
+   ===================================================================== */
+.cld-billboard-pavon .cbp-panel.cbp-panel--boxed {
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--cbp-box-line);
+  border-radius: 16px;
+  background: var(--cbp-box-bg) !important;
+}
+
+.cld-billboard-pavon .cbp-panel__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--cbp-box-line);
+}
+
+.cld-billboard-pavon .cbp-panel__title {
+  margin: 0;
+  padding: 0;
+  color: var(--cbp-box-title) !important;
+  font-family: var(--cbp-font-display);
+  font-size: 1.3rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  line-height: 1;
+  text-transform: none;
+}
+
+.cld-billboard-pavon .cbp-panel__count {
+  margin: 0;
+  color: var(--cbp-box-count) !important;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+/* =====================================================================
+   RESPONSIVE
+   ===================================================================== */
+@media (max-width: 480px) {
+  .cld-billboard-pavon .cbp-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .cld-billboard-pavon {
+    padding-inline: 16px;
+  }
+
+  .cld-billboard-pavon .cbp-tabs .cbp-tab {
+    padding: 11px 22px 10px;
+    font-size: 1.5rem;
+  }
+
+  .cld-billboard-pavon .cbp-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .cld-billboard-pavon .cbp-panel.cbp-panel--boxed {
+    gap: 18px;
+    padding: clamp(14px, 2vw, 24px);
+  }
+
+  .cld-billboard-pavon .cbp-panel__title {
+    font-size: 1.5rem;
+  }
+}
+
+/* Escritorio: selector y filtros comparten fila. */
+@media (min-width: 900px) {
+  .cld-billboard-pavon {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: 28px;
+  }
+
+  .cld-billboard-pavon .cbp-head {
+    grid-column: 1;
+    margin: 0;
+  }
+
+  .cld-billboard-pavon .cbp-tabs {
+    min-width: 0;
+  }
+
+  .cld-billboard-pavon .cbp-tabs .cbp-tab {
+    min-width: 204px;
+    padding-inline: 28px;
+  }
+
+  .cld-billboard-pavon .cbp-filters {
+    grid-column: 2;
+    justify-self: end;
+    width: min(100%, 580px);
+  }
+
+  .cld-billboard-pavon .cbp-list {
+    grid-column: 1 / -1;
+    margin-top: 22px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .cld-billboard-pavon {
+    max-width: none;
+    margin: 0;
+    padding-top: 12px;
+    padding-bottom: 32px;
+  }
+
+  .cld-billboard-pavon .cbp-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 20px;
+  }
+
+  .cld-billboard-pavon .cbp-pill {
+    font-size: 0.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cld-billboard-pavon .cbp-tabs.is-thumb-ready::before,
+  .cld-billboard-pavon .cbp-tabs .cbp-tab,
+  .cld-billboard-pavon .cbp-tab__count,
+  .cld-billboard-pavon .cbp-media img,
+  .cld-billboard-pavon .cbp-pill {
+    transition: none;
+  }
+
+  .cld-billboard-pavon .cbp-skel {
+    animation: none;
+  }
+}

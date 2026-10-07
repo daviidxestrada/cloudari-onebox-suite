@@ -3,6 +3,7 @@
 namespace Cloudari\Onebox\Presentation\Elementor;
 
 use Cloudari\Onebox\Presentation\Assets\Enqueue;
+use Cloudari\Onebox\Presentation\Elementor\Widgets\BillboardPavon;
 use Cloudari\Onebox\Presentation\Elementor\Widgets\HeroCarousel;
 
 if (!defined('ABSPATH')) {
@@ -28,12 +29,16 @@ final class Bootstrap
      */
     public const HERO_ASSET_HANDLE = 'cloudari-hero-carousel';
 
+    public const BILLBOARD_PAVON_ASSET_HANDLE = 'cloudari-billboard-pavon';
+
     public static function register(): void
     {
         add_action('elementor/elements/categories_registered', [self::class, 'registerCategory']);
         add_action('elementor/widgets/register', [self::class, 'registerWidgets']);
         add_action('elementor/frontend/after_register_styles', [Enqueue::class, 'registerHeroCarouselStyle']);
         add_action('elementor/frontend/after_register_scripts', [Enqueue::class, 'registerHeroCarouselScript']);
+        add_action('elementor/frontend/after_register_styles', [Enqueue::class, 'registerBillboardPavonStyle']);
+        add_action('elementor/frontend/after_register_scripts', [Enqueue::class, 'registerBillboardPavonScript']);
     }
 
     public static function registerCategory($elementsManager): void
@@ -50,5 +55,6 @@ final class Bootstrap
     public static function registerWidgets($widgetsManager): void
     {
         $widgetsManager->register(new HeroCarousel());
+        $widgetsManager->register(new BillboardPavon());
     }
 }

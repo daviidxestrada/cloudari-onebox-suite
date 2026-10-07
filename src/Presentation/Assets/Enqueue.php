@@ -139,6 +139,31 @@ final class Enqueue
         );
     }
 
+    /**
+     * Cartelera - Gran Teatro Pavón: mismo criterio que el hero. La hoja es
+     * autocontenida, así que no arrastra la paleta del Perfil MAIN.
+     */
+    public static function registerBillboardPavonStyle(): void
+    {
+        wp_register_style(
+            ElementorBootstrap::BILLBOARD_PAVON_ASSET_HANDLE,
+            CLOUDARI_ONEBOX_URL . 'assets/css/billboard-pavon.css',
+            [],
+            self::assetVersion('assets/css/billboard-pavon.css')
+        );
+    }
+
+    public static function registerBillboardPavonScript(): void
+    {
+        wp_register_script(
+            ElementorBootstrap::BILLBOARD_PAVON_ASSET_HANDLE,
+            CLOUDARI_ONEBOX_URL . 'assets/js/billboard-pavon.js',
+            [],
+            self::assetVersion('assets/js/billboard-pavon.js'),
+            true
+        );
+    }
+
     private static function enqueueCalendarBaseStyle(): void
     {
         wp_enqueue_style(

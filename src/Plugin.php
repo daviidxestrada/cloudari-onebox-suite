@@ -157,6 +157,8 @@ final class Plugin
 
          * - Widget "Cloudari Hero Carrusel"
 
+         * - Widget "Cartelera - Gran Teatro Pavón"
+
          *
 
          * No hace nada si Elementor no está activo.

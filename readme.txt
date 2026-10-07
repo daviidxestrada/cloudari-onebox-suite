@@ -3,7 +3,7 @@ Contributors: cloudari
 Tags: onebox, theatre, calendar, billboard, events
 Requires at least: 6.0
 Requires PHP: 8.0
-Stable tag: 1.6.1
+Stable tag: 1.7.0
 
 Suite Cloudari para integrar OneBox en WordPress: calendario, cartelera, cartelera por espacios, contador y eventos manuales, con soporte para multiples integraciones por teatro.
 
@@ -104,6 +104,12 @@ Opcionales en `wp-config.php`:
 Los widgets HTML estan en la carpeta `widgets/`.
 
 Para usarlos en Elementor, anade un Widget HTML y pega el contenido del archivo correspondiente.
+
+== Widgets de Elementor ==
+Con Elementor activo, el plugin anade la categoria Cloudari al panel de widgets:
+
+- Cloudari Hero Carrusel: carrusel de carteles con enlace de compra.
+- Cartelera - Gran Teatro Pavon: cartelera por espacios con el diseno del Pavon. Lee los mismos datos que `[cloudari_billboard_venues]`. En Contenido se eligen los espacios que van en caja (por defecto, Ambigu), los filtros visibles y los textos del diseno; en Estilo, los colores y tipografias de cada parte. Un color vacio usa el del diseno.
 
 == Manual events ==
 Los eventos manuales se crean con el CPT `evento_manual` y la taxonomia `evento_manual_cat`.
@@ -206,6 +212,14 @@ Desde la version 1.3.7, esta limpieza tambien borra las caches de sesiones por r
 - Usar HTTPS y cache a nivel de servidor si aplica.
 
 == Changelog ==
+
+= 1.7.0 =
+- Anade el widget de Elementor "Cartelera - Gran Teatro Pavon" en la categoria Cloudari: la cartelera por espacios con el diseno propio del Pavon.
+- El selector de espacios pasa a ser un control segmentado con una pastilla que se desliza bajo el espacio activo y el numero de espectaculos de cada uno; en escritorio comparte fila con el buscador y las categorias.
+- La cartelera de los espacios destacados (por defecto, Ambigu) se pinta dentro de una caja con cabecera.
+- El widget lee el mismo endpoint que `[cloudari_billboard_venues]` (OneBox + eventos manuales) y respeta las redirecciones y categorias de Overrides de eventos.
+- El diseno viene por defecto en el widget y no depende de la paleta del Perfil MAIN; colores, tipografias y textos del diseno (placeholders, boton, mensajes) se pueden editar desde el editor de Elementor.
+- El shortcode `[cloudari_billboard_venues]` no cambia.
 
 = 1.6.1 =
 - Corrige la carga lenta del video en movil: el medio movil del primer cartel se quedaba sin prioridad, asi que en el telefono el medio visible era justo el que esperaba a descargarse.
