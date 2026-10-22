@@ -138,12 +138,12 @@ final class PanelRoutes
             return self::invalid($errors);
         }
 
-        $status = self::requestedStatus($input);
-        $postId = wp_insert_post([
+        // wp_insert_post() espera datos con barras: sin wp_slash() se perderían las "\" del título.
+        $postId = wp_insert_post(wp_slash([
             'post_type'   => PostType::SLUG,
             'post_title'  => $input['title'],
-            'post_status' => $status,
-        ], true);
+            'post_status' => self::requestedStatus($input),
+        ]), true);
 
         if (is_wp_error($postId)) {
             return $postId;
@@ -164,11 +164,11 @@ final class PanelRoutes
             return self::invalid($errors);
         }
 
-        $updated = wp_update_post([
+        $updated = wp_update_post(wp_slash([
             'ID'          => $postId,
             'post_title'  => $input['title'],
-            'post_status' => self::requestedStatus($input),
-        ], true);
+            'post_status' => self::requestedStatus($input, $postId),
+        ]), true);
 
         if (is_wp_error($updated)) {
             return $updated;
@@ -181,10 +181,20 @@ final class PanelRoutes
 
     /**
      * Se manda a la papelera, nunca se borra: se puede recuperar desde WordPress.
+     * Si la papelera está desactivada (`EMPTY_TRASH_DAYS` a 0) WordPress borraría
+     * para siempre, así que el panel se niega y lo deja en manos del administrador.
      */
     public static function deleteEvent(WP_REST_Request $request)
     {
         $postId = (int) $request['id'];
+
+        if (!EMPTY_TRASH_DAYS) {
+            return new WP_Error(
+                'cloudari_no_trash',
+                __('La papelera de WordPress está desactivada en esta web, así que quitarlo lo borraría para siempre. Desactiva "Mostrar en la web" para ocultarlo, o pide a quien administra la web que lo borre.', 'cloudari-onebox'),
+                ['status' => 409]
+            );
+        }
 
         if (!wp_trash_post($postId)) {
             return new WP_Error('cloudari_trash_failed', __('No se ha podido quitar el evento.', 'cloudari-onebox'), ['status' => 500]);
@@ -203,19 +213,7 @@ final class PanelRoutes
             return new WP_Error('cloudari_invalid', __('Faltan los carteles.', 'cloudari-onebox'), ['status' => 400]);
         }
 
-        $errors = [];
-
-        foreach (array_values($slides) as $index => $slide) {
-            if (!is_array($slide) || (int) ($slide['desktop']['id'] ?? 0) <= 0) {
-                /* translators: %d: número del cartel. */
-                $errors['slide-' . $index] = sprintf(__('Al cartel %d le falta la imagen o el vídeo para ordenador.', 'cloudari-onebox'), $index + 1);
-            }
-        }
-
-        if ($errors !== []) {
-            return self::invalid($errors);
-        }
-
+        // El repositorio comprueba el medio de ordenador ya combinado con lo guardado.
         $result = HeroRepository::saveSlides($postId, $elementId, array_values($slides));
 
         if (is_wp_error($result)) {
@@ -266,7 +264,7 @@ final class PanelRoutes
             $errors['title'] = __('Escribe el nombre del evento.', 'cloudari-onebox');
         }
 
-        if ($input['url'] !== '' && !wp_http_validate_url($input['url'])) {
+        if ($input['url'] !== '' && !self::isWebUrl($input['url'])) {
             $errors['url'] = __('El enlace tiene que empezar por https:// (cópialo de la barra del navegador).', 'cloudari-onebox');
         }
 
@@ -317,6 +315,19 @@ final class PanelRoutes
         return $errors;
     }
 
+    /**
+     * Solo forma: http(s) y un dominio. `wp_http_validate_url()` no sirve aquí
+     * porque resuelve el DNS desde el servidor y rechaza enlaces válidos.
+     */
+    private static function isWebUrl(string $url): bool
+    {
+        $parts = wp_parse_url($url);
+
+        return is_array($parts)
+            && in_array(strtolower((string) ($parts['scheme'] ?? '')), ['http', 'https'], true)
+            && !empty($parts['host']);
+    }
+
     private static function isTimeOrEmpty($value): bool
     {
         $value = (string) $value;
@@ -325,15 +336,31 @@ final class PanelRoutes
     }
 
     /**
+     * El estado solo cambia si cambia el interruptor "Mostrar en la web": guardar
+     * otro dato no debe publicar un evento pendiente ni despublicar uno privado.
+     *
      * @param array<string,mixed> $input
      */
-    private static function requestedStatus(array $input): string
+    private static function requestedStatus(array $input, int $postId = 0): string
     {
+        if ($postId > 0) {
+            $current = (string) get_post_status($postId);
+
+            if (self::isVisibleStatus($current) === $input['visible']) {
+                return $current;
+            }
+        }
+
         if (!$input['visible']) {
             return 'draft';
         }
 
         return current_user_can('publish_posts') ? 'publish' : 'pending';
+    }
+
+    private static function isVisibleStatus(string $status): bool
+    {
+        return in_array($status, ['publish', 'future', 'pending'], true);
     }
 
     /**
@@ -358,9 +385,10 @@ final class PanelRoutes
 
         return array_merge($data, [
             'id'        => $postId,
-            'title'     => get_the_title($postId),
+            // Título en crudo: get_the_title() lo texturiza ("&" pasa a "&#038;") y se guardaría así.
+            'title'     => (string) get_post_field('post_title', $postId, 'raw'),
             'status'    => (string) get_post_status($postId),
-            'visible'   => in_array(get_post_status($postId), ['publish', 'future', 'pending'], true),
+            'visible'   => self::isVisibleStatus((string) get_post_status($postId)),
             'image_url' => $imageId > 0 ? (string) wp_get_attachment_image_url($imageId, 'medium_large') : '',
             'when'      => self::describeWhen($data),
             'next_date' => self::nextDate($data),

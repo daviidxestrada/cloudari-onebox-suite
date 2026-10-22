@@ -10,8 +10,8 @@ if (!defined('ABSPATH')) {
  *
  * Los carteles no tienen tabla propia: viven en `_elementor_data` de la página
  * que contiene el widget. Se escriben a través de `Document::save()` para que
- * Elementor haga lo mismo que al pulsar "Actualizar" (revisión, purgado del CSS
- * de la página y de su caché), y solo se tocan los campos que el panel edita;
+ * Elementor regenere el CSS de la página y vacíe su caché, igual que al pulsar
+ * "Actualizar" en el editor, y solo se tocan los campos que el panel edita;
  * el encuadre, el texto alternativo y el resto de ajustes del widget se conservan.
  */
 final class HeroRepository
@@ -40,6 +40,13 @@ final class HeroRepository
 
         foreach (self::candidatePostIds() as $postId) {
             if (!current_user_can('edit_post', $postId)) {
+                continue;
+            }
+
+            $document = \Elementor\Plugin::$instance->documents->get($postId);
+
+            // Si Elementor no deja a este usuario editar la página, no se le ofrece.
+            if (!$document || !$document->is_editable_by_current_user()) {
                 continue;
             }
 
@@ -100,15 +107,45 @@ final class HeroRepository
             return new \WP_Error('cloudari_not_found', __('No se encuentra la página del carrusel.', 'cloudari-onebox'), ['status' => 404]);
         }
 
+        // Document::save() devuelve false sin explicar por qué; mejor decirlo antes.
+        if (!$document->is_editable_by_current_user()) {
+            return new \WP_Error('cloudari_forbidden', __('Elementor no permite a tu usuario cambiar esta página. Pide a quien administra la web que te dé acceso al editor de Elementor.', 'cloudari-onebox'), ['status' => 403]);
+        }
+
+        // Si alguien la tiene abierta en Elementor, su próximo "Actualizar" pisaría este cambio (o al revés).
+        $lockedBy = function_exists('wp_check_post_lock') ? wp_check_post_lock($postId) : false;
+
+        if ($lockedBy) {
+            $user = get_userdata((int) $lockedBy);
+            $name = $user ? $user->display_name : __('Otra persona', 'cloudari-onebox');
+
+            return new \WP_Error(
+                'cloudari_locked',
+                /* translators: %s: nombre de quien está editando. */
+                sprintf(__('%s está editando esta página en Elementor ahora mismo. Espera a que termine e inténtalo de nuevo.', 'cloudari-onebox'), $name),
+                ['status' => 409]
+            );
+        }
+
         $found = false;
-        $elements = self::mapWidgets($elements, static function (array $widget) use ($elementId, $slides, &$found): array {
+        $missing = [];
+        $elements = self::mapWidgets($elements, static function (array $widget) use ($elementId, $slides, &$found, &$missing): array {
             if (($widget['id'] ?? '') !== $elementId) {
                 return $widget;
             }
 
             $found = true;
             $current = is_array($widget['settings']['slides'] ?? null) ? $widget['settings']['slides'] : [];
-            $widget['settings']['slides'] = self::mergeSlides($current, $slides);
+            $merged = self::mergeSlides($current, $slides);
+
+            foreach ($merged as $index => $item) {
+                if ((string) ($item['image_desktop']['url'] ?? '') === '') {
+                    /* translators: %d: número del cartel. */
+                    $missing['slide-' . $index] = sprintf(__('Al cartel %d le falta la imagen o el vídeo para ordenador.', 'cloudari-onebox'), $index + 1);
+                }
+            }
+
+            $widget['settings']['slides'] = $merged;
 
             return $widget;
         });
@@ -117,9 +154,18 @@ final class HeroRepository
             return new \WP_Error('cloudari_not_found', __('El carrusel ya no está en esa página. Recarga el panel.', 'cloudari-onebox'), ['status' => 404]);
         }
 
+        if ($missing !== []) {
+            return new \WP_Error('cloudari_invalid', __('Hay datos que revisar antes de guardar.', 'cloudari-onebox'), ['status' => 400, 'fields' => $missing]);
+        }
+
         if (!$document->save(['elements' => $elements])) {
             return new \WP_Error('cloudari_save_failed', __('No se ha podido guardar. Inténtalo de nuevo.', 'cloudari-onebox'), ['status' => 500]);
         }
+
+        // save(['elements']) no toca el post: sin esto no cambia la fecha de modificación
+        // ni salta `save_post`, y las cachés de página que purgan con ese hook seguirían
+        // sirviendo la portada antigua.
+        wp_update_post(['ID' => $postId]);
 
         return true;
     }
@@ -159,7 +205,7 @@ final class HeroRepository
             $item['title'] = sanitize_text_field((string) ($slide['title'] ?? ''));
 
             foreach (['desktop' => 'image_desktop', 'mobile' => 'image_mobile', 'poster' => 'video_poster'] as $key => $field) {
-                $item[$field] = self::mediaValue($slide[$key] ?? null);
+                $item[$field] = self::mediaValue($slide[$key] ?? null, $item[$field] ?? null);
             }
 
             $link = is_array($item['link'] ?? null) ? $item['link'] : [];
@@ -175,17 +221,36 @@ final class HeroRepository
     }
 
     /**
-     * @return array{url:string,id:int|string}
+     * Valor de un control MEDIA de Elementor a partir de lo que manda el panel.
+     *
+     * Si el medio no cambió (mismo id, incluido 0 para una URL externa o un
+     * adjunto que ya no existe) se conserva tal cual estaba guardado, con su
+     * `alt`, `size` y demás claves; solo se reconstruye cuando se eligió otro.
+     *
+     * @param mixed $incoming `null` = quitado; `['id' => n]` = elegido o sin cambios.
+     * @param mixed $stored
+     * @return array<string,mixed>
      */
-    private static function mediaValue($media): array
+    private static function mediaValue($incoming, $stored): array
     {
-        $id = is_array($media) ? (int) ($media['id'] ?? 0) : 0;
+        $empty = ['url' => '', 'id' => ''];
+
+        if (!is_array($incoming)) {
+            return $empty;
+        }
+
+        $id = (int) ($incoming['id'] ?? 0);
+        $storedId = is_array($stored) ? (int) ($stored['id'] ?? 0) : 0;
+
+        if (is_array($stored) && (string) ($stored['url'] ?? '') !== '' && $id === $storedId) {
+            return $stored;
+        }
 
         if ($id > 0 && get_post_type($id) === 'attachment') {
             return ['url' => (string) wp_get_attachment_url($id), 'id' => $id, 'source' => 'library'];
         }
 
-        return ['url' => '', 'id' => ''];
+        return $empty;
     }
 
     private static function newItemId(): string
@@ -205,7 +270,7 @@ final class HeroRepository
             'key'        => $postId . ':' . $widget['id'],
             'post_id'    => $postId,
             'element_id' => (string) $widget['id'],
-            'page_title' => get_the_title($postId) ?: __('(sin título)', 'cloudari-onebox'),
+            'page_title' => (string) get_post_field('post_title', $postId, 'raw') ?: __('(sin título)', 'cloudari-onebox'),
             'page_url'   => (string) get_permalink($postId),
             'edit_url'   => add_query_arg(['post' => $postId, 'action' => 'elementor'], admin_url('post.php')),
             'slides'     => array_values(array_map([self::class, 'describeSlide'], array_filter($slides, 'is_array'))),
@@ -250,7 +315,7 @@ final class HeroRepository
             'url'   => $url,
             'type'  => $isVideo ? 'video' : 'image',
             'thumb' => $thumb ?: ($isVideo ? '' : $url),
-            'name'  => $id > 0 ? (string) get_the_title($id) : wp_basename((string) wp_parse_url($url, PHP_URL_PATH)),
+            'name'  => $id > 0 ? (string) get_post_field('post_title', $id, 'raw') : wp_basename((string) wp_parse_url($url, PHP_URL_PATH)),
         ];
     }
 

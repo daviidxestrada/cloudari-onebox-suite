@@ -50,8 +50,8 @@ final class EventStore
         $exceptions = get_post_meta($postId, self::META_EXCEPTIONS, true);
         $exceptions = is_array($exceptions) ? array_values(array_filter($exceptions, 'is_array')) : [];
 
-        $terms = wp_get_object_terms($postId, Taxonomy::TAXONOMY);
-        $categoryId = (!is_wp_error($terms) && !empty($terms)) ? (int) $terms[0]->term_id : 0;
+        $terms = get_the_terms($postId, Taxonomy::TAXONOMY);
+        $categoryId = (is_array($terms) && $terms !== []) ? (int) $terms[0]->term_id : 0;
 
         $imageId = (int) get_post_meta($postId, self::META_IMG_ID, true);
 

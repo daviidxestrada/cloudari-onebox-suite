@@ -53,14 +53,21 @@ final class TheatrePanel
      * Quien no administra el sitio (rol Editor) entra directamente al panel.
      * Solo se cambia el destino por defecto: si el login venía de otra pantalla, se respeta.
      *
-     * @param \WP_User|\WP_Error $user
+     * Sin tipos escalares: `wp-login.php` y otros plugins pueden pasar arrays,
+     * null o menos argumentos, y un TypeError aquí impediría iniciar sesión.
+     *
+     * @param mixed $redirectTo
+     * @param mixed $requested
+     * @param \WP_User|\WP_Error|null $user
+     * @return mixed
      */
-    public static function loginRedirect(string $redirectTo, string $requested, $user): string
+    public static function loginRedirect($redirectTo, $requested = '', $user = null)
     {
         if (!$user instanceof \WP_User || !$user->has_cap(self::CAPABILITY) || $user->has_cap('manage_options')) {
             return $redirectTo;
         }
 
+        $requested = is_string($requested) ? $requested : '';
         $isDefault = $requested === '' || untrailingslashit($requested) === untrailingslashit(admin_url());
 
         return $isDefault ? self::url() : $redirectTo;
