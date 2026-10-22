@@ -1,0 +1,29 @@
+/**
+ * Cloudari Hero Carrusel - vista previa de los medios mixtos (imagen o vídeo)
+ * en el panel de Elementor. Ver assets/js/hero-carousel-editor.js.
+ */
+.cld-mixed-media .elementor-control-media-video,
+.cld-mixed-media .cld-mixed-media__image {
+    display: none;
+}
+
+.cld-mixed-media .elementor-control-media-area .eicon-video-camera {
+    display: none;
+}
+
+.cld-mixed-media--image .cld-mixed-media__image {
+    display: block;
+}
+
+.cld-mixed-media--video .elementor-control-media-video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+}
+
+.cld-mixed-media--video .elementor-control-media-area .eicon-video-camera {
+    display: block;
+    text-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+}

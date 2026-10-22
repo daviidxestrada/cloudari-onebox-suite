@@ -140,6 +140,31 @@ final class Enqueue
     }
 
     /**
+     * Solo en el editor de Elementor: completa la vista previa del panel en los
+     * controles de medio que aceptan imagen o vídeo, que Elementor deja vacía.
+     */
+    public static function heroCarouselEditorStyle(): void
+    {
+        wp_enqueue_style(
+            ElementorBootstrap::HERO_EDITOR_ASSET_HANDLE,
+            CLOUDARI_ONEBOX_URL . 'assets/css/hero-carousel-editor.css',
+            [],
+            self::assetVersion('assets/css/hero-carousel-editor.css')
+        );
+    }
+
+    public static function heroCarouselEditorScript(): void
+    {
+        wp_enqueue_script(
+            ElementorBootstrap::HERO_EDITOR_ASSET_HANDLE,
+            CLOUDARI_ONEBOX_URL . 'assets/js/hero-carousel-editor.js',
+            ['jquery', 'elementor-editor'],
+            self::assetVersion('assets/js/hero-carousel-editor.js'),
+            true
+        );
+    }
+
+    /**
      * Cartelera - Gran Teatro Pavón: mismo criterio que el hero. La hoja es
      * autocontenida, así que no arrastra la paleta del Perfil MAIN.
      */

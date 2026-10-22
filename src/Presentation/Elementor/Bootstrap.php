@@ -29,6 +29,8 @@ final class Bootstrap
      */
     public const HERO_ASSET_HANDLE = 'cloudari-hero-carousel';
 
+    public const HERO_EDITOR_ASSET_HANDLE = 'cloudari-hero-carousel-editor';
+
     public const BILLBOARD_PAVON_ASSET_HANDLE = 'cloudari-billboard-pavon';
 
     public static function register(): void
@@ -37,6 +39,8 @@ final class Bootstrap
         add_action('elementor/widgets/register', [self::class, 'registerWidgets']);
         add_action('elementor/frontend/after_register_styles', [Enqueue::class, 'registerHeroCarouselStyle']);
         add_action('elementor/frontend/after_register_scripts', [Enqueue::class, 'registerHeroCarouselScript']);
+        add_action('elementor/editor/after_enqueue_styles', [Enqueue::class, 'heroCarouselEditorStyle']);
+        add_action('elementor/editor/after_enqueue_scripts', [Enqueue::class, 'heroCarouselEditorScript']);
         add_action('elementor/frontend/after_register_styles', [Enqueue::class, 'registerBillboardPavonStyle']);
         add_action('elementor/frontend/after_register_scripts', [Enqueue::class, 'registerBillboardPavonScript']);
     }
