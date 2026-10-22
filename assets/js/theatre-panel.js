@@ -142,7 +142,9 @@
         }
 
         var el = h('div', { class: 'cld-toast', role: 'status' }, icon('check'), h('span', { text: message }));
-        document.body.appendChild(el);
+        // Dentro del panel, no en <body>: fuera de .cld-panel no existen sus colores
+        // (--ink, --lime…) y el aviso salía como una caja blanca sin texto visible.
+        root.appendChild(el);
         window.clearTimeout(toastTimer);
         toastTimer = window.setTimeout(function () {
             el.remove();
@@ -1044,7 +1046,9 @@
     function mediaSlot(options) {
         var media = options.media;
         var shown = media || options.inherit || null;
-        var frameClass = 'cld-media__frame' + (!media && options.inherit ? ' cld-media__frame--inherit' : '');
+        var frameClass = 'cld-media__frame'
+            + (shown ? ' cld-media__frame--filled' : '')
+            + (!media && options.inherit ? ' cld-media__frame--inherit' : '');
         var frame = h('div', { class: frameClass, id: options.id + '-frame' });
 
         if (shown) {
