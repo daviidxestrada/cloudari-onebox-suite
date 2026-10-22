@@ -34,7 +34,12 @@ final class MetaBox
         );
     }
 
-    private static function getOneboxVenueOptions(string $currentVenue = ''): array
+    /**
+     * Espacios de OneBox para el selector de "Espacio / venue". Lo usa también el Panel del teatro.
+     *
+     * @return list<string>
+     */
+    public static function getOneboxVenueOptions(string $currentVenue = ''): array
     {
         $options = [];
 
@@ -730,166 +735,31 @@ final class MetaBox
             return;
         }
 
-        // URL del evento
-        $url = isset($_POST['url_evento'])
-            ? esc_url_raw(wp_unslash($_POST['url_evento']))
-            : '';
-        update_post_meta($post_id, self::META_URL, $url);
+        $post = wp_unslash($_POST);
 
-        $manualVenue = isset($_POST['manual_event_venue'])
-            ? sanitize_text_field(wp_unslash($_POST['manual_event_venue']))
-            : '';
-        $manualVenue = trim((string) $manualVenue);
-        if ($manualVenue !== '') {
-            update_post_meta($post_id, self::META_VENUE, $manualVenue);
-        } else {
-            delete_post_meta($post_id, self::META_VENUE);
-        }
-
-        // ✅ CTA label
-        $cta = isset($_POST['manual_cta_label'])
-            ? sanitize_text_field(wp_unslash($_POST['manual_cta_label']))
-            : '';
-        $cta = trim((string)$cta);
-        if ($cta !== '') {
-            update_post_meta($post_id, self::META_CTA_LABEL, $cta);
-        } else {
-            delete_post_meta($post_id, self::META_CTA_LABEL);
-        }
-
-        // Imagen
-        $img_id = isset($_POST['imagen_evento_id'])
-            ? (int) $_POST['imagen_evento_id']
-            : 0;
-
-        if ($img_id > 0) {
-            update_post_meta($post_id, self::META_IMG_ID, $img_id);
-        } else {
-            delete_post_meta($post_id, self::META_IMG_ID);
-        }
-
-        // =========================
-        // Modo
-        // =========================
-        $mode = isset($_POST['manual_event_mode'])
-            ? sanitize_key(wp_unslash($_POST['manual_event_mode']))
-            : 'sessions';
-        if (!in_array($mode, ['sessions', 'range', 'permanent'], true)) {
-            $mode = 'sessions';
-        }
-        update_post_meta($post_id, self::META_MODE, $mode);
-
-        // =========================
-        // Sesiones (modo clásico)
-        // =========================
-        $sesiones_raw = isset($_POST['sesiones_evento']) ? $_POST['sesiones_evento'] : [];
-        $sesiones_limpias = [];
-
-        if (is_array($sesiones_raw)) {
-            foreach ($sesiones_raw as $fila) {
-                $fecha = isset($fila['fecha']) ? sanitize_text_field(wp_unslash($fila['fecha'])) : '';
-                $hora  = isset($fila['hora'])  ? sanitize_text_field(wp_unslash($fila['hora']))  : '';
-                $fin   = isset($fila['hora_fin']) ? sanitize_text_field(wp_unslash($fila['hora_fin'])) : '';
-
-                if ($fecha === '') {
-                    continue;
-                }
-
-                $sesiones_limpias[] = [
-                    'fecha'    => $fecha,
-                    'hora'     => $hora,
-                    'hora_fin' => $fin,
-                ];
-            }
-        }
-
-        if (!empty($sesiones_limpias)) {
-            update_post_meta($post_id, self::META_SESIONES, $sesiones_limpias);
-
-            // Backwards-compat: primera fecha/hora
-            update_post_meta($post_id, '_fecha_evento', $sesiones_limpias[0]['fecha']);
-            update_post_meta($post_id, '_hora_evento', $sesiones_limpias[0]['hora']);
-        } else {
-            delete_post_meta($post_id, self::META_SESIONES);
-            delete_post_meta($post_id, '_fecha_evento');
-            delete_post_meta($post_id, '_hora_evento');
-        }
-
-        // =========================
-        // Rango + reglas
-        // =========================
-        $rangeStart = isset($_POST['manual_range_start']) ? sanitize_text_field(wp_unslash($_POST['manual_range_start'])) : '';
-        $rangeEnd   = isset($_POST['manual_range_end'])   ? sanitize_text_field(wp_unslash($_POST['manual_range_end']))   : '';
-
-        if ($rangeStart) {
-            update_post_meta($post_id, self::META_RANGE_START, $rangeStart);
-        } else {
-            delete_post_meta($post_id, self::META_RANGE_START);
-        }
-
-        if ($rangeEnd) {
-            update_post_meta($post_id, self::META_RANGE_END, $rangeEnd);
-        } else {
-            delete_post_meta($post_id, self::META_RANGE_END);
-        }
-
-        $rules = [
-            'weekday_start' => isset($_POST['manual_weekday_start']) ? sanitize_text_field(wp_unslash($_POST['manual_weekday_start'])) : '',
-            'weekday_end'   => isset($_POST['manual_weekday_end'])   ? sanitize_text_field(wp_unslash($_POST['manual_weekday_end']))   : '',
-            'weekend_start' => isset($_POST['manual_weekend_start']) ? sanitize_text_field(wp_unslash($_POST['manual_weekend_start'])) : '',
-            'weekend_end'   => isset($_POST['manual_weekend_end'])   ? sanitize_text_field(wp_unslash($_POST['manual_weekend_end']))   : '',
+        $data = [
+            'url'         => (string) ($post['url_evento'] ?? ''),
+            'venue'       => (string) ($post['manual_event_venue'] ?? ''),
+            'cta_label'   => (string) ($post['manual_cta_label'] ?? ''),
+            'image_id'    => (int) ($post['imagen_evento_id'] ?? 0),
+            'mode'        => (string) ($post['manual_event_mode'] ?? 'sessions'),
+            'sessions'    => is_array($post['sesiones_evento'] ?? null) ? $post['sesiones_evento'] : [],
+            'range_start' => (string) ($post['manual_range_start'] ?? ''),
+            'range_end'   => (string) ($post['manual_range_end'] ?? ''),
+            'rules'       => [
+                'weekday_start' => (string) ($post['manual_weekday_start'] ?? ''),
+                'weekday_end'   => (string) ($post['manual_weekday_end'] ?? ''),
+                'weekend_start' => (string) ($post['manual_weekend_start'] ?? ''),
+                'weekend_end'   => (string) ($post['manual_weekend_end'] ?? ''),
+            ],
+            'exceptions'  => is_array($post['manual_exceptions'] ?? null) ? $post['manual_exceptions'] : [],
         ];
 
-        foreach ($rules as $k => $v) {
-            $rules[$k] = trim((string)$v);
+        // La categoría solo se toca si el formulario la envía (permite limpiarla desde el select).
+        if (isset($post['evento_manual_cat'])) {
+            $data['category_id'] = (int) $post['evento_manual_cat'];
         }
 
-        if (array_filter($rules)) {
-            update_post_meta($post_id, self::META_RULES, $rules);
-        } else {
-            delete_post_meta($post_id, self::META_RULES);
-        }
-
-        // Excepciones
-        $exRaw = isset($_POST['manual_exceptions']) ? $_POST['manual_exceptions'] : [];
-        $exOut = [];
-
-        if (is_array($exRaw)) {
-            foreach ($exRaw as $row) {
-                $d = isset($row['date'])  ? sanitize_text_field(wp_unslash($row['date']))  : '';
-                $s = isset($row['start']) ? sanitize_text_field(wp_unslash($row['start'])) : '';
-                $e = isset($row['end'])   ? sanitize_text_field(wp_unslash($row['end']))   : '';
-                $d = trim($d); $s = trim($s); $e = trim($e);
-
-                if ($d === '' || $s === '' || $e === '') {
-                    continue;
-                }
-
-                $exOut[] = [
-                    'date'  => $d,
-                    'start' => $s,
-                    'end'   => $e,
-                ];
-            }
-        }
-
-        if (!empty($exOut)) {
-            update_post_meta($post_id, self::META_EXCEPTIONS, $exOut);
-        } else {
-            delete_post_meta($post_id, self::META_EXCEPTIONS);
-        }
-
-        // Categoría (taxonomía evento_manual_cat)
-        if (isset($_POST['evento_manual_cat'])) {
-            $term_id = (int) $_POST['evento_manual_cat'];
-            if ($term_id > 0) {
-                wp_set_object_terms($post_id, [$term_id], Taxonomy::TAXONOMY, false);
-            } else {
-                // Permitir limpiar categoria desde el select
-                wp_set_object_terms($post_id, [], Taxonomy::TAXONOMY, false);
-            }
-        }
-
-        \Cloudari\Onebox\Rest\Routes::clearBillboardCache();
+        EventStore::save($post_id, $data);
     }
 }

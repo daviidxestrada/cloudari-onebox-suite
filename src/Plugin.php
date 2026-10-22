@@ -8,6 +8,10 @@ use Cloudari\Onebox\Admin\SettingsPage;
 
 use Cloudari\Onebox\Admin\EventOverridesPage;
 
+use Cloudari\Onebox\Admin\TheatrePanel;
+
+use Cloudari\Onebox\Rest\PanelRoutes;
+
 use Cloudari\Onebox\Rest\Routes;
 
 use Cloudari\Onebox\Presentation\Shortcodes\Register as ShortcodeRegister;
@@ -62,6 +66,9 @@ final class Plugin
         add_action( 'admin_menu', [ SettingsPage::class, 'register' ] );
         add_action( 'admin_menu', [ EventOverridesPage::class, 'registerMenu' ] );
 
+        // Panel del teatro: eventos manuales y carteles del hero, para el personal del teatro.
+        TheatrePanel::register();
+
 
 
         /**
@@ -79,6 +86,7 @@ final class Plugin
          */
 
         add_action( 'rest_api_init', [ Routes::class, 'register' ] );
+        add_action( 'rest_api_init', [ PanelRoutes::class, 'register' ] );
 
 
 

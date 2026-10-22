@@ -30,3 +30,10 @@ build/
 wp-config.php
 .env
 .env.*
+
+# Impeccable (diseño): solo se versionan el brief de superficie y DESIGN.md
+.impeccable/mocks/
+.impeccable/review/
+.impeccable/questions/
+.impeccable/hook.cache.json
+.playwright-mcp/
